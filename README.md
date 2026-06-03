@@ -94,8 +94,8 @@ Aplikasi manajemen toko sparepart motor lengkap dengan fitur **Point of Sale (PO
 
 ```bash
 # 1. Clone repository
-git clone [repository-url]
-cd rizkimotor
+git clone https://github.com/rizkikotet-dev/rizkimotor-pos-nexjs.git
+cd rizkimotor-pos-nexjs
 
 # 2. Install dependencies
 npm install
@@ -364,49 +364,80 @@ NEXTAUTH_SECRET="your-strong-secret"
 
 ### Docker (Recommended)
 
-**Quick start dengan Docker Compose:**
+#### Mode 1: Pull dari Registry (Recommended untuk production)
 
 ```bash
-# 1. Clone & buat direktori data
+# 1. Clone
+git clone https://github.com/rizkikotet-dev/rizkimotor-pos-nexjs.git
+cd rizkimotor-pos-nexjs
+
+# 2. Buat file .env
+cat > .env << EOF
+NEXTAUTH_SECRET=$(openssl rand -base64 32)
+EOF
+
+# 3. Buat direktori data
+mkdir -p data
+
+# 4. Jalankan (otomatis pull dari GHCR)
+docker compose up -d
+
+# 5. Setup database (pertama kali)
+docker compose exec app npx prisma db push
+
+# 6. Seed data (opsional)
+docker compose exec app npx tsx prisma/seed.ts
+```
+
+**Gunakan DockerHub sebagai alternatif:**
+
+```bash
+# Edit docker-compose.yml, ganti image:
+# image: rizkikotet/rizkimotor-pos-nexjs:main
+
+# Atau pull manual
+docker pull rizkikotet/rizkimotor-pos-nexjs:main
+docker run -d -p 3000:3000 -v ./data:/app/data rizkikotet/rizkimotor-pos-nexjs:main
+```
+
+#### Mode 2: Build Lokal (Development)
+
+```bash
+# 1. Clone
 git clone [repository-url]
 cd rizkimotor
 mkdir -p data
 
 # 2. Build & jalankan
-docker compose up -d --build
+docker compose --profile build up -d --build
 
-# 3. Setup database (pertama kali)
-docker compose exec app npx prisma db push
-
-# 4. Seed data (opsional)
-docker compose exec app npx tsx prisma/seed.ts
+# 3. Setup database
+docker compose --profile build exec app npx prisma db push
 ```
 
-Aplikasi berjalan di **http://localhost:3000**
-
-**Perintah Docker lainnya:**
+#### Perintah Docker
 
 ```bash
-docker compose up -d          # Jalankan di background
-docker compose down           # Stop container
-docker compose logs -f        # Lihat log
-docker compose exec app sh    # Shell ke container
-docker compose restart        # Restart container
+# Mode pull (default)
+docker compose up -d
+docker compose down
+docker compose logs -f
+
+# Mode build lokal
+docker compose --profile build up -d --build
+docker compose --profile build down
+
+# Lihat image
+docker images | grep rizki-motor
 ```
 
-**Build manual tanpa Compose:**
+#### File Docker
 
-```bash
-docker build -t rizki-motor .
-docker run -d \
-  --name rizki-motor \
-  -p 3000:3000 \
-  -v $(pwd)/data:/app/data \
-  -e NEXTAUTH_SECRET="your-secret" \
-  rizki-motor
-```
-
-**File Docker:**
+| File | Keterangan |
+|------|------------|
+| `Dockerfile` | Multi-stage build (deps → build → production) |
+| `docker-compose.yml` | 2 service: default (pull) + build (lokal) |
+| `.dockerignore` | File yang di-exclude dari build |
 | File | Keterangan |
 |------|------------|
 | `Dockerfile` | Multi-stage build (deps → build → production) |
@@ -504,10 +535,10 @@ git push origin main
 
 ```bash
 # Dari DockerHub
-docker pull [username]/rizki-motor:main
+docker pull rizkikotet/rizkimotor-pos-nexjs:main
 
 # Dari GHCR
-docker pull ghcr.io/[username]/rizki-motor:main
+docker pull ghcr.io/rizkikotet-dev/rizkimotor-pos-nexjs:main
 
 # Jalankan (keduanya sama)
 docker run -d \
@@ -515,7 +546,7 @@ docker run -d \
   -p 3000:3000 \
   -v $(pwd)/data:/app/data \
   -e NEXTAUTH_SECRET="your-secret" \
-  [username]/rizki-motor:main
+  rizkikotet/rizkimotor-pos-nexjs:main
 ```
 
 ### Tag yang Dihasilkan

@@ -1,5 +1,25 @@
 services:
-  app:
+  # app:
+  #   image: ghcr.io/rizkikotet-dev/rizkimotor-pos-nexjs:main
+  #   container_name: rizki-motor
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - DATABASE_URL=file:/app/data/prod.db
+  #     - NEXTAUTH_URL=http://localhost:3000
+  #     - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-change-this-in-production}
+  #   volumes:
+  #     - ./data:/app/data
+  #   healthcheck:
+  #     test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 10s
+
+  # Jalankan: docker compose --profile build up
+  build:
     build: .
     container_name: rizki-motor
     restart: unless-stopped
@@ -17,3 +37,5 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+    profiles:
+      - build
