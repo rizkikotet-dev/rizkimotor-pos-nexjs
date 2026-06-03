@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatRupiah, formatDateTime } from "@/lib/format";
 import { Printer } from "lucide-react";
+import { FadeIn } from "@/components/ui/FadeIn";
 
 export const dynamic = "force-dynamic";
 
@@ -23,19 +24,22 @@ export default async function PosRiwayatPage() {
 
   return (
     <div className="page-container">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 tracking-tight">Riwayat Transaksi</h1>
-          <p className="text-sm text-zinc-500 mt-1">
-            {user.role === "ADMIN" ? "Semua transaksi" : "Transaksi Anda"} &middot; Total:{" "}
-            <span className="font-bold text-primary">
-              {formatRupiah(totalAgg._sum.total ?? 0)}
-            </span>
-          </p>
+      <FadeIn>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 tracking-tight">Riwayat Transaksi</h1>
+            <p className="text-sm text-zinc-500 mt-1">
+              {user.role === "ADMIN" ? "Semua transaksi" : "Transaksi Anda"} &middot; Total:{" "}
+              <span className="font-bold text-primary">
+                {formatRupiah(totalAgg._sum.total ?? 0)}
+              </span>
+            </p>
+          </div>
         </div>
-      </div>
+      </FadeIn>
 
-      <div className="card overflow-hidden">
+      <FadeIn delay={100}>
+        <div className="card overflow-hidden">
         {transactions.length === 0 ? (
           <p className="p-12 text-center text-sm text-zinc-500">Belum ada transaksi.</p>
         ) : (
@@ -84,6 +88,7 @@ export default async function PosRiwayatPage() {
           </div>
         )}
       </div>
+      </FadeIn>
     </div>
   );
 }

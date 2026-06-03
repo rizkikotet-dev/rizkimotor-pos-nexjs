@@ -2,6 +2,7 @@ import { getSettings } from "@/lib/settings";
 import { prisma } from "@/lib/prisma";
 import { SettingsForm } from "./SettingsForm";
 import { Settings } from "lucide-react";
+import { FadeIn } from "@/components/ui/FadeIn";
 
 export const dynamic = "force-dynamic";
 
@@ -13,15 +14,19 @@ export default async function PengaturanPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <div className="flex items-center gap-2">
-          <Settings className="h-5 w-5 text-primary" />
-          <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 tracking-tight">Pengaturan</h1>
+      <FadeIn>
+        <div className="mb-6">
+          <div className="flex items-center gap-2">
+            <Settings className="h-5 w-5 text-primary" />
+            <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 tracking-tight">Pengaturan</h1>
+          </div>
+          <p className="text-sm text-zinc-500 mt-0.5">Kelola informasi toko, jam operasional, dan metode pembayaran.</p>
         </div>
-        <p className="text-sm text-zinc-500 mt-0.5">Kelola informasi toko, jam operasional, dan metode pembayaran.</p>
-      </div>
+      </FadeIn>
 
-      <SettingsForm initialSettings={settings} categories={categories} />
+      <FadeIn delay={100}>
+        <SettingsForm initialSettings={settings} categories={categories} />
+      </FadeIn>
     </div>
   );
 }

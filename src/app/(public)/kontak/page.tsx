@@ -1,5 +1,6 @@
 import { getSettings } from "@/lib/settings";
 import { MapPin, Phone, Clock, Wrench } from "lucide-react";
+import { FadeIn } from "@/components/ui/FadeIn";
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +9,8 @@ export default async function KontakPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
-      <div className="max-w-2xl mx-auto text-center mb-12">
+      <FadeIn>
+        <div className="max-w-2xl mx-auto text-center mb-12">
         <div className="inline-flex items-center justify-center w-10 h-10 bg-primary/10 rounded-lg mb-4 border border-primary/20">
           <Wrench className="h-5 w-5 text-primary" />
         </div>
@@ -20,7 +22,9 @@ export default async function KontakPage() {
           Ada pertanyaan tentang produk atau pesanan? Jangan ragu untuk menghubungi kami.
         </p>
       </div>
+      </FadeIn>
 
+      <FadeIn delay={100}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
         {[
           {
@@ -65,7 +69,9 @@ export default async function KontakPage() {
           </div>
         ))}
       </div>
+      </FadeIn>
 
+      <FadeIn delay={200}>
       {settings["store.mapsEmbedUrl"] && (
         <div className="mt-10 max-w-3xl mx-auto">
           <div className="card overflow-hidden border-surface-outline-variant">
@@ -82,6 +88,7 @@ export default async function KontakPage() {
           </div>
         </div>
       )}
+      </FadeIn>
     </div>
   );
 }

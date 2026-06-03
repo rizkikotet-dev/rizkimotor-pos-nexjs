@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/public/ProductCard";
 import { Search, X, SlidersHorizontal } from "lucide-react";
+import { FadeIn } from "@/components/ui/FadeIn";
 
 export const dynamic = "force-dynamic";
 
@@ -37,18 +38,21 @@ export default async function ProductListPage({ searchParams }: PageProps) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
-      <div className="mb-6 lg:mb-8">
-        <p className="text-[10px] font-mono text-primary uppercase tracking-widest mb-1">Katalog</p>
-        <h1 className="text-2xl sm:text-3xl font-bold text-zinc-100 tracking-tight">
-          Katalog Produk
-        </h1>
-        <p className="text-sm text-zinc-500 mt-1 font-mono">
-          {products.length} produk tersedia {query && `untuk "${query}"`}
-        </p>
-      </div>
+      <FadeIn>
+        <div className="mb-6 lg:mb-8">
+          <p className="text-[10px] font-mono text-primary uppercase tracking-widest mb-1">Katalog</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-zinc-100 tracking-tight">
+            Katalog Produk
+          </h1>
+          <p className="text-sm text-zinc-500 mt-1 font-mono">
+            {products.length} produk tersedia {query && `untuk "${query}"`}
+          </p>
+        </div>
+      </FadeIn>
 
       <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 lg:gap-8">
-        <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start" aria-label="Filter produk">
+        <FadeIn delay={100}>
+          <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start" aria-label="Filter produk">
           <form className="relative" role="search" aria-label="Cari produk">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" aria-hidden="true" />
             <input
@@ -107,7 +111,9 @@ export default async function ProductListPage({ searchParams }: PageProps) {
             </ul>
           </div>
         </aside>
+        </FadeIn>
 
+        <FadeIn delay={200}>
         <div>
           {products.length === 0 ? (
             <div className="card p-12 text-center">
@@ -136,6 +142,7 @@ export default async function ProductListPage({ searchParams }: PageProps) {
             </div>
           )}
         </div>
+        </FadeIn>
       </div>
     </div>
   );

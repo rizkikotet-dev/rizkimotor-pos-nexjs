@@ -3,6 +3,7 @@ import { ArrowRight, ShieldCheck, Truck, Tag, ChevronRight, Zap } from "lucide-r
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { ProductCard } from "@/components/public/ProductCard";
+import { FadeIn } from "@/components/ui/FadeIn";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,7 @@ export default async function HomePage() {
 
   return (
     <div>
+      <FadeIn direction="none">
       <section className="relative bg-surface-base border-b border-surface-outline-variant overflow-hidden" aria-labelledby="hero-heading">
         <div className="absolute inset-0 dark-grid opacity-50" aria-hidden="true" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[120px]" aria-hidden="true" />
@@ -73,7 +75,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      </FadeIn>
 
+      <FadeIn delay={100}>
       <section className="bg-surface-container-low border-b border-surface-outline-variant" aria-label="Statistik toko">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-3 divide-x divide-surface-outline-variant">
@@ -90,7 +94,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      </FadeIn>
 
+      <FadeIn delay={200}>
       <section className="py-14 lg:py-20" aria-labelledby="features-heading">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-10">
@@ -147,7 +153,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      </FadeIn>
 
+      <FadeIn delay={300}>
       {latestProducts.length > 0 && (
         <section className="py-14 lg:py-20 border-t border-surface-outline-variant" aria-labelledby="products-heading">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -181,7 +189,9 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+      </FadeIn>
 
+      <FadeIn delay={400}>
       <section className="py-14 lg:py-20 border-t border-surface-outline-variant" aria-labelledby="cta-heading">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="card-dark p-10 sm:p-14 text-center relative overflow-hidden">
@@ -210,6 +220,7 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      </FadeIn>
     </div>
   );
 }
