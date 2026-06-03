@@ -12,6 +12,7 @@ import {
   Wrench,
   ChevronLeft,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -97,6 +98,10 @@ export function AdminSidebar({ collapsed = false, onToggle }: SidebarProps) {
           </nav>
 
           <div className="border-t border-surface-outline-variant p-2 space-y-0.5 pb-20 lg:pb-2">
+            <div className="flex items-center justify-between px-2.5 py-1.5">
+              <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">Tampilan</span>
+              <ThemeToggle />
+            </div>
             <Link
               href="/"
               className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-zinc-500 hover:text-zinc-300 hover:bg-surface-container-high transition-colors min-h-[44px]"

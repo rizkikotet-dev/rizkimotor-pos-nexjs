@@ -3,6 +3,7 @@ import { Wrench, LayoutDashboard } from "lucide-react";
 import { getSettings } from "@/lib/settings";
 import { getCurrentUser } from "@/lib/auth";
 import { PublicMobileNav } from "./PublicMobileNav";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export async function PublicHeader() {
   const [settings, user] = await Promise.all([getSettings(), getCurrentUser()]);
@@ -48,7 +49,8 @@ export async function PublicHeader() {
               ))}
             </nav>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <ThemeToggle />
               {user ? (
                 <Link
                   href={user.role === "ADMIN" ? "/admin" : "/pos"}
