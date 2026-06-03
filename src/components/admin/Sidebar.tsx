@@ -14,6 +14,8 @@ import {
   Wrench,
   ChevronLeft,
   Barcode,
+  UserCircle,
+  DollarSign,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -29,6 +31,8 @@ const navItems = [
   { href: "/admin/kategori", label: "Kategori", icon: Tag },
   { href: "/admin/barcode", label: "Cetak Barcode", icon: Barcode },
   { href: "/admin/transaksi", label: "Transaksi", icon: ShoppingCart },
+  { href: "/admin/pelanggan", label: "Pelanggan", icon: UserCircle },
+  { href: "/admin/utang-piutang", label: "Utang Piutang", icon: DollarSign },
   { href: "/admin/pengguna", label: "Pengguna", icon: Users },
   { href: "/admin/pengaturan", label: "Pengaturan", icon: Settings },
 ];

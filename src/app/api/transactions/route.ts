@@ -23,6 +23,8 @@ const createSchema = z.object({
   items: z.array(z.union([dbItemSchema, manualItemSchema])).min(1, "Minimal 1 item"),
   payment: z.number().int().nonnegative(),
   note: z.string().max(200).optional().nullable(),
+  customerId: z.number().int().positive().optional().nullable(),
+  isDebt: z.boolean().optional(),
 });
 
 export async function GET(req: NextRequest) {
@@ -118,14 +120,15 @@ export async function POST(req: NextRequest) {
   }
 
   // Validasi pembayaran
-  if (parsed.data.payment < total) {
+  const isDebt = parsed.data.isDebt === true && parsed.data.customerId;
+  if (!isDebt && parsed.data.payment < total) {
     return NextResponse.json(
       { error: `Bayar kurang. Total: ${total}, Bayar: ${parsed.data.payment}` },
       { status: 400 }
     );
   }
 
-  const change = parsed.data.payment - total;
+  const change = Math.max(0, parsed.data.payment - total);
   const invoiceNo = generateInvoiceNo();
 
   // DB transaction
@@ -134,6 +137,7 @@ export async function POST(req: NextRequest) {
       data: {
         invoiceNo,
         userId: parseInt(user.id),
+        customerId: parsed.data.customerId || null,
         total,
         payment: parsed.data.payment,
         change,
@@ -151,6 +155,22 @@ export async function POST(req: NextRequest) {
       },
       include: { items: true },
     });
+
+    // Buat utang jika transaksi kredit
+    if (isDebt && parsed.data.customerId) {
+      const debtAmount = total - parsed.data.payment;
+      if (debtAmount > 0) {
+        await tx.debt.create({
+          data: {
+            transactionId: t.id,
+            customerId: parsed.data.customerId,
+            amount: debtAmount,
+            paid: 0,
+            status: "UNPAID",
+          },
+        });
+      }
+    }
 
     // Decrement stok hanya untuk item DB
     for (const item of dbItems) {

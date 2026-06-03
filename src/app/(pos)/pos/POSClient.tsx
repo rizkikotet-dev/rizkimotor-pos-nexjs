@@ -25,6 +25,13 @@ interface CartItem {
   quantity: number;
   maxStock: number;
 }
+
+interface Customer {
+  id: number;
+  name: string;
+  phone: string | null;
+}
+
 import { formatRupiah } from "@/lib/format";
 import {
   ShoppingCart,
@@ -50,11 +57,19 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const cartEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     searchInputRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/customers")
+      .then((r) => r.json())
+      .then((data) => setCustomers(data))
+      .catch(() => {});
   }, []);
 
   const filtered = products.filter((p) => {
@@ -124,7 +139,7 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
     setShowPayment(true);
   }
 
-  async function handleConfirmPayment(paymentAmount: number) {
+  async function handleConfirmPayment(paymentAmount: number, customerId: number | null, isDebt: boolean) {
     setSubmitting(true);
 
     try {
@@ -139,6 +154,8 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
           })),
           payment: paymentAmount,
           note: null,
+          customerId,
+          isDebt,
         }),
       });
 
@@ -340,6 +357,7 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
         onConfirm={handleConfirmPayment}
         grandTotal={grandTotal}
         submitting={submitting}
+        customers={customers}
       />
     </div>
   );
