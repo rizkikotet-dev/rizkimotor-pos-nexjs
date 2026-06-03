@@ -40,11 +40,11 @@ export function UserForm({ action, initial, isEdit }: UserFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
       <div className="flex items-center justify-between">
-        <Link href="/admin/pengguna" className="btn-ghost text-sm" aria-label="Kembali ke daftar pengguna">
+        <Link href="/admin/pengguna" className="btn-ghost" aria-label="Kembali ke daftar pengguna">
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Kembali
         </Link>
-        <button type="submit" disabled={pending} className="btn-primary text-sm min-h-[44px]" aria-label={pending ? "Menyimpan pengguna" : isEdit ? "Simpan perubahan pengguna" : "Buat pengguna baru"}>
+        <button type="submit" disabled={pending} className="btn-primary" aria-label={pending ? "Menyimpan pengguna" : isEdit ? "Simpan perubahan pengguna" : "Buat pengguna baru"}>
           {pending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Save className="h-4 w-4" aria-hidden="true" />}
           {isEdit ? "Simpan Perubahan" : "Buat Pengguna"}
         </button>
@@ -130,7 +130,7 @@ export function UserForm({ action, initial, isEdit }: UserFormProps) {
             name="role"
             required
             defaultValue={initial?.role ?? "KASIR"}
-            className="input bg-white min-h-[44px]"
+            className="select min-h-[44px]"
             aria-required="true"
           >
             <option value="KASIR">KASIR — Hanya POS</option>

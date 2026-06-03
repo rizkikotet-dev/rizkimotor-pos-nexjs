@@ -65,7 +65,7 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
       <style dangerouslySetInnerHTML={{ __html: printPageCss }} />
 
       <div className="max-w-md mx-auto no-print mb-3 px-3 flex items-center justify-between gap-2">
-        <Link href={backUrl} className="btn-ghost text-sm min-h-[44px] min-w-[56px]" aria-label="Kembali ke riwayat transaksi">
+        <Link href={backUrl} className="btn-ghost min-h-[44px] min-w-[56px]" aria-label="Kembali ke riwayat transaksi">
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Kembali
         </Link>
@@ -93,7 +93,7 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
           </button>
         </div>
 
-        <button onClick={handlePrint} className="btn-primary text-sm print:hidden min-h-[44px] min-w-[56px]" aria-label={`Cetak struk ukuran ${paperSize}`}>
+        <button onClick={handlePrint} className="btn-primary print:hidden min-h-[44px] min-w-[56px]" aria-label={`Cetak struk ukuran ${paperSize}`}>
           <Printer className="h-4 w-4" aria-hidden="true" />
           Cetak
         </button>

@@ -182,27 +182,27 @@ export function SettingsForm({ initialSettings, categories }: SettingsFormProps)
           <p className="text-xs font-medium text-zinc-400 mb-3">Tampilkan di Struk:</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" name="receipt.showAddress" value="true" defaultChecked={initialSettings["receipt.showAddress"] === "true"} className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500" />
+              <input type="checkbox" name="receipt.showAddress" value="true" defaultChecked={initialSettings["receipt.showAddress"] === "true"} className="w-4 h-4 rounded border-surface-outline bg-surface-container text-primary focus:ring-primary" />
               <span className="text-xs text-zinc-300">Alamat</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" name="receipt.showPhone" value="true" defaultChecked={initialSettings["receipt.showPhone"] === "true"} className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500" />
+              <input type="checkbox" name="receipt.showPhone" value="true" defaultChecked={initialSettings["receipt.showPhone"] === "true"} className="w-4 h-4 rounded border-surface-outline bg-surface-container text-primary focus:ring-primary" />
               <span className="text-xs text-zinc-300">Telepon</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" name="receipt.showEmail" value="true" defaultChecked={initialSettings["receipt.showEmail"] === "true"} className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500" />
+              <input type="checkbox" name="receipt.showEmail" value="true" defaultChecked={initialSettings["receipt.showEmail"] === "true"} className="w-4 h-4 rounded border-surface-outline bg-surface-container text-primary focus:ring-primary" />
               <span className="text-xs text-zinc-300">Email</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" name="receipt.showWebsite" value="true" defaultChecked={initialSettings["receipt.showWebsite"] === "true"} className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500" />
+              <input type="checkbox" name="receipt.showWebsite" value="true" defaultChecked={initialSettings["receipt.showWebsite"] === "true"} className="w-4 h-4 rounded border-surface-outline bg-surface-container text-primary focus:ring-primary" />
               <span className="text-xs text-zinc-300">Website</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" name="receipt.showKasir" value="true" defaultChecked={initialSettings["receipt.showKasir"] === "true"} className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500" />
+              <input type="checkbox" name="receipt.showKasir" value="true" defaultChecked={initialSettings["receipt.showKasir"] === "true"} className="w-4 h-4 rounded border-surface-outline bg-surface-container text-primary focus:ring-primary" />
               <span className="text-xs text-zinc-300">Nama Kasir</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" name="receipt.showInvoiceDate" value="true" defaultChecked={initialSettings["receipt.showInvoiceDate"] === "true"} className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500" />
+              <input type="checkbox" name="receipt.showInvoiceDate" value="true" defaultChecked={initialSettings["receipt.showInvoiceDate"] === "true"} className="w-4 h-4 rounded border-surface-outline bg-surface-container text-primary focus:ring-primary" />
               <span className="text-xs text-zinc-300">Tanggal & Jam</span>
             </label>
           </div>
@@ -232,7 +232,7 @@ export function SettingsForm({ initialSettings, categories }: SettingsFormProps)
         </div>
       </div>
 
-      <button type="submit" disabled={loading} className="btn-primary px-5 py-2.5 text-sm">
+      <button type="submit" disabled={loading} className="btn-primary">
         {loading ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />

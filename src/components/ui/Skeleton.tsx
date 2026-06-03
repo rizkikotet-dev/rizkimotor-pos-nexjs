@@ -13,7 +13,7 @@ export function Skeleton({ className = "", rounded = "md" }: SkeletonProps) {
 
   return (
     <div
-      className={`animate-pulse bg-zinc-800/50 ${roundedMap[rounded]} ${className}`}
+      className={`animate-pulse bg-surface-container-high ${roundedMap[rounded]} ${className}`}
       aria-hidden="true"
     />
   );

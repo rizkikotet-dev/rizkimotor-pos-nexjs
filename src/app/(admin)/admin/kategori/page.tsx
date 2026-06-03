@@ -55,7 +55,7 @@ export default async function CategoryPage() {
               placeholder="Contoh: Oli, Ban, Kampas Rem..."
               className="input flex-1"
             />
-            <button type="submit" className="btn-primary px-4 py-2 text-sm">
+            <button type="submit" className="btn-primary">
               Simpan
             </button>
           </form>

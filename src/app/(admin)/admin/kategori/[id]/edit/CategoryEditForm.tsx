@@ -85,10 +85,10 @@ export function CategoryEditForm({ category }: CategoryEditFormProps) {
         />
       </div>
 
-      <div className="flex items-center gap-3 pt-2">
+      <div className="flex items-center gap-3 pt-4 border-t border-surface-outline-variant">
         <Link
           href="/admin/kategori"
-          className="btn-secondary px-4 py-2 text-sm min-h-[44px]"
+          className="btn-secondary"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Batal
@@ -96,7 +96,7 @@ export function CategoryEditForm({ category }: CategoryEditFormProps) {
         <button
           type="submit"
           disabled={loading || !name.trim()}
-          className="btn-primary px-4 py-2 text-sm min-h-[44px]"
+          className="btn-primary"
         >
           {loading ? (
             <>

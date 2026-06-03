@@ -75,7 +75,7 @@ export default async function PosRiwayatPage() {
                       <Link
                         href={`/pos/struk/${t.id}`}
                         target="_blank"
-                        className="btn-ghost text-xs px-2.5 py-1.5"
+                        className="btn-ghost btn-sm"
                       >
                         <Printer className="h-3.5 w-3.5" aria-hidden="true" />
                         Struk

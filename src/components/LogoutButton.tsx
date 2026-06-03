@@ -18,7 +18,7 @@ export function LogoutButton({ className = "" }: LogoutButtonProps) {
   return (
     <button
       onClick={handleLogout}
-      className={`items-center gap-2 btn-secondary text-sm px-3 py-1.5 min-h-[36px] text-zinc-500 hover:text-red-400 hover:border-red-500/20 ${className}`}
+      className={`items-center gap-2 btn-secondary btn-md text-zinc-500 hover:text-red-400 hover:border-red-500/20 ${className}`}
       aria-label="Logout"
     >
       <LogOut className="h-4 w-4" aria-hidden="true" />

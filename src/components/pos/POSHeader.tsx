@@ -52,7 +52,7 @@ export async function POSHeader() {
             {isAdmin && (
               <Link
                 href="/admin"
-                className="hidden sm:flex items-center gap-2 btn-secondary text-sm px-3 py-1.5 min-h-[36px]"
+                className="hidden sm:flex items-center gap-2 btn-secondary btn-md"
                 aria-label="Admin Panel"
               >
                 <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
@@ -61,7 +61,7 @@ export async function POSHeader() {
             )}
             <Link
               href="/"
-              className="hidden sm:flex items-center gap-2 btn-secondary text-sm px-3 py-1.5 min-h-[36px]"
+              className="hidden sm:flex items-center gap-2 btn-secondary btn-md"
               aria-label="Katalog"
             >
               <Wrench className="h-4 w-4" aria-hidden="true" />

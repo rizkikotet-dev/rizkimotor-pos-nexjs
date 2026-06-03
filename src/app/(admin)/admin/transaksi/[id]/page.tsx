@@ -31,7 +31,7 @@ export default async function AdminTransactionDetailPage({ params }: PageProps) 
         <Link
           href={`/pos/struk/${transaction.id}?from=admin`}
           target="_blank"
-          className="btn-primary text-sm px-4 py-2"
+          className="btn-primary"
         >
           <Printer className="h-4 w-4" />
           Cetak Struk

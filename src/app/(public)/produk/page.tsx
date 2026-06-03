@@ -129,7 +129,7 @@ export default async function ProductListPage({ searchParams }: PageProps) {
                 Coba gunakan kata kunci lain atau pilih kategori berbeda.
               </p>
               {query && (
-                <Link href="/produk" className="btn-secondary text-sm">
+                <Link href="/produk" className="btn-secondary">
                   Lihat semua produk
                 </Link>
               )}

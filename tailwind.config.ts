@@ -10,7 +10,7 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#a78bfa",
+          DEFAULT: "var(--primary)",
           50: "#f5f3ff",
           100: "#ede9fe",
           200: "#ddd6fe",
@@ -33,7 +33,7 @@ const config: Config = {
           "outline-variant": "var(--surface-outline-variant)",
         },
         emerald: {
-          DEFAULT: "#34d399",
+          DEFAULT: "var(--emerald)",
           50: "#ecfdf5",
           100: "#d1fae5",
           200: "#a7f3d0",
@@ -46,7 +46,7 @@ const config: Config = {
           900: "#064e3b",
         },
         red: {
-          DEFAULT: "#ef4444",
+          DEFAULT: "var(--red)",
           50: "#fef2f2",
           100: "#fee2e2",
           200: "#fecaca",
@@ -72,7 +72,7 @@ const config: Config = {
           950: "#09090b",
         },
         amber: {
-          DEFAULT: "#f59e0b",
+          DEFAULT: "var(--amber)",
           400: "#fbbf24",
           500: "#f59e0b",
           600: "#d97706",
@@ -93,6 +93,14 @@ const config: Config = {
       },
       boxShadow: {
         none: "none",
+      },
+      zIndex: {
+        dropdown: "50",
+        sticky: "60",
+        "modal-backdrop": "70",
+        modal: "80",
+        toast: "90",
+        tooltip: "100",
       },
       keyframes: {
         "fade-in": {

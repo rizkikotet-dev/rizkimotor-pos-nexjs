@@ -68,10 +68,10 @@ export function BarcodePageClient({ products }: BarcodePageClientProps) {
       {/* Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <div className="flex items-center gap-2">
-          <button onClick={selectAll} className="btn-ghost text-xs px-3 py-1.5">
+          <button onClick={selectAll} className="btn-ghost btn-sm">
             Pilih Semua
           </button>
-          <button onClick={clearSelection} className="btn-ghost text-xs px-3 py-1.5">
+          <button onClick={clearSelection} className="btn-ghost btn-sm">
             Hapus Pilihan
           </button>
           <span className="text-xs text-zinc-500">{selected.size} dipilih</span>
@@ -96,7 +96,7 @@ export function BarcodePageClient({ products }: BarcodePageClientProps) {
           <button
             onClick={handlePrint}
             disabled={selected.size === 0}
-            className="btn-primary text-sm px-4 py-2 disabled:opacity-50"
+            className="btn-primary disabled:opacity-50"
           >
             <Printer className="h-4 w-4" />
             Cetak ({selected.size})
@@ -113,7 +113,7 @@ export function BarcodePageClient({ products }: BarcodePageClientProps) {
               type="checkbox"
               checked={showNormal}
               onChange={(e) => setShowNormal(e.target.checked)}
-              className="w-3.5 h-3.5 rounded border-zinc-600 bg-zinc-800 text-blue-500"
+              className="w-3.5 h-3.5 rounded border-surface-outline bg-surface-container text-primary"
             />
             <span className="text-xs text-zinc-300">Normal (HJ)</span>
           </label>
@@ -122,7 +122,7 @@ export function BarcodePageClient({ products }: BarcodePageClientProps) {
               type="checkbox"
               checked={showCost}
               onChange={(e) => setShowCost(e.target.checked)}
-              className="w-3.5 h-3.5 rounded border-zinc-600 bg-zinc-800 text-blue-500"
+              className="w-3.5 h-3.5 rounded border-surface-outline bg-surface-container text-primary"
             />
             <span className="text-xs text-zinc-300">Modal (HB)</span>
           </label>
@@ -131,7 +131,7 @@ export function BarcodePageClient({ products }: BarcodePageClientProps) {
               type="checkbox"
               checked={showReseller}
               onChange={(e) => setShowReseller(e.target.checked)}
-              className="w-3.5 h-3.5 rounded border-zinc-600 bg-zinc-800 text-blue-500"
+              className="w-3.5 h-3.5 rounded border-surface-outline bg-surface-container text-primary"
             />
             <span className="text-xs text-zinc-300">Reseller (HR)</span>
           </label>
@@ -214,7 +214,7 @@ export function BarcodePageClient({ products }: BarcodePageClientProps) {
                       type="checkbox"
                       checked={selected.has(product.id)}
                       onChange={() => toggleProduct(product)}
-                      className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-blue-500"
+className="w-4 h-4 rounded border-surface-outline bg-surface-container text-primary"
                       onClick={(e) => e.stopPropagation()}
                     />
                   </td>

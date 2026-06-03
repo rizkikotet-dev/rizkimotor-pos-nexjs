@@ -19,7 +19,7 @@ export default async function AdminPenggunaPage() {
             <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 tracking-tight">Pengguna</h1>
             <p className="text-sm text-zinc-500 mt-0.5 font-mono">{users.length} pengguna terdaftar</p>
           </div>
-          <Link href="/admin/pengguna/tambah" className="btn-primary text-sm px-4 py-2">
+          <Link href="/admin/pengguna/tambah" className="btn-primary">
             <Plus className="h-4 w-4" />
             Tambah Pengguna
           </Link>

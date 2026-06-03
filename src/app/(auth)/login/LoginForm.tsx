@@ -131,7 +131,7 @@ export function LoginForm() {
             <button
               type="submit"
               disabled={loading || !username || !password}
-              className="btn-primary w-full py-2.5 text-sm mt-1 min-h-[44px]"
+              className="btn-primary w-full mt-1"
             >
               {loading ? (
                 <>

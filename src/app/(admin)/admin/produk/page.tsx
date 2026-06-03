@@ -43,7 +43,7 @@ export default async function AdminProdukPage({ searchParams }: PageProps) {
             <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 tracking-tight">Produk</h1>
             <p className="text-sm text-zinc-500 mt-0.5 font-mono">{products.length} produk ditemukan</p>
           </div>
-          <Link href="/admin/produk/tambah" className="btn-primary text-sm px-4 py-2">
+          <Link href="/admin/produk/tambah" className="btn-primary">
             <Plus className="h-4 w-4" />
             Tambah Produk
           </Link>

@@ -26,7 +26,7 @@ export default async function HomePage() {
       <section className="relative bg-surface-base border-b border-surface-outline-variant overflow-hidden" aria-labelledby="hero-heading">
         <div className="absolute inset-0 dark-grid opacity-50" aria-hidden="true" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[120px]" aria-hidden="true" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-500/3 rounded-full blur-[120px]" aria-hidden="true" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-[120px]" aria-hidden="true" />
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 md:py-28">
           <div className="max-w-2xl">
@@ -48,14 +48,14 @@ export default async function HomePage() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/produk"
-                className="btn-primary px-6 py-2.5 text-sm group"
+                className="btn-primary group"
               >
                 Jelajahi Katalog
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
               </Link>
               <Link
                 href="/kontak"
-                className="btn-secondary px-6 py-2.5 text-sm"
+                className="btn-secondary"
               >
                 Hubungi Kami
               </Link>
@@ -64,13 +64,13 @@ export default async function HomePage() {
 
           <div className="hidden lg:flex absolute right-12 top-1/2 -translate-y-1/2 flex-col items-end gap-4" aria-hidden="true">
             <div className="text-right">
-              <p className="text-6xl font-bold text-zinc-800 leading-none">{productCount}+</p>
-              <p className="text-[10px] text-zinc-600 font-mono uppercase tracking-widest mt-1">Produk</p>
+              <p className="text-6xl font-bold text-zinc-300 leading-none">{productCount}+</p>
+              <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest mt-1">Produk</p>
             </div>
             <div className="w-px h-16 bg-surface-outline-variant" aria-hidden="true" />
             <div className="text-right">
-              <p className="text-6xl font-bold text-zinc-800 leading-none">{categoryCount}</p>
-              <p className="text-[10px] text-zinc-600 font-mono uppercase tracking-widest mt-1">Kategori</p>
+              <p className="text-6xl font-bold text-zinc-300 leading-none">{categoryCount}</p>
+              <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest mt-1">Kategori</p>
             </div>
           </div>
         </div>
@@ -197,7 +197,7 @@ export default async function HomePage() {
           <div className="card-dark p-10 sm:p-14 text-center relative overflow-hidden">
             <div className="absolute inset-0 dark-grid opacity-30" aria-hidden="true" />
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" aria-hidden="true" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/3 rounded-full blur-[80px]" aria-hidden="true" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px]" aria-hidden="true" />
 
             <div className="relative z-10 max-w-md mx-auto">
               <Zap className="h-6 w-6 text-primary mx-auto mb-4" aria-hidden="true" />
@@ -208,11 +208,11 @@ export default async function HomePage() {
                 Tim kami siap membantu Anda menemukan sparepart yang tepat.
               </p>
               <div className="flex flex-wrap gap-3 justify-center">
-                <Link href="/kontak" className="btn-primary px-6 py-2.5">
+                <Link href="/kontak" className="btn-primary">
                   Hubungi Kami
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
-                <Link href="/produk" className="btn-secondary px-6 py-2.5">
+                <Link href="/produk" className="btn-secondary">
                   Lihat Katalog
                 </Link>
               </div>

@@ -83,10 +83,10 @@ export async function PublicFooter() {
         </div>
 
         <div className="border-t border-surface-outline-variant mt-8 pt-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm">
-          <p className="text-zinc-600 text-xs font-mono">
+          <p className="text-zinc-500 text-xs font-mono">
             &copy; {new Date().getFullYear()} {s["store.name"]}
           </p>
-          <p className="text-[10px] text-zinc-700 font-mono uppercase tracking-widest">
+          <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">
             Sparepart Motor Terpercaya
           </p>
         </div>

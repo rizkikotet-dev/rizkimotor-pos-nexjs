@@ -90,11 +90,11 @@ export function ProductForm({ categories, action, initial, submitLabel = "Simpan
     <form onSubmit={handleSubmit} className="space-y-5" noValidate>
       {/* Back + Save bar */}
       <div className="flex items-center justify-between">
-        <Link href="/admin/produk" className="btn-ghost text-sm" aria-label="Kembali ke daftar produk">
+        <Link href="/admin/produk" className="btn-ghost" aria-label="Kembali ke daftar produk">
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Kembali
         </Link>
-        <button type="submit" disabled={pending || uploading} className="btn-primary text-sm min-h-[44px]" aria-label={pending ? "Menyimpan produk" : submitLabel}>
+        <button type="submit" disabled={pending || uploading} className="btn-primary" aria-label={pending ? "Menyimpan produk" : submitLabel}>
           {pending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Save className="h-4 w-4" aria-hidden="true" />}
           {submitLabel}
         </button>
@@ -136,7 +136,7 @@ export function ProductForm({ categories, action, initial, submitLabel = "Simpan
                 name="categoryId"
                 required
                 defaultValue={initial?.categoryId}
-                className="input bg-white min-h-[44px]"
+                className="select min-h-[44px]"
                 aria-required="true"
               >
                 <option value="">Pilih kategori</option>
@@ -292,7 +292,7 @@ export function ProductForm({ categories, action, initial, submitLabel = "Simpan
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="btn-secondary text-sm mb-2 min-h-[44px] min-w-[56px] focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1"
+              className="btn-secondary mb-2 min-w-[56px] focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1"
               aria-label={uploading ? "Mengupload gambar" : "Pilih gambar dari komputer"}
             >
               {uploading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Upload className="h-4 w-4" aria-hidden="true" />}
@@ -322,11 +322,11 @@ export function ProductForm({ categories, action, initial, submitLabel = "Simpan
       </div>
 
       {/* Bottom save */}
-      <div className="flex items-center justify-end gap-3 pb-8 lg:pb-0">
-        <Link href="/admin/produk" className="btn-secondary text-sm min-h-[44px]" aria-label="Batal dan kembali">
+      <div className="flex items-center justify-end gap-3 pt-4 pb-8 lg:pb-0 border-t border-surface-outline-variant">
+        <Link href="/admin/produk" className="btn-secondary" aria-label="Batal dan kembali">
           Batal
         </Link>
-        <button type="submit" disabled={pending || uploading} className="btn-primary text-sm min-h-[44px]" aria-label={pending ? "Menyimpan produk" : submitLabel}>
+        <button type="submit" disabled={pending || uploading} className="btn-primary" aria-label={pending ? "Menyimpan produk" : submitLabel}>
           {pending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Save className="h-4 w-4" aria-hidden="true" />}
           {submitLabel}
         </button>

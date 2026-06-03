@@ -289,7 +289,7 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => updateQty(item.productId, item.price, -1)}
-                      className="w-8 h-8 flex items-center justify-center rounded border border-surface-outline-variant bg-surface-container-high text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 active:scale-90 transition-all"
+                      className="w-8 h-8 flex items-center justify-center rounded border border-surface-outline-variant bg-surface-container-high text-zinc-400 hover:text-zinc-200 hover:border-surface-outline active:scale-90 transition-all"
                       aria-label="Kurangi jumlah"
                     >
                       <Minus className="h-3 w-3" aria-hidden="true" />
@@ -298,7 +298,7 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
                     <button
                       onClick={() => updateQty(item.productId, item.price, 1)}
                       disabled={item.quantity >= item.maxStock}
-                      className="w-8 h-8 flex items-center justify-center rounded border border-surface-outline-variant bg-surface-container-high text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 active:scale-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="w-8 h-8 flex items-center justify-center rounded border border-surface-outline-variant bg-surface-container-high text-zinc-400 hover:text-zinc-200 hover:border-surface-outline active:scale-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                       aria-label="Tambah jumlah"
                     >
                       <Plus className="h-3 w-3" aria-hidden="true" />
@@ -321,7 +321,7 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
           <button
             onClick={submitOrder}
             disabled={cart.length === 0 || submitting}
-            className="btn-primary w-full py-2.5 text-sm min-h-[44px]"
+            className="btn-primary w-full"
             aria-label={submitting ? "Memproses pesanan" : "Buat Pesanan"}
           >
             {submitting ? (

@@ -203,7 +203,7 @@ export function ProductForm({ mode, categories, initialData }: ProductFormProps)
             name="categoryId"
             required
             defaultValue={initialData?.categoryId?.toString()}
-            className={`input ${fieldErrors.categoryId ? "!border-red-500 !ring-red-500/20" : ""}`}
+            className={`select ${fieldErrors.categoryId ? "!border-red-500 !ring-red-500/20" : ""}`}
             aria-invalid={!!fieldErrors.categoryId}
             aria-describedby={fieldErrors.categoryId ? "category-error" : undefined}
           >
@@ -304,7 +304,7 @@ export function ProductForm({ mode, categories, initialData }: ProductFormProps)
               </button>
             </div>
           ) : (
-            <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-surface-outline-variant rounded-lg cursor-pointer hover:border-zinc-600 transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+            <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-surface-outline-variant rounded-lg cursor-pointer hover:border-surface-outline transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
               <Upload className="h-6 w-6 text-zinc-600 mb-1" aria-hidden="true" />
               <span className="text-[10px] text-zinc-500 font-mono">Pilih gambar</span>
               <input
@@ -326,14 +326,14 @@ export function ProductForm({ mode, categories, initialData }: ProductFormProps)
             name="active"
             id="active"
             defaultChecked={initialData?.active ?? true}
-            className="h-4 w-4 rounded border-zinc-600 bg-surface-container-high text-primary focus:ring-primary/40"
+            className="h-4 w-4 rounded border-surface-outline bg-surface-container-high text-primary focus:ring-primary/40"
           />
           <label htmlFor="active" className="text-sm text-zinc-300 select-none">Aktif (ditampilkan di katalog)</label>
         </div>
       </div>
 
-      <div className="flex gap-2 pt-2">
-        <button type="submit" disabled={loading} className="btn-primary px-5 py-2.5 text-sm min-h-[44px]">
+      <div className="flex items-center gap-3 pt-4 border-t border-surface-outline-variant">
+        <button type="submit" disabled={loading} className="btn-primary">
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -345,7 +345,7 @@ export function ProductForm({ mode, categories, initialData }: ProductFormProps)
             "Tambah Produk"
           )}
         </button>
-        <button type="button" onClick={() => router.back()} className="btn-secondary px-5 py-2.5 text-sm min-h-[44px]">
+        <button type="button" onClick={() => router.back()} className="btn-secondary">
           Batal
         </button>
       </div>

@@ -54,14 +54,14 @@ export async function PublicHeader() {
               {user ? (
                 <Link
                   href={user.role === "ADMIN" ? "/admin" : "/pos"}
-                  className="btn-primary text-sm px-3 py-1.5 min-h-[36px]"
+                  className="btn-primary btn-md"
                   aria-label={`${user.role === "ADMIN" ? "Admin" : "POS"} Panel`}
                 >
                   <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
                   <span className="hidden sm:inline">Panel</span>
                 </Link>
               ) : (
-                <Link href="/login" className="btn-secondary text-sm px-3 py-1.5 min-h-[36px]">
+                <Link href="/login" className="btn-secondary btn-md">
                   Login
                 </Link>
               )}

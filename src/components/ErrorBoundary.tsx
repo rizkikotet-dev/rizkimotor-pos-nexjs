@@ -45,7 +45,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="btn-primary px-6 py-2.5"
+              className="btn-primary"
             >
               Muat Ulang Halaman
             </button>

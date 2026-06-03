@@ -31,7 +31,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           aria-describedby={
             error ? errorId : hint ? hintId : undefined
           }
-          className={`input bg-surface-container ${error ? "!border-red-500 !ring-red-500/20" : ""} ${className}`}
+          className={`select ${error ? "!border-red-500 !ring-red-500/20" : ""} ${className}`}
           {...props}
         >
           {options.map((opt) => (
