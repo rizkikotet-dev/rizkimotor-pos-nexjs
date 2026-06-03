@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Loader2 } from "lucide-react";
+import { Save, Loader2, Printer } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 
 interface SettingsFormProps {
@@ -25,8 +25,22 @@ export function SettingsForm({ initialSettings, categories }: SettingsFormProps)
       const form = new FormData(e.currentTarget);
       const settings: Record<string, string> = {};
 
+      const CHECKBOX_KEYS = [
+        "receipt.showAddress",
+        "receipt.showPhone",
+        "receipt.showEmail",
+        "receipt.showWebsite",
+        "receipt.showKasir",
+        "receipt.showInvoiceDate",
+      ];
+      for (const key of CHECKBOX_KEYS) {
+        settings[key] = form.has(key) ? "true" : "false";
+      }
+
       for (const [key, value] of form.entries()) {
-        settings[key] = value as string;
+        if (!CHECKBOX_KEYS.includes(key)) {
+          settings[key] = value as string;
+        }
       }
 
       const res = await fetch("/api/settings", {
@@ -130,6 +144,68 @@ export function SettingsForm({ initialSettings, categories }: SettingsFormProps)
           <p className="text-[10px] text-zinc-500 mt-1.5 font-mono">
             Harga reseller hanya berlaku untuk produk di kategori ini.
           </p>
+        </div>
+      </div>
+
+      {/* Receipt / Printer settings */}
+      <div className="card p-5">
+        <h3 className="text-sm font-bold text-zinc-200 mb-1 flex items-center gap-2">
+          <Printer className="h-4 w-4" />
+          Pengaturan Struk / Printer
+        </h3>
+        <p className="text-[10px] text-zinc-500 mb-4 font-mono">Konfigurasi tampilan struk printer thermal</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>Ukuran Kertas</label>
+            <select name="receipt.paperSize" defaultValue={initialSettings["receipt.paperSize"]} className={inputClass}>
+              <option value="58mm">58mm (Kecil)</option>
+              <option value="80mm">80mm (Standar)</option>
+            </select>
+            <p className="text-[10px] text-zinc-500 mt-1.5 font-mono">Sesuaikan dengan ukuran printer thermal Anda</p>
+          </div>
+          <div>
+            <label className={labelClass}>Catatan Header</label>
+            <input name="receipt.headerNote" defaultValue={initialSettings["receipt.headerNote"]} className={inputClass} placeholder="mis. Cabang XYZ" />
+            <p className="text-[10px] text-zinc-500 mt-1.5 font-mono">Ditampilkan di bawah nama toko</p>
+          </div>
+          <div>
+            <label className={labelClass}>Footer Baris 1</label>
+            <input name="receipt.footerLine1" defaultValue={initialSettings["receipt.footerLine1"]} className={inputClass} placeholder="Terima kasih atas kunjungan Anda" />
+          </div>
+          <div>
+            <label className={labelClass}>Footer Baris 2</label>
+            <input name="receipt.footerLine2" defaultValue={initialSettings["receipt.footerLine2"]} className={inputClass} placeholder="Barang yang sudah dibeli tidak dapat dikembalikan" />
+          </div>
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-zinc-800">
+          <p className="text-xs font-medium text-zinc-400 mb-3">Tampilkan di Struk:</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" name="receipt.showAddress" value="true" defaultChecked={initialSettings["receipt.showAddress"] === "true"} className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500" />
+              <span className="text-xs text-zinc-300">Alamat</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" name="receipt.showPhone" value="true" defaultChecked={initialSettings["receipt.showPhone"] === "true"} className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500" />
+              <span className="text-xs text-zinc-300">Telepon</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" name="receipt.showEmail" value="true" defaultChecked={initialSettings["receipt.showEmail"] === "true"} className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500" />
+              <span className="text-xs text-zinc-300">Email</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" name="receipt.showWebsite" value="true" defaultChecked={initialSettings["receipt.showWebsite"] === "true"} className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500" />
+              <span className="text-xs text-zinc-300">Website</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" name="receipt.showKasir" value="true" defaultChecked={initialSettings["receipt.showKasir"] === "true"} className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500" />
+              <span className="text-xs text-zinc-300">Nama Kasir</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" name="receipt.showInvoiceDate" value="true" defaultChecked={initialSettings["receipt.showInvoiceDate"] === "true"} className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500" />
+              <span className="text-xs text-zinc-300">Tanggal & Jam</span>
+            </label>
+          </div>
         </div>
       </div>
 

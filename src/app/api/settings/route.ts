@@ -20,10 +20,7 @@ export async function GET() {
   return NextResponse.json(result);
 }
 
-const updateSchema = z.object({
-  key: z.enum(ALLOWED_KEYS as [string, ...string[]]),
-  value: z.string().max(500),
-});
+const batchSchema = z.record(z.string(), z.string().max(500));
 
 export async function PUT(req: NextRequest) {
   const user = await getCurrentUser();
@@ -32,15 +29,25 @@ export async function PUT(req: NextRequest) {
   }
 
   const body = await req.json();
-  const parsed = updateSchema.safeParse(body);
+
+  const settings = body.settings ?? body;
+
+  const parsed = batchSchema.safeParse(settings);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const setting = await prisma.setting.upsert({
-    where: { key: parsed.data.key },
-    create: { key: parsed.data.key, value: parsed.data.value },
-    update: { value: parsed.data.value },
-  });
-  return NextResponse.json(setting);
+  const ops = Object.entries(parsed.data)
+    .filter(([key]) => ALLOWED_KEYS.includes(key))
+    .map(([key, value]) =>
+      prisma.setting.upsert({
+        where: { key },
+        create: { key, value },
+        update: { value },
+      })
+    );
+
+  await Promise.all(ops);
+
+  return NextResponse.json({ ok: true, saved: ops.length });
 }
