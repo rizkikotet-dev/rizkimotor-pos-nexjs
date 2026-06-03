@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
 
 interface DeleteButtonProps {
   productId: number;
@@ -11,6 +12,7 @@ interface DeleteButtonProps {
 
 export function DeleteButton({ productId, productName }: DeleteButtonProps) {
   const router = useRouter();
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
 
   async function handleDelete() {
@@ -20,12 +22,13 @@ export function DeleteButton({ productId, productName }: DeleteButtonProps) {
     try {
       const res = await fetch(`/api/products/${productId}`, { method: "DELETE" });
       if (res.ok) {
+        toast.success("Produk berhasil dihapus");
         router.refresh();
       } else {
-        alert("Gagal menghapus produk");
+        toast.error("Gagal menghapus produk");
       }
     } catch {
-      alert("Terjadi kesalahan");
+      toast.error("Terjadi kesalahan");
     } finally {
       setLoading(false);
     }

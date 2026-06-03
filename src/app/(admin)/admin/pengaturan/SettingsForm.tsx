@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save, Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
 
 interface SettingsFormProps {
   initialSettings: Record<string, string>;
@@ -11,14 +12,13 @@ interface SettingsFormProps {
 
 export function SettingsForm({ initialSettings, categories }: SettingsFormProps) {
   const router = useRouter();
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
-    setSuccess("");
     setLoading(true);
 
     try {
@@ -40,10 +40,12 @@ export function SettingsForm({ initialSettings, categories }: SettingsFormProps)
         throw new Error(data.error || "Gagal menyimpan pengaturan");
       }
 
-      setSuccess("Pengaturan berhasil disimpan!");
+      toast.success("Pengaturan berhasil disimpan!");
       router.refresh();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Terjadi kesalahan");
+      const errorMsg = err instanceof Error ? err.message : "Terjadi kesalahan";
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -57,11 +59,6 @@ export function SettingsForm({ initialSettings, categories }: SettingsFormProps)
       {error && (
         <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-sm text-red-400" role="alert">
           {error}
-        </div>
-      )}
-      {success && (
-        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-sm text-emerald-400">
-          {success}
         </div>
       )}
 

@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
 
 export function ProductDeleteButton({ id, name }: { id: number; name: string }) {
   const router = useRouter();
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -24,9 +26,12 @@ export function ProductDeleteButton({ id, name }: { id: number; name: string }) 
         const data = await res.json();
         throw new Error(data.error || "Gagal menghapus");
       }
+      toast.success("Produk berhasil dihapus");
       router.refresh();
     } catch (e) {
-      setError((e as Error).message);
+      const errorMsg = (e as Error).message;
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

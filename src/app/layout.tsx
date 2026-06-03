@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { ToastProvider } from "@/components/ui/Toast";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export const metadata: Metadata = {
   title: "RIZKI MOTOR — Sparepart Motor Terlengkap",
@@ -29,7 +31,11 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">
           Lewati ke konten utama
         </a>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <ToastProvider>
+            <ErrorBoundary>{children}</ErrorBoundary>
+          </ToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

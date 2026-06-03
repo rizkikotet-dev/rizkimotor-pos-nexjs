@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatRupiah, formatDateTime } from "@/lib/format";
-import { ArrowLeft, Receipt, Printer } from "lucide-react";
+import { Printer } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -22,51 +22,49 @@ export default async function PosRiwayatPage() {
   ]);
 
   return (
-    <div className="max-w-5xl mx-auto p-4 sm:p-6">
+    <div className="page-container">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-surface-900 tracking-tight">Riwayat Transaksi</h1>
-          <p className="text-sm text-surface-500 mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 tracking-tight">Riwayat Transaksi</h1>
+          <p className="text-sm text-zinc-500 mt-1">
             {user.role === "ADMIN" ? "Semua transaksi" : "Transaksi Anda"} &middot; Total:{" "}
-            <span className="font-bold text-brand-600">
+            <span className="font-bold text-primary">
               {formatRupiah(totalAgg._sum.total ?? 0)}
             </span>
           </p>
         </div>
-        <Link href="/pos" className="btn-primary text-sm">
-          <ArrowLeft className="h-4 w-4" />
-          Kembali
-        </Link>
       </div>
 
       <div className="card overflow-hidden">
         {transactions.length === 0 ? (
-          <p className="p-12 text-center text-sm text-surface-500">Belum ada transaksi.</p>
+          <p className="p-12 text-center text-sm text-zinc-500">Belum ada transaksi.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-surface-50 border-b border-surface-200">
+              <thead className="bg-surface-container-low border-b border-surface-outline-variant">
                 <tr>
-                  <th className="text-left px-4 py-3 font-semibold text-surface-600 text-xs uppercase tracking-wider">Invoice</th>
-                  <th className="text-left px-4 py-3 font-semibold text-surface-600 text-xs uppercase tracking-wider hidden sm:table-cell">Tanggal</th>
+                  <th className="text-left px-4 py-3 text-[10px] text-zinc-500 font-mono uppercase tracking-widest font-semibold">Invoice</th>
+                  <th className="text-left px-4 py-3 text-[10px] text-zinc-500 font-mono uppercase tracking-widest font-semibold hidden sm:table-cell">Tanggal</th>
                   {user.role === "ADMIN" && (
-                    <th className="text-left px-4 py-3 font-semibold text-surface-600 text-xs uppercase tracking-wider hidden md:table-cell">Kasir</th>
+                    <th className="text-left px-4 py-3 text-[10px] text-zinc-500 font-mono uppercase tracking-widest font-semibold hidden md:table-cell">Kasir</th>
                   )}
-                  <th className="text-center px-4 py-3 font-semibold text-surface-600 text-xs uppercase tracking-wider">Item</th>
-                  <th className="text-right px-4 py-3 font-semibold text-surface-600 text-xs uppercase tracking-wider">Total</th>
-                  <th className="text-right px-4 py-3 font-semibold text-surface-600 text-xs uppercase tracking-wider">Aksi</th>
+                  <th className="text-center px-4 py-3 text-[10px] text-zinc-500 font-mono uppercase tracking-widest font-semibold">Item</th>
+                  <th className="text-right px-4 py-3 text-[10px] text-zinc-500 font-mono uppercase tracking-widest font-semibold">Total</th>
+                  <th className="text-right px-4 py-3 text-[10px] text-zinc-500 font-mono uppercase tracking-widest font-semibold">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-surface-100">
+              <tbody className="divide-y divide-surface-outline-variant">
                 {transactions.map((t) => (
-                  <tr key={t.id} className="hover:bg-surface-50/50 transition-colors">
-                    <td className="px-4 py-3.5 font-mono font-medium text-surface-900">{t.invoiceNo}</td>
-                    <td className="px-4 py-3.5 text-surface-500 text-xs hidden sm:table-cell">{formatDateTime(t.createdAt)}</td>
+                  <tr key={t.id} className="hover:bg-surface-container-high transition-colors">
+                    <td className="px-4 py-3.5 font-mono font-medium text-zinc-200">{t.invoiceNo}</td>
+                    <td className="px-4 py-3.5 text-zinc-500 text-xs hidden sm:table-cell">{formatDateTime(t.createdAt)}</td>
                     {user.role === "ADMIN" && (
-                      <td className="px-4 py-3.5 text-surface-600 hidden md:table-cell">{t.user.name}</td>
+                      <td className="px-4 py-3.5 text-zinc-400 hidden md:table-cell">{t.user.name}</td>
                     )}
-                    <td className="px-4 py-3.5 text-center">{t._count.items}</td>
-                    <td className="px-4 py-3.5 text-right font-bold text-brand-600">
+                    <td className="px-4 py-3.5 text-center">
+                      <span className="tag-brand text-[10px]">{t._count.items}</span>
+                    </td>
+                    <td className="px-4 py-3.5 text-right font-bold text-primary">
                       {formatRupiah(t.total)}
                     </td>
                     <td className="px-4 py-3.5 text-right">
@@ -75,7 +73,7 @@ export default async function PosRiwayatPage() {
                         target="_blank"
                         className="btn-ghost text-xs px-2.5 py-1.5"
                       >
-                        <Printer className="h-3.5 w-3.5" />
+                        <Printer className="h-3.5 w-3.5" aria-hidden="true" />
                         Struk
                       </Link>
                     </td>

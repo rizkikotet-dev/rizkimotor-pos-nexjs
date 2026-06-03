@@ -2,7 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { createCategory } from "./actions";
 import { CategoryDeleteButton } from "./CategoryDeleteButton";
 import { formatDate } from "@/lib/format";
-import { Tag, Plus, ShieldCheck, Info } from "lucide-react";
+import { Tag, Plus, ShieldCheck, Info, Pencil } from "lucide-react";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -99,7 +100,16 @@ export default async function CategoryPage() {
                     </td>
                     <td className="px-4 py-3 text-zinc-500 text-xs hidden md:table-cell">{formatDate(c.createdAt)}</td>
                     <td className="px-4 py-3 text-right">
-                      <CategoryDeleteButton id={c.id} name={c.name} isDefault={c.isDefault} />
+                      <div className="inline-flex items-center gap-2">
+                        <Link
+                          href={`/admin/kategori/${c.id}/edit`}
+                          className="p-1.5 text-zinc-500 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 min-h-[32px] min-w-[32px] inline-flex items-center justify-center"
+                          aria-label={`Edit kategori ${c.name}`}
+                        >
+                          <Pencil className="h-4 w-4" aria-hidden="true" />
+                        </Link>
+                        <CategoryDeleteButton id={c.id} name={c.name} isDefault={c.isDefault} />
+                      </div>
                     </td>
                   </tr>
                 ))}

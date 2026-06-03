@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/Toast";
 interface Product {
   id: number;
   name: string;
@@ -43,6 +44,7 @@ interface POSClientProps {
 
 export function POSClient({ products, settings, userRole }: POSClientProps) {
   const router = useRouter();
+  const toast = useToast();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -64,29 +66,30 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
 
   const grandTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  const addToCart = useCallback((product: Product) => {
-    const isReseller =
-      userRole === "KASIR" &&
-      settings["store.resellerCategoryId"] &&
-      String(product.categoryId) === settings["store.resellerCategoryId"];
-
-    const price = isReseller && product.priceReseller > 0 ? product.priceReseller : product.price;
-
+  const addToCart = useCallback((product: Product, selectedPrice: number) => {
     setCart((prev) => {
-      const existing = prev.find((c) => c.productId === product.id);
+      const existing = prev.find((c) => c.productId === product.id && c.price === selectedPrice);
       if (existing) {
-        if (existing.quantity >= product.stock) return prev;
+        if (existing.quantity >= product.stock) {
+          toast.warning(`Stok maksimal ${product.stock}`);
+          return prev;
+        }
         return prev.map((c) =>
-          c.productId === product.id ? { ...c, quantity: c.quantity + 1 } : c
+          c.productId === product.id && c.price === selectedPrice
+            ? { ...c, quantity: c.quantity + 1 }
+            : c
         );
       }
-      if (product.stock <= 0) return prev;
+      if (product.stock <= 0) {
+        toast.error("Stok habis");
+        return prev;
+      }
       return [
         ...prev,
         {
           productId: product.id,
           name: product.name,
-          price,
+          price: selectedPrice,
           quantity: 1,
           maxStock: product.stock,
         },
@@ -94,13 +97,13 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
     });
     setSearchQuery("");
     searchInputRef.current?.focus();
-  }, [userRole, settings]);
+  }, [toast]);
 
-  function updateQty(productId: number, delta: number) {
+  function updateQty(productId: number, price: number, delta: number) {
     setCart((prev) => {
       return prev
         .map((item) => {
-          if (item.productId !== productId) return item;
+          if (item.productId !== productId || item.price !== price) return item;
           const newQty = item.quantity + delta;
           if (newQty <= 0) return null;
           if (newQty > item.maxStock) return item;
@@ -110,49 +113,61 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
     });
   }
 
-  function removeItem(productId: number) {
-    setCart((prev) => prev.filter((c) => c.productId !== productId));
+  function removeItem(productId: number, price: number) {
+    setCart((prev) => prev.filter((c) => !(c.productId === productId && c.price === price)));
   }
 
   async function submitOrder() {
     if (cart.length === 0) return;
+    
+    const payment = prompt("Masukkan jumlah bayar:");
+    if (!payment || isNaN(Number(payment))) return;
+    
+    const paymentAmount = Number(payment);
+    if (paymentAmount < grandTotal) {
+      toast.error(`Pembayaran kurang! Total: ${formatRupiah(grandTotal)}`);
+      return;
+    }
+
     setSubmitting(true);
 
     try {
-      const res = await fetch("/api/orders", {
+      const res = await fetch("/api/transactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          grandTotal,
-          paymentMethod: "CASH",
-          paymentStatus: "UNPAID",
           items: cart.map((c) => ({
             productId: c.productId,
+            price: c.price,
             quantity: c.quantity,
-            unitPrice: c.price,
           })),
+          payment: paymentAmount,
+          note: null,
         }),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        alert(data.error || "Gagal membuat pesanan");
+        toast.error(data.error || "Gagal membuat transaksi");
         return;
       }
 
+      const result = await res.json();
       setCart([]);
       router.refresh();
-      alert("Pesanan berhasil dibuat!");
+      toast.success(`Transaksi berhasil! Invoice: ${result.invoiceNo} | Kembalian: ${formatRupiah(result.change)}`);
+      router.push(`/pos/struk/${result.id}`);
     } catch {
-      alert("Terjadi kesalahan jaringan");
+      toast.error("Terjadi kesalahan jaringan");
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4 h-full">
-      <div className="flex-1 flex flex-col min-h-0 lg:h-[calc(100dvh-7rem)]">
+    <div className="page-container">
+      <div className="flex flex-col lg:flex-row gap-4 h-full">
+        <div className="flex-1 flex flex-col min-h-0 lg:h-[calc(100dvh-7rem)]">
         <div className="relative mb-3">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" aria-hidden="true" />
           <input
@@ -185,23 +200,48 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-2 p-2">
               {filtered.map((product) => {
                 const inStock = product.stock > 0;
+                const hasResellerPrice = product.priceReseller > 0;
+                
                 return (
-                  <button
+                  <div
                     key={product.id}
-                    onClick={() => addToCart(product)}
-                    disabled={!inStock}
-                    className={`text-left p-3 rounded-lg border transition-all duration-150 min-h-[80px] active:scale-[0.97] ${
+                    className={`text-left p-3 rounded-lg border transition-all duration-150 min-h-[120px] ${
                       inStock
-                        ? "border-surface-outline-variant bg-surface-base hover:bg-surface-container-high hover:border-zinc-600 cursor-pointer"
-                        : "border-surface-outline-variant bg-surface-container-low opacity-50 cursor-not-allowed"
+                        ? "border-surface-outline-variant bg-surface-base"
+                        : "border-surface-outline-variant bg-surface-container-low opacity-50"
                     }`}
-                    aria-label={`Tambah ${product.name} ke keranjang${!inStock ? ", stok habis" : ""}`}
                   >
                     <p className="text-xs font-semibold text-zinc-200 line-clamp-2 leading-snug mb-1">{product.name}</p>
-                    <p className="text-[10px] text-zinc-500 font-mono mb-1.5">{product.sku}</p>
-                    <p className="text-sm font-bold text-primary">{formatRupiah(product.price)}</p>
-                    <p className="text-[10px] text-zinc-500 mt-0.5">Stok: {product.stock}</p>
-                  </button>
+                    <p className="text-[10px] text-zinc-500 font-mono mb-2">{product.sku}</p>
+                    <p className="text-[10px] text-zinc-500 mb-2">Stok: {product.stock}</p>
+                    
+                    {inStock ? (
+                      <div className="space-y-1">
+                        <button
+                          onClick={() => addToCart(product, product.price)}
+                          className="w-full px-2 py-1.5 bg-primary text-surface-base hover:bg-primary-400 rounded text-xs font-medium transition-colors active:scale-95 flex items-center justify-between"
+                          aria-label={`Tambah ${product.name} harga normal`}
+                        >
+                          <span>Normal</span>
+                          <span className="font-bold">{formatRupiah(product.price)}</span>
+                        </button>
+                        {hasResellerPrice && (
+                          <button
+                            onClick={() => addToCart(product, product.priceReseller)}
+                            className="w-full px-2 py-1.5 bg-emerald-600 text-white hover:bg-emerald-500 rounded text-xs font-medium transition-colors active:scale-95 flex items-center justify-between"
+                            aria-label={`Tambah ${product.name} harga reseller`}
+                          >
+                            <span>Reseller</span>
+                            <span className="font-bold">{formatRupiah(product.priceReseller)}</span>
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center py-2 text-xs text-zinc-600 font-medium">
+                        Stok Habis
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -229,7 +269,7 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
           ) : (
             cart.map((item) => (
               <div
-                key={item.productId}
+                key={`${item.productId}-${item.price}`}
                 className="bg-surface-container-low border border-surface-outline-variant rounded-lg p-2.5"
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
@@ -238,7 +278,7 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
                     <p className="text-[10px] text-primary font-mono">{formatRupiah(item.price)}</p>
                   </div>
                   <button
-                    onClick={() => removeItem(item.productId)}
+                    onClick={() => removeItem(item.productId, item.price)}
                     className="text-zinc-600 hover:text-red-400 transition-colors p-1.5 rounded focus:outline-none focus:ring-2 focus:ring-red-500/40 min-h-[32px] min-w-[32px]"
                     aria-label={`Hapus ${item.name} dari keranjang`}
                   >
@@ -248,7 +288,7 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={() => updateQty(item.productId, -1)}
+                      onClick={() => updateQty(item.productId, item.price, -1)}
                       className="w-8 h-8 flex items-center justify-center rounded border border-surface-outline-variant bg-surface-container-high text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 active:scale-90 transition-all"
                       aria-label="Kurangi jumlah"
                     >
@@ -256,7 +296,7 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
                     </button>
                     <span className="w-8 text-center text-sm font-bold text-zinc-100" aria-live="polite" aria-label={`Jumlah ${item.quantity}`}>{item.quantity}</span>
                     <button
-                      onClick={() => updateQty(item.productId, 1)}
+                      onClick={() => updateQty(item.productId, item.price, 1)}
                       disabled={item.quantity >= item.maxStock}
                       className="w-8 h-8 flex items-center justify-center rounded border border-surface-outline-variant bg-surface-container-high text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 active:scale-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                       aria-label="Tambah jumlah"
@@ -293,6 +333,7 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
               "Buat Pesanan"
             )}
           </button>
+          </div>
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Printer, ArrowLeft, Info } from "lucide-react";
 import Link from "next/link";
 import { formatRupiah, formatDateTime } from "@/lib/format";
+import { printStruk } from "./printStruk";
 import type { Settings } from "@/lib/settings";
 
 interface StrukItem {
@@ -55,6 +56,10 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
     }
   `;
 
+  function handlePrint() {
+    printStruk(transaction, settings, paperSize);
+  }
+
   return (
     <div className="min-h-screen bg-surface-base py-6 print:bg-white print:py-0">
       <style dangerouslySetInnerHTML={{ __html: printPageCss }} />
@@ -88,7 +93,7 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
           </button>
         </div>
 
-        <button onClick={() => window.print()} className="btn-primary text-sm print:hidden min-h-[44px] min-w-[56px]" aria-label={`Cetak struk ukuran ${paperSize}`}>
+        <button onClick={handlePrint} className="btn-primary text-sm print:hidden min-h-[44px] min-w-[56px]" aria-label={`Cetak struk ukuran ${paperSize}`}>
           <Printer className="h-4 w-4" aria-hidden="true" />
           Cetak
         </button>

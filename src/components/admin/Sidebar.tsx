@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import {
   LayoutDashboard,
   Package,
+  Tag,
   ShoppingCart,
   Users,
   Settings,
@@ -21,7 +23,9 @@ interface SidebarProps {
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/pos", label: "POS / Kasir", icon: ShoppingCart },
   { href: "/admin/produk", label: "Produk", icon: Package },
+  { href: "/admin/kategori", label: "Kategori", icon: Tag },
   { href: "/admin/transaksi", label: "Transaksi", icon: ShoppingCart },
   { href: "/admin/pengguna", label: "Pengguna", icon: Users },
   { href: "/admin/pengaturan", label: "Pengaturan", icon: Settings },
@@ -112,7 +116,7 @@ export function AdminSidebar({ collapsed = false, onToggle }: SidebarProps) {
               <span className="truncate">Katalog Publik</span>
             </Link>
             <button
-              onClick={() => fetch("/api/auth/signout").then(() => location.reload())}
+              onClick={() => signOut({ callbackUrl: "/login", redirect: true })}
               className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors min-h-[44px] w-full text-left"
               aria-label="Logout dari akun"
             >

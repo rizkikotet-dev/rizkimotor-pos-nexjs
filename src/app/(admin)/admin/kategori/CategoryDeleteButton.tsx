@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, Loader2, ShieldCheck } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
 
 export function CategoryDeleteButton({ id, name, isDefault }: { id: number; name: string; isDefault: boolean }) {
   const router = useRouter();
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -29,9 +31,11 @@ export function CategoryDeleteButton({ id, name, isDefault }: { id: number; name
         throw new Error(data.error || "Gagal menghapus");
       }
       if (data.reassigned > 0) {
-        alert(
-          `${data.message}\n\n${data.reassigned} produk telah dialihkan ke "${data.defaultCategory}".`
+        toast.success(
+          `${data.message} - ${data.reassigned} produk telah dialihkan ke "${data.defaultCategory}".`
         );
+      } else {
+        toast.success("Kategori berhasil dihapus");
       }
       router.refresh();
     } catch (e) {
