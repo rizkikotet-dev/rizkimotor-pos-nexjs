@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Wrench, ShieldCheck, Truck, Tag } from "lucide-react";
+import { ArrowRight, Wrench, ShieldCheck, Truck, Tag, ChevronRight, Zap } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { ProductCard } from "@/components/public/ProductCard";
@@ -21,125 +21,194 @@ export default async function HomePage() {
 
   return (
     <div>
-      {/* HERO */}
-      <section className="relative overflow-hidden bg-[#0f172a] text-white">
-        {/* Decorative elements */}
+      {/* ═══════════════════════════════════════════ HERO ═══════════════════════════════════════════ */}
+      <section className="relative overflow-hidden bg-ink text-white min-h-[85vh] flex items-center">
+        {/* Grid background */}
+        <div className="absolute inset-0 hero-grid" />
+        {/* Diagonal stripes */}
+        <div className="absolute inset-0 stripe-pattern" />
+        {/* Grain */}
+        <div className="absolute inset-0 grain grain-dark" />
+        {/* Mesh gradient blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-orange-600/5 rounded-full blur-3xl" />
+          <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-brand-500/10 rounded-full blur-[120px]" />
+          <div className="absolute -bottom-48 -left-48 w-[600px] h-[600px] bg-brand-600/5 rounded-full blur-[150px]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-brand-500/5 rounded-full blur-[100px]" />
         </div>
 
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 md:py-28 lg:py-32">
+        {/* Geometric decorations */}
+        <div className="absolute top-20 right-[15%] w-20 h-20 border border-white/[0.06] rotate-45 animate-float" />
+        <div className="absolute bottom-32 left-[10%] w-12 h-12 border border-brand-500/20 rotate-12" style={{ animationDelay: "2s" }} />
+        <div className="absolute top-[40%] right-[8%] w-1.5 h-16 bg-brand-500/30 rounded-full" />
+
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 md:py-28 w-full">
           <div className="max-w-3xl">
-            <span className="inline-flex items-center gap-1.5 bg-brand-500/15 text-brand-400 text-xs font-semibold px-3.5 py-1.5 rounded-full mb-5 border border-brand-500/20">
+            <div className="tag-dark w-fit mb-6">
               <Wrench className="h-3 w-3" />
               {settings["store.tagline"]}
-            </span>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-5 leading-[1.1]">
+            </div>
+
+            <h1 className="font-display text-display-lg md:text-[5.5rem] text-white mb-6 leading-none">
               {settings["store.name"]}
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-gray-300 mb-8 max-w-2xl leading-relaxed">
+
+            <div className="line-accent mb-6" />
+
+            <p className="text-lg md:text-xl text-white/50 mb-10 max-w-xl leading-relaxed font-light">
               Solusi terpercaya untuk segala kebutuhan alat-alat sepeda motor Anda.
-              Katalog terlengkap, harga bersaing, dan kualitas terjamin.
+              Katalog terlengkap, harga bersaing, kualitas terjamin.
             </p>
-            <div className="flex flex-wrap gap-3">
+
+            <div className="flex flex-wrap gap-4">
               <Link
                 href="/produk"
-                className="btn-primary px-6 py-3 text-base"
+                className="btn-primary px-8 py-4 text-base rounded-2xl group"
               >
-                Lihat Katalog
-                <ArrowRight className="h-4 w-4" />
+                Jelajahi Katalog
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
                 href="/kontak"
-                className="btn px-6 py-3 text-base bg-white/10 text-white hover:bg-white/20 border border-white/10 backdrop-blur-sm rounded-xl transition-all duration-200 font-semibold"
+                className="btn-outline-dark px-8 py-4 text-base rounded-2xl"
               >
                 Hubungi Kami
               </Link>
             </div>
           </div>
+
+          {/* Right side decorative numbers */}
+          <div className="hidden lg:flex absolute right-12 top-1/2 -translate-y-1/2 flex-col items-end gap-6">
+            <div className="text-right">
+              <p className="text-7xl font-display font-800 text-white/[0.04] leading-none">{productCount}+</p>
+              <p className="text-[10px] text-white/20 uppercase tracking-[0.2em] font-mono mt-1">Produk</p>
+            </div>
+            <div className="w-px h-20 bg-white/10" />
+            <div className="text-right">
+              <p className="text-7xl font-display font-800 text-white/[0.04] leading-none">{categoryCount}</p>
+              <p className="text-[10px] text-white/20 uppercase tracking-[0.2em] font-mono mt-1">Kategori</p>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* STATS BAR */}
-      <section className="border-b border-surface-200 bg-white">
+      {/* ═══════════════════════════════════════════ STATS ═══════════════════════════════════════════ */}
+      <section className="bg-ink border-y border-surface-800">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-3 divide-x divide-surface-200">
+          <div className="grid grid-cols-3 divide-x divide-surface-800/50">
             {[
-              { value: productCount, label: "Produk" },
-              { value: categoryCount, label: "Kategori" },
-              { value: "100%", label: "Kualitas" },
+              { value: `${productCount}+`, label: "Produk Tersedia" },
+              { value: `${categoryCount}`, label: "Kategori" },
+              { value: "100%", label: "Kualitas Terjamin" },
             ].map((stat, i) => (
-              <div key={i} className="py-6 text-center">
-                <p className="text-2xl sm:text-3xl font-bold text-surface-900">{stat.value}</p>
-                <p className="text-xs sm:text-sm text-surface-500 mt-1">{stat.label}</p>
+              <div key={i} className="py-6 md:py-8 text-center group">
+                <p className="text-2xl md:text-3xl font-display font-800 text-white tracking-tight group-hover:text-brand-400 transition-colors duration-300">
+                  {stat.value}
+                </p>
+                <p className="text-[10px] md:text-xs text-surface-500 mt-1 uppercase tracking-[0.15em] font-mono">
+                  {stat.label}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* FEATURES */}
-      <section className="py-16 lg:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-surface-900 mb-3">Mengapa Memilih Kami?</h2>
-            <p className="text-surface-500 max-w-lg mx-auto">
-              Pelayanan terbaik untuk kebutuhan sparepart motor Anda
-            </p>
+      {/* ═══════════════════════════════════════════ FEATURES ═══════════════════════════════════════════ */}
+      <section className="py-16 lg:py-24 bg-surface-50 relative">
+        <div className="absolute inset-0 grain" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {/* Section header — editorial style */}
+          <div className="flex items-start gap-6 mb-14">
+            <div>
+              <p className="text-[10px] font-mono text-brand-600 uppercase tracking-[0.2em] mb-3">Kenapa Kami</p>
+              <h2 className="font-display text-display-sm md:text-display-md text-ink tracking-tight">
+                Dibangun untuk<br />
+                <span className="text-brand-600">Mekanik Sejati</span>
+              </h2>
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[
-              {
-                icon: ShieldCheck,
-                title: "Kualitas Terjamin",
-                desc: "Semua produk dijamin asli dan berkualitas tinggi dari merek-merek terpercaya.",
-                color: "bg-emerald-50 text-emerald-600",
-              },
-              {
-                icon: Tag,
-                title: "Harga Bersaing",
-                desc: "Harga terbaik di pasaran tanpa mengorbankan kualitas produk.",
-                color: "bg-brand-50 text-brand-600",
-              },
-              {
-                icon: Truck,
-                title: "Stok Lengkap",
-                desc: "Ribuan sparepart tersedia dan siap dikirim kapan saja Anda butuhkan.",
-                color: "bg-blue-50 text-blue-600",
-              },
-            ].map((feature, i) => (
-              <div key={i} className="card p-6 text-center hover:shadow-lifted hover:-translate-y-1 transition-all duration-300">
-                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-4 ${feature.color}`}>
-                  <feature.icon className="h-6 w-6" />
+
+          {/* Asymmetric feature grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Large feature */}
+            <div className="card-dark p-8 md:p-10 relative overflow-hidden group row-span-2 min-h-[320px] flex flex-col justify-end">
+              <div className="absolute inset-0 bg-mesh-2 opacity-50" />
+              <div className="absolute inset-0 hero-grid opacity-50" />
+              <div className="absolute inset-0 grain grain-dark" />
+              <div className="relative z-10">
+                <div className="w-14 h-14 rounded-2xl bg-brand-500/20 flex items-center justify-center mb-6 group-hover:bg-brand-500/30 transition-colors">
+                  <ShieldCheck className="h-7 w-7 text-brand-400" />
                 </div>
-                <h3 className="font-semibold text-surface-900 mb-2">{feature.title}</h3>
-                <p className="text-sm text-surface-500 leading-relaxed">{feature.desc}</p>
+                <h3 className="font-display text-2xl font-700 text-white mb-3">
+                  Kualitas Terjamin
+                </h3>
+                <p className="text-white/50 leading-relaxed max-w-sm">
+                  Semua produk dijamin asli dan berkualitas tinggi dari merek-merek terpercaya. Kami hanya menjual produk yang kami sendiri percaya.
+                </p>
               </div>
-            ))}
+            </div>
+
+            {/* Small features */}
+            <div className="card p-8 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
+              <div className="relative z-10 flex items-start gap-5">
+                <div className="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-100 transition-colors">
+                  <Tag className="h-5 w-5 text-brand-600" />
+                </div>
+                <div>
+                  <h3 className="font-display text-lg font-700 text-ink mb-2">Harga Bersaing</h3>
+                  <p className="text-sm text-surface-500 leading-relaxed">
+                    Harga terbaik di pasaran tanpa mengorbankan kualitas. Cocok untuk mekanik dan bengkel.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="card p-8 relative overflow-hidden group">
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl" />
+              <div className="relative z-10 flex items-start gap-5">
+                <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-100 transition-colors">
+                  <Truck className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-display text-lg font-700 text-ink mb-2">Stok Lengkap</h3>
+                  <p className="text-sm text-surface-500 leading-relaxed">
+                    Ribuan sparepart tersedia dan siap dikirim kapan saja. Tidak perlu menunggu lama.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* LATEST PRODUCTS */}
+      {/* ═══════════════════════════════════════════ PRODUCTS ═══════════════════════════════════════════ */}
       {latestProducts.length > 0 && (
-        <section className="py-16 lg:py-20 bg-white">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-8">
+        <section className="py-16 lg:py-24 relative">
+          <div className="absolute inset-0 grain" />
+          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex items-end justify-between mb-10">
               <div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-surface-900">Produk Terbaru</h2>
-                <p className="text-surface-500 mt-1">Koleksi terbaru dari toko kami</p>
+                <p className="text-[10px] font-mono text-brand-600 uppercase tracking-[0.2em] mb-3">Katalog</p>
+                <h2 className="font-display text-display-sm md:text-display-md text-ink tracking-tight">
+                  Produk Terbaru
+                </h2>
               </div>
-              <Link href="/produk" className="btn-secondary text-sm hidden sm:inline-flex">
+              <Link
+                href="/produk"
+                className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-surface-500 hover:text-brand-600 transition-colors group"
+              >
                 Lihat Semua
-                <ArrowRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
               {latestProducts.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
             </div>
+
             <div className="mt-8 text-center sm:hidden">
               <Link href="/produk" className="btn-secondary">
                 Lihat Semua Produk
@@ -150,24 +219,43 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* CTA */}
-      <section className="py-16 lg:py-20">
+      {/* ═══════════════════════════════════════════ CTA ═══════════════════════════════════════════ */}
+      <section className="py-16 lg:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-600 to-brand-700 text-white p-8 sm:p-12 lg:p-16 text-center">
-            <div className="absolute inset-0 overflow-hidden">
-              <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-2xl" />
-              <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-white/5 rounded-full blur-2xl" />
+          <div className="relative overflow-hidden rounded-3xl bg-ink text-white p-10 sm:p-14 lg:p-20">
+            {/* Background layers */}
+            <div className="absolute inset-0 hero-grid" />
+            <div className="absolute inset-0 stripe-pattern" />
+            <div className="absolute inset-0 grain grain-dark" />
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute -top-24 -right-24 w-80 h-80 bg-brand-500/10 rounded-full blur-[100px]" />
+              <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-brand-600/5 rounded-full blur-[100px]" />
             </div>
-            <div className="relative">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-3">Butuh Bantuan?</h2>
-              <p className="text-white/80 mb-6 max-w-md mx-auto">
-                Tim kami siap membantu Anda menemukan sparepart yang tepat.
+
+            {/* Geometric accent */}
+            <div className="absolute top-8 right-12 w-16 h-16 border border-white/[0.06] rotate-45" />
+            <div className="absolute bottom-8 left-12 w-8 h-8 bg-brand-500/20 rotate-12 rounded-lg" />
+
+            <div className="relative z-10 text-center max-w-xl mx-auto">
+              <Zap className="h-8 w-8 text-brand-400 mx-auto mb-6" />
+              <h2 className="font-display text-3xl sm:text-4xl font-800 tracking-tight mb-4">
+                Butuh Bantuan?
+              </h2>
+              <p className="text-white/40 mb-8 leading-relaxed">
+                Tim kami siap membantu Anda menemukan sparepart yang tepat. Jangan ragu untuk menghubungi.
               </p>
-              <div className="flex flex-wrap gap-3 justify-center">
-                <Link href="/kontak" className="btn bg-white text-brand-700 hover:bg-surface-50 px-6 py-3 rounded-xl font-semibold shadow-lg">
+              <div className="flex flex-wrap gap-4 justify-center">
+                <Link
+                  href="/kontak"
+                  className="btn-primary px-8 py-4 rounded-2xl text-base"
+                >
                   Hubungi Kami
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
-                <Link href="/produk" className="btn bg-white/15 text-white hover:bg-white/25 border border-white/20 px-6 py-3 rounded-xl font-semibold backdrop-blur-sm">
+                <Link
+                  href="/produk"
+                  className="btn-outline-dark px-8 py-4 rounded-2xl text-base"
+                >
                   Lihat Katalog
                 </Link>
               </div>

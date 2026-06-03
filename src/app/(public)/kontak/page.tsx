@@ -20,15 +20,22 @@ export default async function KontakPage() {
   ].filter(Boolean) as Array<{ icon: any; label: string; value: string; href?: string }>;
 
   return (
-    <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
-      <div className="text-center mb-10 lg:mb-12">
-        <h1 className="text-3xl sm:text-4xl font-bold text-surface-900 tracking-tight mb-3">Hubungi Kami</h1>
-        <p className="text-surface-500 max-w-md mx-auto">
+    <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10 lg:py-16 relative">
+      <div className="absolute inset-0 grain" />
+
+      {/* Header — editorial style */}
+      <div className="text-center mb-12 lg:mb-14 relative">
+        <p className="text-[10px] font-mono text-brand-600 uppercase tracking-[0.2em] mb-3">Kontak</p>
+        <h1 className="font-display text-display-sm md:text-display-md text-ink tracking-tight mb-4">
+          Hubungi Kami
+        </h1>
+        <div className="line-accent mx-auto mb-5" />
+        <p className="text-surface-500 max-w-md mx-auto leading-relaxed">
           Kami siap melayani Anda. Silakan hubungi {s["store.name"]} melalui informasi di bawah.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative">
         {items.map((item, i) => {
           const Wrapper = item.href ? "a" : "div";
           const wrapperProps = item.href
@@ -40,12 +47,12 @@ export default async function KontakPage() {
               {...wrapperProps}
               className="card p-5 flex items-start gap-4 group hover:shadow-lifted hover:-translate-y-0.5 transition-all duration-300"
             >
-              <div className="bg-brand-50 text-brand-600 p-3 rounded-xl flex-shrink-0 group-hover:bg-brand-100 transition-colors">
+              <div className="bg-ink text-white p-3 rounded-xl flex-shrink-0 group-hover:bg-brand-600 transition-colors duration-300">
                 <item.icon className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs uppercase tracking-widest text-surface-500 font-semibold mb-1">{item.label}</p>
-                <p className="font-medium text-surface-900 break-words">{item.value}</p>
+                <p className="text-[10px] font-mono text-surface-400 uppercase tracking-[0.15em] mb-1">{item.label}</p>
+                <p className="font-semibold text-ink break-words">{item.value}</p>
               </div>
               {item.href && (
                 <ExternalLink className="h-4 w-4 text-surface-300 flex-shrink-0 mt-1 group-hover:text-brand-500 transition-colors" />

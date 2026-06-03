@@ -36,16 +36,21 @@ export default async function ProductListPage({ searchParams }: PageProps) {
   ]);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
-      {/* Page header */}
-      <div className="mb-6 lg:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-surface-900 tracking-tight">Katalog Produk</h1>
-        <p className="text-sm text-surface-500 mt-1">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 lg:py-10 relative">
+      <div className="absolute inset-0 grain" />
+
+      {/* Page header — editorial style */}
+      <div className="mb-8 lg:mb-10 relative">
+        <p className="text-[10px] font-mono text-brand-600 uppercase tracking-[0.2em] mb-2">Katalog</p>
+        <h1 className="font-display text-display-sm md:text-display-md text-ink tracking-tight">
+          Katalog Produk
+        </h1>
+        <p className="text-sm text-surface-400 mt-2 font-mono">
           {products.length} produk tersedia {query && `untuk "${query}"`}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6 lg:gap-8 relative">
         {/* SIDEBAR */}
         <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
           {/* Search */}
@@ -72,7 +77,7 @@ export default async function ProductListPage({ searchParams }: PageProps) {
           <div className="card p-3">
             <div className="flex items-center gap-2 px-2 mb-2">
               <SlidersHorizontal className="h-3.5 w-3.5 text-surface-400" />
-              <h3 className="font-semibold text-xs text-surface-500 uppercase tracking-wider">Kategori</h3>
+              <h3 className="font-mono text-[10px] text-surface-400 uppercase tracking-[0.15em] font-semibold">Kategori</h3>
             </div>
             <ul className="space-y-0.5">
               <li>
@@ -81,7 +86,7 @@ export default async function ProductListPage({ searchParams }: PageProps) {
                   className={`block px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     !categoryId
                       ? "bg-brand-50 text-brand-700"
-                      : "text-surface-600 hover:bg-surface-50"
+                      : "text-surface-500 hover:bg-surface-50"
                   }`}
                 >
                   Semua Kategori
@@ -94,7 +99,7 @@ export default async function ProductListPage({ searchParams }: PageProps) {
                     className={`block px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                       categoryId === c.id
                         ? "bg-brand-50 text-brand-700"
-                        : "text-surface-600 hover:bg-surface-50"
+                        : "text-surface-500 hover:bg-surface-50"
                     }`}
                   >
                     {c.name}
@@ -108,20 +113,23 @@ export default async function ProductListPage({ searchParams }: PageProps) {
         {/* PRODUCT GRID */}
         <div>
           {products.length === 0 ? (
-            <div className="card p-12 text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-surface-100 rounded-2xl mb-4">
-                <Search className="h-8 w-8 text-surface-300" />
+            <div className="card p-12 text-center relative overflow-hidden">
+              <div className="absolute inset-0 grain" />
+              <div className="relative z-10">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-surface-100 rounded-2xl mb-4">
+                  <Search className="h-8 w-8 text-surface-300" />
+                </div>
+                <p className="text-surface-500 font-medium mb-1">
+                  {query
+                    ? `Tidak ada produk untuk "${query}"`
+                    : "Belum ada produk di kategori ini."}
+                </p>
+                {query && (
+                  <Link href="/produk" className="text-sm text-brand-600 hover:text-brand-700 font-semibold">
+                    Lihat semua produk
+                  </Link>
+                )}
               </div>
-              <p className="text-surface-500 font-medium mb-1">
-                {query
-                  ? `Tidak ada produk untuk "${query}"`
-                  : "Belum ada produk di kategori ini."}
-              </p>
-              {query && (
-                <Link href="/produk" className="text-sm text-brand-600 hover:text-brand-700 font-medium">
-                  Lihat semua produk
-                </Link>
-              )}
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">

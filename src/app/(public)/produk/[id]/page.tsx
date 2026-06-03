@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { Package, ArrowLeft, Phone, MessageCircle, MapPin, Clock } from "lucide-react";
+import { Package, ArrowLeft, Phone, MessageCircle } from "lucide-react";
 import { formatRupiah } from "@/lib/format";
 import { getSettings } from "@/lib/settings";
 
@@ -35,9 +35,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
       {/* Back */}
       <Link
         href="/produk"
-        className="inline-flex items-center gap-1.5 text-sm text-surface-500 hover:text-brand-600 mb-6 transition-colors font-medium"
+        className="inline-flex items-center gap-1.5 text-sm text-surface-400 hover:text-brand-600 mb-6 transition-colors font-medium group"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
         Kembali ke katalog
       </Link>
 
@@ -47,7 +47,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
           <div className="aspect-square md:aspect-auto md:h-full bg-surface-100 relative overflow-hidden">
             {product.image ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+              <img src={product.image} alt={product.name} className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-700" />
             ) : (
               <div className="w-full h-full min-h-[300px] flex items-center justify-center text-surface-300">
                 <Package className="h-20 w-20 sm:h-28 sm:w-28" />
@@ -57,10 +57,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {/* Info */}
           <div className="p-6 sm:p-8 flex flex-col">
-            <span className="badge-info w-fit mb-3">
+            <span className="tag-brand w-fit mb-3">
               {product.category.name}
             </span>
-            <h1 className="text-2xl sm:text-3xl font-bold text-surface-900 tracking-tight mb-2">
+            <h1 className="font-display text-2xl sm:text-3xl font-800 text-ink tracking-tight mb-2">
               {product.name}
             </h1>
             <p className="text-sm text-surface-400 font-mono mb-4">SKU: {product.sku}</p>
@@ -69,26 +69,26 @@ export default async function ProductDetailPage({ params }: PageProps) {
             <div className="mb-6">
               {inStock ? (
                 <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse" />
-                  <span className="text-sm text-emerald-700 font-medium">
+                  <span className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse-subtle" />
+                  <span className="text-sm text-emerald-700 font-semibold">
                     Tersedia — Stok: {product.stock} unit
                   </span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 bg-red-500 rounded-full" />
-                  <span className="text-sm text-red-600 font-medium">Stok habis</span>
+                  <span className="text-sm text-red-600 font-semibold">Stok habis</span>
                 </div>
               )}
             </div>
 
             {/* Price */}
-            <div className="bg-surface-50 rounded-2xl p-4 mb-6">
-              <p className="text-xs text-surface-500 uppercase tracking-wider font-semibold mb-1">Harga</p>
-              <p className="text-3xl font-bold text-brand-600">{formatRupiah(product.price)}</p>
+            <div className="bg-surface-50 rounded-2xl p-5 mb-6 border border-surface-100">
+              <p className="text-[10px] text-surface-400 font-mono uppercase tracking-[0.15em] mb-1">Harga</p>
+              <p className="font-display text-3xl font-800 text-brand-600">{formatRupiah(product.price)}</p>
               {product.priceReseller > 0 && (
-                <p className="text-sm text-surface-500 mt-1">
-                  Harga reseller: <span className="font-semibold text-surface-700">{formatRupiah(product.priceReseller)}</span>
+                <p className="text-sm text-surface-500 mt-1.5">
+                  Harga reseller: <span className="font-semibold text-ink">{formatRupiah(product.priceReseller)}</span>
                 </p>
               )}
             </div>
@@ -96,7 +96,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             {/* Description */}
             {product.description && (
               <div className="mb-6">
-                <h3 className="text-sm font-semibold text-surface-900 mb-2">Deskripsi</h3>
+                <h3 className="text-sm font-semibold text-ink mb-2">Deskripsi</h3>
                 <p className="text-sm text-surface-600 whitespace-pre-line leading-relaxed">
                   {product.description}
                 </p>
@@ -105,7 +105,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
             {/* Contact actions */}
             <div className="mt-auto pt-6 border-t border-surface-200">
-              <p className="text-sm font-semibold text-surface-900 mb-3">Tertarik dengan produk ini?</p>
+              <p className="text-sm font-semibold text-ink mb-3">Tertarik dengan produk ini?</p>
               <p className="text-sm text-surface-500 mb-4">
                 Hubungi kami untuk info lebih lanjut atau kunjungi langsung toko.
               </p>

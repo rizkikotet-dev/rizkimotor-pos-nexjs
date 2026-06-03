@@ -19,9 +19,11 @@ export default async function ProductListPage() {
     <>
       <AdminHeader user={user} title="Produk" subtitle="Kelola katalog produk" />
 
-      <div className="page-container pb-24 lg:pb-8">
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-surface-500">{products.length} produk terdaftar</p>
+      <div className="page-container pb-24 lg:pb-8 relative">
+        <div className="absolute inset-0 grain" />
+
+        <div className="flex items-center justify-between mb-4 relative">
+          <p className="text-sm text-surface-400 font-mono">{products.length} produk terdaftar</p>
           <Link
             href="/admin/produk/tambah"
             className="btn-primary text-sm"
@@ -31,7 +33,7 @@ export default async function ProductListPage() {
           </Link>
         </div>
 
-        <div className="card overflow-hidden">
+        <div className="card overflow-hidden relative">
           {products.length === 0 ? (
             <div className="p-12 text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-surface-100 rounded-2xl mb-4">
@@ -48,23 +50,23 @@ export default async function ProductListPage() {
               <table className="w-full text-sm">
                 <thead className="bg-surface-50 border-b border-surface-200">
                   <tr>
-                    <th className="text-left px-4 py-3 font-semibold text-surface-600 text-xs uppercase tracking-wider">Produk</th>
-                    <th className="text-left px-4 py-3 font-semibold text-surface-600 text-xs uppercase tracking-wider hidden sm:table-cell">Kategori</th>
-                    <th className="text-right px-4 py-3 font-semibold text-surface-600 text-xs uppercase tracking-wider">Harga</th>
-                    <th className="text-center px-4 py-3 font-semibold text-surface-600 text-xs uppercase tracking-wider">Stok</th>
-                    <th className="text-center px-4 py-3 font-semibold text-surface-600 text-xs uppercase tracking-wider hidden md:table-cell">Status</th>
-                    <th className="text-right px-4 py-3 font-semibold text-surface-600 text-xs uppercase tracking-wider">Aksi</th>
+                    <th className="text-left px-4 py-3 font-mono text-[10px] font-semibold text-surface-400 uppercase tracking-[0.12em]">Produk</th>
+                    <th className="text-left px-4 py-3 font-mono text-[10px] font-semibold text-surface-400 uppercase tracking-[0.12em] hidden sm:table-cell">Kategori</th>
+                    <th className="text-right px-4 py-3 font-mono text-[10px] font-semibold text-surface-400 uppercase tracking-[0.12em]">Harga</th>
+                    <th className="text-center px-4 py-3 font-mono text-[10px] font-semibold text-surface-400 uppercase tracking-[0.12em]">Stok</th>
+                    <th className="text-center px-4 py-3 font-mono text-[10px] font-semibold text-surface-400 uppercase tracking-[0.12em] hidden md:table-cell">Status</th>
+                    <th className="text-right px-4 py-3 font-mono text-[10px] font-semibold text-surface-400 uppercase tracking-[0.12em]">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-surface-100">
                   {products.map((p) => (
                     <tr key={p.id} className="hover:bg-surface-50/50 transition-colors">
                       <td className="px-4 py-3.5">
-                        <div className="font-medium text-surface-900">{p.name}</div>
-                        <div className="text-xs text-surface-500 font-mono mt-0.5">{p.sku}</div>
+                        <div className="font-semibold text-ink">{p.name}</div>
+                        <div className="text-xs text-surface-400 font-mono mt-0.5">{p.sku}</div>
                       </td>
-                      <td className="px-4 py-3.5 text-surface-600 hidden sm:table-cell">{p.category.name}</td>
-                      <td className="px-4 py-3.5 text-right font-medium text-surface-900">
+                      <td className="px-4 py-3.5 text-surface-500 hidden sm:table-cell">{p.category.name}</td>
+                      <td className="px-4 py-3.5 text-right font-semibold text-ink">
                         {formatRupiah(p.price)}
                         {p.priceReseller > 0 && (
                           <div className="text-[10px] text-brand-600 font-medium mt-0.5">
