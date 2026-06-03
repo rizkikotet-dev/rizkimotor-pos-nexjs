@@ -10,30 +10,28 @@ export async function PublicHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-surface-200/60">
+      <header className="sticky top-0 z-40 bg-surface-base/80 backdrop-blur-xl border-b border-surface-outline-variant">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            {/* Logo */}
+          <div className="flex h-14 items-center justify-between">
             <Link
               href="/"
-              className="flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 rounded-xl px-2 py-1 -ml-2"
+              className="flex items-center gap-2.5 group focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-lg px-2 py-1 -ml-2"
               aria-label={`${s["store.name"]} - Beranda`}
             >
-              <div className="bg-ink text-white p-2 rounded-xl group-hover:bg-brand-600 transition-all duration-300 shadow-brutal-sm">
-                <Wrench className="h-5 w-5" aria-hidden="true" />
+              <div className="bg-primary text-surface-base p-1.5 rounded-lg">
+                <Wrench className="h-4 w-4" aria-hidden="true" />
               </div>
               <div>
-                <div className="font-display font-800 text-base leading-none text-ink tracking-tight">
+                <div className="font-bold text-sm leading-none text-zinc-100 tracking-tight">
                   {s["store.name"]}
                 </div>
-                <div className="text-[10px] text-surface-400 leading-tight mt-0.5 font-mono uppercase tracking-[0.15em]">
+                <div className="text-[10px] text-zinc-500 leading-tight mt-0.5 font-mono uppercase tracking-widest">
                   {s["store.tagline"]}
                 </div>
               </div>
             </Link>
 
-            {/* Desktop nav */}
-            <nav className="hidden md:flex items-center gap-1 text-sm font-medium" aria-label="Navigasi utama">
+            <nav className="hidden md:flex items-center gap-0.5 text-sm" aria-label="Navigasi utama">
               {[
                 { href: "/", label: "Beranda" },
                 { href: "/produk", label: "Produk" },
@@ -43,26 +41,25 @@ export async function PublicHeader() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="px-3.5 py-2 rounded-lg text-surface-500 hover:text-ink hover:bg-surface-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1"
+                  className="px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-surface-container-high transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary/40 min-h-[36px]"
                 >
                   {item.label}
                 </Link>
               ))}
             </nav>
 
-            {/* Right action */}
             <div className="flex items-center gap-2">
               {user ? (
                 <Link
                   href={user.role === "ADMIN" ? "/admin" : "/pos"}
-                  className="btn-primary text-sm px-4 py-2"
+                  className="btn-primary text-sm px-3 py-1.5 min-h-[36px]"
                   aria-label={`${user.role === "ADMIN" ? "Admin" : "POS"} Panel`}
                 >
                   <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
                   <span className="hidden sm:inline">Panel</span>
                 </Link>
               ) : (
-                <Link href="/login" className="btn-secondary text-sm px-4 py-2">
+                <Link href="/login" className="btn-secondary text-sm px-3 py-1.5 min-h-[36px]">
                   Login
                 </Link>
               )}

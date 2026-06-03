@@ -56,23 +56,22 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
   `;
 
   return (
-    <div className="min-h-screen bg-surface-100 py-6 print:bg-white print:py-0">
+    <div className="min-h-screen bg-surface-base py-6 print:bg-white print:py-0">
       <style dangerouslySetInnerHTML={{ __html: printPageCss }} />
 
-      {/* TOOLBAR */}
       <div className="max-w-md mx-auto no-print mb-3 px-3 flex items-center justify-between gap-2">
         <Link href={backUrl} className="btn-ghost text-sm min-h-[44px] min-w-[56px]" aria-label="Kembali ke riwayat transaksi">
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Kembali
         </Link>
 
-        <div className="flex items-center gap-0.5 bg-white border border-surface-200 rounded-xl p-0.5 text-xs" role="radiogroup" aria-label="Ukuran kertas">
+        <div className="flex items-center gap-0.5 bg-surface-container rounded-lg p-0.5 text-xs border border-surface-outline-variant" role="radiogroup" aria-label="Ukuran kertas">
           <button
             onClick={() => setPaperSize("58mm")}
             role="radio"
             aria-checked={paperSize === "58mm"}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition-all min-h-[36px] focus:outline-none focus:ring-2 focus:ring-brand-500 ${
-              paperSize === "58mm" ? "bg-brand-600 text-white shadow-sm" : "text-surface-600 hover:bg-surface-50"
+            className={`px-3 py-1.5 rounded-lg font-semibold transition-all min-h-[36px] focus:outline-none focus:ring-2 focus:ring-primary/40 ${
+              paperSize === "58mm" ? "bg-primary text-surface-base" : "text-zinc-400 hover:text-zinc-200 hover:bg-surface-container-high"
             }`}
           >
             58mm
@@ -81,8 +80,8 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
             onClick={() => setPaperSize("80mm")}
             role="radio"
             aria-checked={paperSize === "80mm"}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition-all min-h-[36px] focus:outline-none focus:ring-2 focus:ring-brand-500 ${
-              paperSize === "80mm" ? "bg-brand-600 text-white shadow-sm" : "text-surface-600 hover:bg-surface-50"
+            className={`px-3 py-1.5 rounded-lg font-semibold transition-all min-h-[36px] focus:outline-none focus:ring-2 focus:ring-primary/40 ${
+              paperSize === "80mm" ? "bg-primary text-surface-base" : "text-zinc-400 hover:text-zinc-200 hover:bg-surface-container-high"
             }`}
           >
             80mm
@@ -95,25 +94,23 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
         </button>
       </div>
 
-      {/* Tips */}
       <div className="max-w-md mx-auto no-print mb-3 px-3">
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-800 flex items-start gap-2">
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-[11px] text-amber-400 flex items-start gap-2">
           <Info className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" aria-hidden="true" />
           <div>
-            <strong>Tips cetak:</strong> Saat dialog cetak muncul, set{" "}
-            <em>Margins: None / Minimum</em> dan pilih ukuran kertas <strong>{paperSize}</strong>{" "}
+            <strong>Tips cetak:</strong> Saat dialog cetak muncul, set{' '}
+            <em>Margins: None / Minimum</em> dan pilih ukuran kertas{' '}
+            <strong>{paperSize}</strong>{' '}
             di pengaturan printer.
           </div>
         </div>
       </div>
 
-      {/* STRUK */}
       <div
-        className={`bg-white p-2 shadow-soft print:shadow-none mx-auto ${strukWidthClass}`}
+        className={`bg-white p-2 print:shadow-none mx-auto ${strukWidthClass}`}
         id="struk"
         data-paper-size={paperSize}
       >
-        {/* Header */}
         <div className="text-center border-b border-dashed border-gray-400 pb-1.5 mb-1.5">
           <h1 className="font-bold text-[13px] uppercase leading-tight">{s["store.name"]}</h1>
           {headerNote && <p className="text-[9px] text-gray-600 italic leading-tight">{headerNote}</p>}
@@ -123,7 +120,6 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
           {showWebsite && <p className="text-[9px] text-gray-600 leading-tight">{s["store.website"]}</p>}
         </div>
 
-        {/* Info */}
         <div className="text-[9px] space-y-0.5 mb-1.5 border-b border-dashed border-gray-400 pb-1.5">
           {showDate && (
             <div className="flex justify-between gap-1">
@@ -143,7 +139,6 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
           )}
         </div>
 
-        {/* Items */}
         <div className="border-b border-dashed border-gray-400 pb-1.5 mb-1.5">
           {transaction.items.map((item) => (
             <div key={item.id} className="text-[9px] mb-1">
@@ -151,7 +146,7 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
               <div className="text-gray-500 font-mono text-[8px]">{item.productSku}</div>
               <div className="flex justify-between gap-1">
                 <span>
-                  {item.quantity} × {formatRupiah(item.price)}
+                  {item.quantity} &times; {formatRupiah(item.price)}
                 </span>
                 <span className="font-medium">{formatRupiah(item.subtotal)}</span>
               </div>
@@ -159,7 +154,6 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
           ))}
         </div>
 
-        {/* Totals */}
         <div className="border-b border-dashed border-gray-400 pb-1.5 mb-1.5 text-[9px] space-y-0.5">
           <div className="flex justify-between font-bold text-[11px]">
             <span>TOTAL</span>
@@ -175,21 +169,19 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
           </div>
         </div>
 
-        {/* Footer */}
         <div className="text-center text-[8px] text-gray-600 leading-tight space-y-0.5">
           {s["receipt.footerLine1"] && <p>{s["receipt.footerLine1"]}</p>}
           {s["receipt.footerLine2"] && <p>{s["receipt.footerLine2"]}</p>}
-          <p className="text-[7px] text-gray-400 pt-0.5">— {transaction.invoiceNo} —</p>
+          <p className="text-[7px] text-gray-400 pt-0.5">&mdash; {transaction.invoiceNo} &mdash;</p>
         </div>
       </div>
 
-      {/* Bottom info */}
-      <div className="max-w-md mx-auto no-print mt-3 px-3 text-center text-xs text-surface-500">
+      <div className="max-w-md mx-auto no-print mt-3 px-3 text-center text-xs text-zinc-500">
         <p>
-          Struk di-print dengan ukuran {paperSize}. Atur di{" "}
-          <Link href="/admin/pengaturan" className="text-brand-600 hover:underline font-medium" aria-label="Ubah pengaturan struk">
+          Struk di-print dengan ukuran {paperSize}. Atur di{' '}
+          <Link href="/admin/pengaturan" className="text-primary hover:text-primary-400 underline font-medium" aria-label="Ubah pengaturan struk">
             Pengaturan
-          </Link>{" "}
+          </Link>{' '}
           untuk mengubah default.
         </p>
       </div>

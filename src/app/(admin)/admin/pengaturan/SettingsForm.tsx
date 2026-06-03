@@ -2,195 +2,176 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Loader2, RotateCcw, AlertCircle, Store, Receipt, Check } from "lucide-react";
-import { updateSettingsBulk, resetSettings } from "./actions";
-import type { Settings } from "@/lib/settings";
+import { Save, Loader2 } from "lucide-react";
 
 interface SettingsFormProps {
-  settings: Settings;
-  grouped: {
-    store: Array<{ key: keyof Settings; label: string; type: string; placeholder?: string; hint?: string; options?: string[] }>;
-    receipt: Array<{ key: keyof Settings; label: string; type: string; placeholder?: string; hint?: string; options?: string[] }>;
-  };
+  initialSettings: Record<string, string>;
+  categories: { id: number; name: string }[];
 }
 
-export function SettingsForm({ settings, grouped }: SettingsFormProps) {
+export function SettingsForm({ initialSettings, categories }: SettingsFormProps) {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-  const [pending, setPending] = useState(false);
-  const [resetPending, setResetPending] = useState(false);
+  const [success, setSuccess] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
-    setSuccess(false);
-    setPending(true);
+    setSuccess("");
+    setLoading(true);
+
     try {
-      const formData = new FormData(e.currentTarget);
-      await updateSettingsBulk(formData);
-      setSuccess(true);
+      const form = new FormData(e.currentTarget);
+      const settings: Record<string, string> = {};
+
+      for (const [key, value] of form.entries()) {
+        settings[key] = value as string;
+      }
+
+      const res = await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Gagal menyimpan pengaturan");
+      }
+
+      setSuccess("Pengaturan berhasil disimpan!");
       router.refresh();
-      setTimeout(() => setSuccess(false), 3000);
-    } catch (e) {
-      setError((e as Error).message || "Gagal menyimpan");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Terjadi kesalahan");
     } finally {
-      setPending(false);
+      setLoading(false);
     }
   }
 
-  async function handleReset() {
-    if (!confirm("Reset semua pengaturan ke default? Tindakan ini tidak dapat dibatalkan.")) return;
-    setResetPending(true);
-    setError("");
-    try {
-      await resetSettings();
-      router.refresh();
-    } catch (e) {
-      setError((e as Error).message || "Gagal reset");
-    } finally {
-      setResetPending(false);
-    }
-  }
-
-  function renderField(field: {
-    key: keyof Settings;
-    label: string;
-    type: string;
-    placeholder?: string;
-    hint?: string;
-    options?: string[];
-  }) {
-    const value = settings[field.key];
-    const id = `field-${field.key}`;
-
-    if (field.type === "boolean") {
-      return (
-        <label key={field.key} htmlFor={id} className="flex items-start gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            name={field.key}
-            id={id}
-            defaultChecked={value === "true"}
-            className="mt-0.5 h-4 w-4 rounded border-surface-300 text-brand-600 focus:ring-brand-500"
-          />
-          <input type="hidden" name={`__bool_${field.key}`} value="true" />
-          <div>
-            <span className="text-sm font-medium text-surface-700 block">{field.label}</span>
-            {field.hint && <span className="text-xs text-surface-500">{field.hint}</span>}
-          </div>
-        </label>
-      );
-    }
-
-    if (field.type === "textarea") {
-      return (
-        <div key={field.key}>
-          <label htmlFor={id} className="block text-xs font-semibold text-surface-600 uppercase tracking-wider mb-1.5">
-            {field.label}
-          </label>
-          <textarea
-            name={field.key}
-            id={id}
-            defaultValue={value}
-            placeholder={field.placeholder}
-            rows={2}
-            className="input resize-none min-h-[80px]"
-          />
-          {field.hint && <p className="text-[11px] text-surface-500 mt-1">{field.hint}</p>}
-        </div>
-      );
-    }
-
-    if (field.type === "select") {
-      return (
-        <div key={field.key}>
-          <label htmlFor={id} className="block text-xs font-semibold text-surface-600 uppercase tracking-wider mb-1.5">
-            {field.label}
-          </label>
-          <select
-            name={field.key}
-            id={id}
-            defaultValue={value}
-            className="input bg-white min-h-[44px]"
-          >
-            {field.options?.map((opt) => (
-              <option key={opt} value={opt}>{opt}</option>
-            ))}
-          </select>
-          {field.hint && <p className="text-[11px] text-surface-500 mt-1">{field.hint}</p>}
-        </div>
-      );
-    }
-
-    return (
-      <div key={field.key}>
-        <label htmlFor={id} className="block text-xs font-semibold text-surface-600 uppercase tracking-wider mb-1.5">
-          {field.label}
-        </label>
-        <input
-          type="text"
-          name={field.key}
-          id={id}
-          defaultValue={value}
-          placeholder={field.placeholder}
-          className="input min-h-[44px]"
-        />
-        {field.hint && <p className="text-[11px] text-surface-500 mt-1">{field.hint}</p>}
-      </div>
-    );
-  }
+  const inputClass = "input";
+  const labelClass = "block text-xs font-medium text-zinc-400 mb-1";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-      {/* Toko */}
-      <div className="card overflow-hidden">
-        <div className="px-5 py-4 border-b border-surface-100 bg-surface-50/50 flex items-center gap-2">
-          <Store className="h-4 w-4 text-brand-600" aria-hidden="true" />
-          <h2 className="font-semibold text-surface-900">Informasi Toko</h2>
-        </div>
-        <div className="p-5 space-y-4">{grouped.store.map(renderField)}</div>
-      </div>
-
-      {/* Struk */}
-      <div className="card overflow-hidden">
-        <div className="px-5 py-4 border-b border-surface-100 bg-surface-50/50 flex items-center gap-2">
-          <Receipt className="h-4 w-4 text-brand-600" aria-hidden="true" />
-          <h2 className="font-semibold text-surface-900">Struk / Printer Thermal</h2>
-        </div>
-        <div className="p-5 space-y-4">{grouped.receipt.map(renderField)}</div>
-      </div>
-
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
       {error && (
-        <div role="alert" className="flex items-start gap-2.5 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
-          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
-          <span>{error}</span>
+        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-sm text-red-400" role="alert">
+          {error}
         </div>
       )}
       {success && (
-        <div role="status" className="flex items-center gap-2.5 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700">
-          <Check className="h-4 w-4" aria-hidden="true" />
-          <span className="font-medium">Pengaturan berhasil disimpan.</span>
+        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-sm text-emerald-400">
+          {success}
         </div>
       )}
 
-      <div className="flex items-center justify-between card p-4 sticky bottom-4 lg:static">
-        <button
-          type="button"
-          onClick={handleReset}
-          disabled={resetPending || pending}
-          className="btn-ghost text-sm text-red-600 hover:text-red-700 hover:bg-red-50 min-h-[44px] min-w-[56px] focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
-          aria-label="Reset semua pengaturan ke default"
-        >
-          {resetPending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <RotateCcw className="h-4 w-4" aria-hidden="true" />}
-          Reset ke Default
-        </button>
-
-        <button type="submit" disabled={pending} className="btn-primary text-sm min-h-[44px] min-w-[56px] focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1" aria-label={pending ? "Menyimpan pengaturan" : "Simpan pengaturan"}>
-          {pending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Save className="h-4 w-4" aria-hidden="true" />}
-          Simpan Pengaturan
-        </button>
+      {/* Store info */}
+      <div className="card p-5">
+        <h3 className="text-sm font-bold text-zinc-200 mb-4">Informasi Toko</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2">
+            <label className={labelClass}>Nama Toko</label>
+            <input name="store.name" defaultValue={initialSettings["store.name"]} className={inputClass} />
+          </div>
+          <div className="sm:col-span-2">
+            <label className={labelClass}>Tagline</label>
+            <input name="store.tagline" defaultValue={initialSettings["store.tagline"]} className={inputClass} />
+          </div>
+          <div className="sm:col-span-2">
+            <label className={labelClass}>Deskripsi</label>
+            <textarea name="store.description" rows={3} defaultValue={initialSettings["store.description"]} className={`${inputClass} resize-y`} />
+          </div>
+          <div>
+            <label className={labelClass}>Telepon</label>
+            <input name="store.phone" defaultValue={initialSettings["store.phone"]} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>WhatsApp</label>
+            <input name="store.whatsapp" defaultValue={initialSettings["store.whatsapp"]} className={inputClass} />
+          </div>
+          <div className="sm:col-span-2">
+            <label className={labelClass}>Alamat</label>
+            <textarea name="store.address" rows={2} defaultValue={initialSettings["store.address"]} className={`${inputClass} resize-y`} />
+          </div>
+          <div className="sm:col-span-2">
+            <label className={labelClass}>Maps Embed URL</label>
+            <input name="store.mapsEmbedUrl" defaultValue={initialSettings["store.mapsEmbedUrl"]} className={inputClass} placeholder="https://www.google.com/maps/embed?..." />
+          </div>
+        </div>
       </div>
+
+      {/* Operating hours */}
+      <div className="card p-5">
+        <h3 className="text-sm font-bold text-zinc-200 mb-4">Jam Operasional</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label className={labelClass}>Hari</label>
+            <input name="store.openDays" defaultValue={initialSettings["store.openDays"]} className={inputClass} placeholder="Senin - Sabtu" />
+          </div>
+          <div>
+            <label className={labelClass}>Jam Buka</label>
+            <input name="store.openStart" type="time" defaultValue={initialSettings["store.openStart"]} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>Jam Tutup</label>
+            <input name="store.openEnd" type="time" defaultValue={initialSettings["store.openEnd"]} className={inputClass} />
+          </div>
+        </div>
+      </div>
+
+      {/* Reseller category */}
+      <div className="card p-5">
+        <h3 className="text-sm font-bold text-zinc-200 mb-4">Harga Reseller</h3>
+        <div>
+          <label className={labelClass}>Kategori Reseller</label>
+          <select name="store.resellerCategoryId" defaultValue={initialSettings["store.resellerCategoryId"]} className={inputClass}>
+            <option value="">Tidak ada</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          <p className="text-[10px] text-zinc-500 mt-1.5 font-mono">
+            Harga reseller hanya berlaku untuk produk di kategori ini.
+          </p>
+        </div>
+      </div>
+
+      {/* Payment methods */}
+      <div className="card p-5">
+        <h3 className="text-sm font-bold text-zinc-200 mb-4">Metode Pembayaran</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>CASH</label>
+            <input name="payment.CASH" defaultValue={initialSettings["payment.CASH"]} className={inputClass} placeholder="Tunai" />
+          </div>
+          <div>
+            <label className={labelClass}>QRIS</label>
+            <input name="payment.QRIS" defaultValue={initialSettings["payment.QRIS"]} className={inputClass} placeholder="QRIS Scan" />
+          </div>
+          <div>
+            <label className={labelClass}>Transfer BCA</label>
+            <input name="payment.TRANSFER_BCA" defaultValue={initialSettings["payment.TRANSFER_BCA"]} className={inputClass} placeholder="1234567890 a.n. ..." />
+          </div>
+          <div>
+            <label className={labelClass}>Transfer Mandiri</label>
+            <input name="payment.TRANSFER_MANDIRI" defaultValue={initialSettings["payment.TRANSFER_MANDIRI"]} className={inputClass} placeholder="1234567890 a.n. ..." />
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" disabled={loading} className="btn-primary px-5 py-2.5 text-sm">
+        {loading ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Menyimpan...
+          </>
+        ) : (
+          <>
+            <Save className="h-4 w-4" />
+            Simpan Pengaturan
+          </>
+        )}
+      </button>
     </form>
   );
 }

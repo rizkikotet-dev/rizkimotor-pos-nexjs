@@ -11,7 +11,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#ea580c",
+  themeColor: "#09090b",
 };
 
 export default function RootLayout({
@@ -20,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id">
-      <body className="min-h-dvh">
+    <html lang="id" className="dark">
+      <body className="min-h-dvh bg-surface-base">
         <a href="#main-content" className="skip-link">
           Lewati ke konten utama
         </a>

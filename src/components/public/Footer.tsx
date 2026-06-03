@@ -6,37 +6,27 @@ export async function PublicFooter() {
   const s = settings;
 
   return (
-    <footer className="bg-ink text-surface-400 mt-16 relative overflow-hidden">
-      {/* Background texture */}
-      <div className="absolute inset-0 hero-grid opacity-50" />
-      <div className="absolute inset-0 stripe-pattern" />
-      <div className="absolute inset-0 grain grain-dark" />
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-brand-500/5 rounded-full blur-[100px]" />
-      </div>
-
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14 lg:py-18">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8">
-          {/* Brand — takes more space */}
+    <footer className="bg-surface-container-low border-t border-surface-outline-variant mt-16">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-6">
           <div className="sm:col-span-2 lg:col-span-5">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="bg-brand-600 text-white p-2.5 rounded-xl shadow-brutal-sm">
-                <Wrench className="h-5 w-5" />
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="bg-primary text-surface-base p-1.5 rounded-lg">
+                <Wrench className="h-4 w-4" aria-hidden="true" />
               </div>
               <div>
-                <div className="font-display font-800 text-white text-lg tracking-tight">{s["store.name"]}</div>
-                <div className="text-[10px] text-surface-500 font-mono uppercase tracking-[0.15em]">{s["store.tagline"]}</div>
+                <div className="font-bold text-zinc-100 text-sm tracking-tight">{s["store.name"]}</div>
+                <div className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">{s["store.tagline"]}</div>
               </div>
             </div>
-            <p className="text-sm text-surface-500 leading-relaxed max-w-xs">
+            <p className="text-sm text-zinc-500 leading-relaxed max-w-xs">
               Solusi terpercaya untuk segala kebutuhan alat-alat sepeda motor Anda.
             </p>
           </div>
 
-          {/* Navigation */}
           <div className="lg:col-span-3">
-            <h3 className="text-white font-display font-700 text-sm mb-5">Navigasi</h3>
-            <ul className="space-y-3 text-sm">
+            <h2 className="text-zinc-300 font-semibold text-xs uppercase tracking-widest mb-4">Navigasi</h2>
+            <ul className="space-y-2 text-sm">
               {[
                 { href: "/", label: "Beranda" },
                 { href: "/produk", label: "Produk" },
@@ -46,9 +36,8 @@ export async function PublicFooter() {
                 <li key={item.href}>
                   <a
                     href={item.href}
-                    className="hover:text-white transition-colors duration-200 inline-flex items-center gap-1.5 group"
+                    className="text-zinc-500 hover:text-zinc-100 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-sm"
                   >
-                    <span className="w-0 group-hover:w-2 h-px bg-brand-500 transition-all duration-200" />
                     {item.label}
                   </a>
                 </li>
@@ -56,32 +45,35 @@ export async function PublicFooter() {
             </ul>
           </div>
 
-          {/* Contact */}
           <div className="lg:col-span-4">
-            <h3 className="text-white font-display font-700 text-sm mb-5">Hubungi Kami</h3>
-            <ul className="space-y-3.5 text-sm">
+            <h2 className="text-zinc-300 font-semibold text-xs uppercase tracking-widest mb-4">Hubungi Kami</h2>
+            <ul className="space-y-3 text-sm">
               {s["store.address"] && (
-                <li className="flex items-start gap-3">
-                  <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-surface-600" />
-                  <span>{s["store.address"]}</span>
+                <li className="flex items-start gap-2.5">
+                  <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-zinc-600" aria-hidden="true" />
+                  <span className="text-zinc-500">{s["store.address"]}</span>
                 </li>
               )}
               {s["store.phone"] && (
-                <li className="flex items-center gap-3">
-                  <Phone className="h-4 w-4 flex-shrink-0 text-surface-600" />
-                  <span>{s["store.phone"]}</span>
+                <li className="flex items-center gap-2.5">
+                  <Phone className="h-4 w-4 flex-shrink-0 text-zinc-600" aria-hidden="true" />
+                  <a href={`tel:${s["store.phone"]}`} className="text-zinc-500 hover:text-zinc-100 transition-colors">
+                    {s["store.phone"]}
+                  </a>
                 </li>
               )}
               {s["store.email"] && (
-                <li className="flex items-center gap-3">
-                  <Mail className="h-4 w-4 flex-shrink-0 text-surface-600" />
-                  <span>{s["store.email"]}</span>
+                <li className="flex items-center gap-2.5">
+                  <Mail className="h-4 w-4 flex-shrink-0 text-zinc-600" aria-hidden="true" />
+                  <a href={`mailto:${s["store.email"]}`} className="text-zinc-500 hover:text-zinc-100 transition-colors">
+                    {s["store.email"]}
+                  </a>
                 </li>
               )}
               {s["store.website"] && (
-                <li className="flex items-center gap-3">
-                  <Globe className="h-4 w-4 flex-shrink-0 text-surface-600" />
-                  <a href={s["store.website"]} target="_blank" rel="noopener" className="hover:text-white transition-colors">
+                <li className="flex items-center gap-2.5">
+                  <Globe className="h-4 w-4 flex-shrink-0 text-zinc-600" aria-hidden="true" />
+                  <a href={s["store.website"]} target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-zinc-100 transition-colors">
                     {s["store.website"]}
                   </a>
                 </li>
@@ -90,12 +82,11 @@ export async function PublicFooter() {
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="border-t border-surface-800/50 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
-          <p className="text-surface-600 text-xs font-mono">
+        <div className="border-t border-surface-outline-variant mt-8 pt-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm">
+          <p className="text-zinc-600 text-xs font-mono">
             &copy; {new Date().getFullYear()} {s["store.name"]}
           </p>
-          <p className="text-[10px] text-surface-700 font-mono uppercase tracking-[0.2em]">
+          <p className="text-[10px] text-zinc-700 font-mono uppercase tracking-widest">
             Sparepart Motor Terpercaya
           </p>
         </div>

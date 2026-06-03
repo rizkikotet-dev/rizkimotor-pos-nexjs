@@ -8,21 +8,17 @@ export const dynamic = "force-dynamic";
 export default async function POSPage() {
   const user = await getCurrentUser();
   const settings = await getSettings();
-  const [products, categories] = await Promise.all([
-    prisma.product.findMany({
-      where: { active: true },
-      include: { category: true },
-      orderBy: { name: "asc" },
-    }),
-    prisma.category.findMany({ orderBy: { name: "asc" } }),
-  ]);
+  const products = await prisma.product.findMany({
+    where: { active: true },
+    include: { category: true },
+    orderBy: { name: "asc" },
+  });
 
   return (
     <POSClient
       products={products}
-      categories={categories}
-      user={user!}
-      storeName={settings["store.name"]}
+      settings={settings}
+      userRole={user?.role}
     />
   );
 }

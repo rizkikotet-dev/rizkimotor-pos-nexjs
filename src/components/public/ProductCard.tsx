@@ -20,68 +20,57 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Link
       href={`/produk/${product.id}`}
-      className="group block card-hover overflow-hidden focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 rounded-2xl"
+      className="group block card-hover overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-lg active:scale-[0.98] transition-all duration-150"
       aria-label={`${product.name}, ${product.category.name}${!inStock ? ", stok habis" : ""}`}
     >
-      {/* Image area */}
-      <div className="aspect-[4/3] bg-surface-100 relative overflow-hidden">
+      <div className="aspect-[4/3] bg-surface-container-low relative overflow-hidden">
         {product.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={product.image}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+            className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-surface-300">
-            <Package className="h-14 w-14 group-hover:scale-110 transition-transform duration-500" aria-hidden="true" />
+          <div className="w-full h-full flex items-center justify-center text-zinc-700">
+            <Package className="h-12 w-12" aria-hidden="true" />
           </div>
         )}
 
-        {/* Stock overlay */}
         {!inStock && (
-          <div className="absolute inset-0 bg-ink/60 backdrop-blur-sm flex items-center justify-center">
-            <span className="bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider">
+          <div className="absolute inset-0 bg-surface-base/70 backdrop-blur-sm flex items-center justify-center">
+            <span className="bg-red-600 text-white text-[10px] font-semibold px-2.5 py-1 rounded-md uppercase tracking-wider">
               Stok Habis
             </span>
           </div>
         )}
 
-        {/* Low stock badge */}
         {inStock && product.stock <= 5 && (
-          <div className="absolute top-2.5 right-2.5">
+          <div className="absolute top-2 right-2">
             <span
-              className="bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider"
+              className="bg-amber-600 text-white text-[10px] font-semibold px-2 py-0.5 rounded-md"
               aria-label={`Sisa stok ${product.stock}`}
             >
               Sisa {product.stock}
             </span>
           </div>
         )}
-
-        {/* Category tag on hover */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-ink/80 to-transparent p-3 pt-8 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-          <span className="text-[10px] font-mono text-white/80 uppercase tracking-[0.15em]">
-            {product.category.name}
-          </span>
-        </div>
       </div>
 
-      {/* Info area */}
-      <div className="p-3.5 sm:p-4">
-        <p className="text-[10px] font-mono text-surface-400 uppercase tracking-[0.12em] mb-1">
+      <div className="p-3">
+        <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-1">
           {product.category.name}
         </p>
-        <h3 className="font-display font-600 text-sm text-ink line-clamp-2 group-hover:text-brand-600 transition-colors duration-200 leading-snug mb-2">
+        <h3 className="font-semibold text-sm text-zinc-100 line-clamp-2 group-hover:text-primary transition-colors duration-150 leading-snug mb-1.5">
           {product.name}
         </h3>
         {product.price != null && product.price > 0 && (
-          <p className="font-display font-800 text-brand-600 text-base">
+          <p className="font-bold text-primary text-sm">
             {formatRupiah(product.price)}
           </p>
         )}
-        <p className="text-[10px] text-surface-400 font-mono mt-1">{product.sku}</p>
+        <p className="text-[10px] text-zinc-600 font-mono mt-1">{product.sku}</p>
       </div>
     </Link>
   );

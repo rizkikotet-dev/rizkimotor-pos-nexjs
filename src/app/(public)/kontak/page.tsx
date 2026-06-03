@@ -1,66 +1,87 @@
-import { MapPin, Phone, Mail, Clock, Globe, ExternalLink } from "lucide-react";
 import { getSettings } from "@/lib/settings";
+import { MapPin, Phone, Clock, Wrench } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata() {
-  const s = await getSettings();
-  return { title: `Kontak — ${s["store.name"]}` };
-}
-
 export default async function KontakPage() {
-  const s = await getSettings();
-
-  const items = [
-    s["store.address"] && { icon: MapPin, label: "Alamat", value: s["store.address"] },
-    s["store.phone"] && { icon: Phone, label: "Telepon", value: s["store.phone"], href: `tel:${s["store.phone"]}` },
-    s["store.email"] && { icon: Mail, label: "Email", value: s["store.email"], href: `mailto:${s["store.email"]}` },
-    s["store.website"] && { icon: Globe, label: "Website", value: s["store.website"], href: s["store.website"] },
-    { icon: Clock, label: "Jam Buka", value: "Senin - Sabtu: 08.00 - 20.00 WIB" },
-  ].filter(Boolean) as Array<{ icon: any; label: string; value: string; href?: string }>;
+  const settings = await getSettings();
 
   return (
-    <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10 lg:py-16 relative">
-      <div className="absolute inset-0 grain" />
-
-      {/* Header — editorial style */}
-      <div className="text-center mb-12 lg:mb-14 relative">
-        <p className="text-[10px] font-mono text-brand-600 uppercase tracking-[0.2em] mb-3">Kontak</p>
-        <h1 className="font-display text-display-sm md:text-display-md text-ink tracking-tight mb-4">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
+      <div className="max-w-2xl mx-auto text-center mb-12">
+        <div className="inline-flex items-center justify-center w-10 h-10 bg-primary/10 rounded-lg mb-4 border border-primary/20">
+          <Wrench className="h-5 w-5 text-primary" />
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-zinc-100 tracking-tight mb-3">
           Hubungi Kami
         </h1>
-        <div className="line-accent mx-auto mb-5" />
-        <p className="text-surface-500 max-w-md mx-auto leading-relaxed">
-          Kami siap melayani Anda. Silakan hubungi {s["store.name"]} melalui informasi di bawah.
+        <div className="line-accent mb-4" />
+        <p className="text-zinc-400 leading-relaxed">
+          Ada pertanyaan tentang produk atau pesanan? Jangan ragu untuk menghubungi kami.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative">
-        {items.map((item, i) => {
-          const Wrapper = item.href ? "a" : "div";
-          const wrapperProps = item.href
-            ? { href: item.href, target: item.href.startsWith("http") ? "_blank" : undefined, rel: item.href.startsWith("http") ? "noopener noreferrer" : undefined }
-            : {};
-          return (
-            <Wrapper
-              key={i}
-              {...wrapperProps}
-              className="card p-5 flex items-start gap-4 group hover:shadow-lifted hover:-translate-y-0.5 transition-all duration-300"
-            >
-              <div className="bg-ink text-white p-3 rounded-xl flex-shrink-0 group-hover:bg-brand-600 transition-colors duration-300">
-                <item.icon className="h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-mono text-surface-400 uppercase tracking-[0.15em] mb-1">{item.label}</p>
-                <p className="font-semibold text-ink break-words">{item.value}</p>
-              </div>
-              {item.href && (
-                <ExternalLink className="h-4 w-4 text-surface-300 flex-shrink-0 mt-1 group-hover:text-brand-500 transition-colors" />
-              )}
-            </Wrapper>
-          );
-        })}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
+        {[
+          {
+            icon: MapPin,
+            title: "Alamat",
+            lines: [settings["store.address"]],
+            color: "bg-primary/10 text-primary",
+          },
+          {
+            icon: Phone,
+            title: "Telepon",
+            lines: [settings["store.phone"]],
+            href: `tel:${settings["store.phone"]?.replace(/[^0-9+]/g, "")}`,
+            color: "bg-emerald-500/10 text-emerald-400",
+          },
+          {
+            icon: Clock,
+            title: "Jam Operasional",
+            lines: [
+              settings["store.openDays"],
+              `${settings["store.openStart"]} — ${settings["store.openEnd"]} WIB`,
+            ],
+            color: "bg-zinc-500/10 text-zinc-400",
+          },
+        ].map((item) => (
+          <div key={item.title} className="card p-6 text-center hover:bg-surface-container-high transition-colors">
+            <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-3 ${item.color}`}>
+              <item.icon className="h-5 w-5" />
+            </div>
+            <h3 className="text-sm font-bold text-zinc-100 mb-1">{item.title}</h3>
+            {item.href ? (
+              <a href={item.href} className="text-sm text-primary hover:text-primary-400 font-medium">
+                {item.lines[0]}
+              </a>
+            ) : (
+              item.lines.map((line, i) => (
+                <p key={i} className="text-sm text-zinc-400">
+                  {line}
+                </p>
+              ))
+            )}
+          </div>
+        ))}
       </div>
+
+      {settings["store.mapsEmbedUrl"] && (
+        <div className="mt-10 max-w-3xl mx-auto">
+          <div className="card overflow-hidden border-surface-outline-variant">
+            <div className="aspect-video bg-surface-container-high relative">
+              <iframe
+                src={settings["store.mapsEmbedUrl"]}
+                className="w-full h-full border-0"
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Lokasi RIZKI MOTOR di Google Maps"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

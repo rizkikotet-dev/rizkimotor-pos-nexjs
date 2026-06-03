@@ -1,77 +1,59 @@
-import { Wrench, Target, Eye, Heart } from "lucide-react";
-import { getSettings } from "@/lib/settings";
+import { Wrench, Shield, Clock, Award } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+export const metadata = {
+  title: "Tentang Kami — RIZKI MOTOR",
+};
 
-export async function generateMetadata() {
-  const s = await getSettings();
-  return { title: `Tentang Kami — ${s["store.name"]}` };
-}
-
-export default async function TentangPage() {
-  const s = await getSettings();
+export default function TentangPage() {
   return (
-    <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10 lg:py-16 relative">
-      <div className="absolute inset-0 grain" />
-
-      {/* Hero — editorial style */}
-      <div className="text-center mb-14 lg:mb-18 relative">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-ink text-white rounded-2xl mb-6 shadow-brutal-sm">
-          <Wrench className="h-8 w-8" />
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
+      <div className="max-w-2xl mx-auto text-center mb-12">
+        <div className="inline-flex items-center justify-center w-10 h-10 bg-primary/10 rounded-lg mb-4 border border-primary/20">
+          <Wrench className="h-5 w-5 text-primary" />
         </div>
-        <p className="text-[10px] font-mono text-brand-600 uppercase tracking-[0.2em] mb-3">Profil</p>
-        <h1 className="font-display text-display-sm md:text-display-md text-ink tracking-tight mb-4">
-          Tentang {s["store.name"]}
+        <h1 className="text-2xl sm:text-3xl font-bold text-zinc-100 tracking-tight mb-3">
+          Tentang RIZKI MOTOR
         </h1>
-        <div className="line-accent mx-auto mb-5" />
-        <p className="text-surface-500 max-w-xl mx-auto leading-relaxed">
-          Mitra terpercaya Anda untuk segala kebutuhan alat-alat sepeda motor.
+        <div className="line-accent mb-4" />
+        <p className="text-zinc-400 leading-relaxed">
+          Kami adalah toko sparepart motor terpercaya yang melayani kebutuhan mekanik dan pemilik motor sejak 2015.
+          Dengan ribuan produk berkualitas dan harga bersaing, kami berkomitmen menjadi solusi terlengkap untuk segala kebutuhan alat sepeda motor Anda.
         </p>
       </div>
 
-      {/* About card */}
-      <div className="card p-6 sm:p-8 mb-12 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
-        <div className="relative z-10">
-          <div className="line-accent mb-4" />
-          <p className="text-surface-700 leading-relaxed text-base">
-            <strong className="text-ink">{s["store.name"]}</strong> adalah toko sparepart alat-alat sepeda motor
-            yang berkomitmen menyediakan produk berkualitas dengan harga bersaing. Kami
-            menyediakan berbagai macam komponen dan aksesoris motor dari merek-merek
-            terpercaya untuk memastikan kendaraan Anda tetap dalam kondisi terbaik.
-          </p>
-        </div>
-      </div>
-
-      {/* Values — asymmetric grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
         {[
           {
-            icon: Target,
-            title: "Misi",
-            desc: "Menyediakan sparepart motor asli berkualitas dengan pelayanan terbaik untuk pelanggan.",
-            accent: "bg-brand-500",
+            icon: Shield,
+            title: "Terpercaya",
+            desc: "Lebih dari 8 tahun melayani mekanik dan bengkel di seluruh Indonesia.",
+            color: "bg-primary/10 text-primary",
           },
           {
-            icon: Eye,
-            title: "Visi",
-            desc: "Menjadi toko sparepart motor pilihan utama di wilayah kami.",
-            accent: "bg-blue-500",
+            icon: Award,
+            title: "Kualitas Terjamin",
+            desc: "Semua produk dijamin asli dan berkualitas dari merek terpercaya.",
+            color: "bg-emerald-500/10 text-emerald-400",
           },
           {
-            icon: Heart,
-            title: "Komitmen",
-            desc: "Kepuasan pelanggan adalah prioritas utama. Kami siap melayani dengan ramah dan profesional.",
-            accent: "bg-emerald-500",
+            icon: Clock,
+            title: "Stok Ready",
+            desc: "Ribuan sparepart tersedia siap dikirim untuk mendukung bisnis Anda.",
+            color: "bg-zinc-500/10 text-zinc-400",
           },
-        ].map((item, i) => (
-          <div key={i} className="card p-6 group hover:shadow-lifted hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-            <div className={`w-full h-1 ${item.accent} rounded-full mb-5 group-hover:h-1.5 transition-all`} />
-            <div className="w-12 h-12 rounded-xl bg-surface-100 flex items-center justify-center mb-4 group-hover:bg-surface-200 transition-colors">
-              <item.icon className="h-5 w-5 text-surface-600" />
+          {
+            icon: Wrench,
+            title: "Harga Bersaing",
+            desc: "Harga terbaik untuk mekanik dan bengkel, termasuk harga reseller khusus.",
+            color: "bg-primary/10 text-primary",
+          },
+        ].map((item) => (
+          <div key={item.title} className="card p-5 hover:bg-surface-container-high transition-colors">
+            <div className={`inline-flex items-center justify-center w-9 h-9 rounded-lg mb-3 ${item.color}`}>
+              <item.icon className="h-4 w-4" />
             </div>
-            <h3 className="font-display font-700 text-ink mb-2">{item.title}</h3>
-            <p className="text-sm text-surface-500 leading-relaxed">{item.desc}</p>
+            <h3 className="text-sm font-bold text-zinc-100 mb-1.5">{item.title}</h3>
+            <p className="text-xs text-zinc-400 leading-relaxed">{item.desc}</p>
           </div>
         ))}
       </div>

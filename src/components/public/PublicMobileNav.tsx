@@ -20,7 +20,7 @@ export function PublicMobileNav({ user }: Props) {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-ink/95 backdrop-blur-xl border-t border-surface-800/50 safe-area-bottom"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-base/90 backdrop-blur-xl border-t border-surface-outline-variant safe-area-bottom"
       aria-label="Navigasi mobile"
     >
       <div className="flex items-center justify-around px-1 py-1">
@@ -32,11 +32,11 @@ export function PublicMobileNav({ user }: Props) {
               key={item.href}
               href={item.href}
               aria-label={item.label}
-              {...(active ? { "aria-current": "page" } : {})}
-              className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl text-[10px] font-medium transition-all duration-200 min-w-[56px] min-h-[44px] justify-center ${
+              aria-current={active ? "page" : undefined}
+              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors duration-150 min-w-[56px] min-h-[44px] justify-center ${
                 active
-                  ? "text-brand-400"
-                  : "text-surface-500 hover:text-surface-300"
+                  ? "text-primary"
+                  : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
               <Icon className="h-5 w-5" aria-hidden="true" />
@@ -48,7 +48,7 @@ export function PublicMobileNav({ user }: Props) {
           <Link
             href={user.role === "ADMIN" ? "/admin" : "/pos"}
             aria-label="Panel Admin"
-            className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl text-[10px] font-medium text-surface-500 hover:text-surface-300 transition-all duration-200 min-w-[56px] min-h-[44px] justify-center"
+            className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg text-[10px] font-medium text-zinc-500 hover:text-zinc-300 transition-colors duration-150 min-w-[56px] min-h-[44px] justify-center"
           >
             <LayoutDashboard className="h-5 w-5" aria-hidden="true" />
             <span>Panel</span>

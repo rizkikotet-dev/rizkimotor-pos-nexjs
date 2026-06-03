@@ -5,92 +5,118 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Package,
-  Tag,
-  Receipt,
-  Users,
   ShoppingCart,
-  Settings as SettingsIcon,
+  Users,
+  Settings,
+  LogOut,
   Wrench,
+  ChevronLeft,
 } from "lucide-react";
 
+interface SidebarProps {
+  collapsed?: boolean;
+  onToggle?: () => void;
+}
+
 const navItems = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/produk", label: "Produk", icon: Package },
-  { href: "/admin/kategori", label: "Kategori", icon: Tag },
-  { href: "/admin/transaksi", label: "Transaksi", icon: Receipt },
+  { href: "/admin/transaksi", label: "Transaksi", icon: ShoppingCart },
   { href: "/admin/pengguna", label: "Pengguna", icon: Users },
-  { href: "/admin/pengaturan", label: "Pengaturan", icon: SettingsIcon },
+  { href: "/admin/pengaturan", label: "Pengaturan", icon: Settings },
 ];
 
-export function AdminSidebar() {
+export function AdminSidebar({ collapsed = false, onToggle }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden lg:flex lg:flex-col w-[260px] bg-ink text-surface-300 min-h-screen flex-shrink-0 relative overflow-hidden">
-      {/* Background texture */}
-      <div className="absolute inset-0 hero-grid opacity-30" />
-      <div className="absolute inset-0 stripe-pattern" />
-      <div className="absolute inset-0 grain grain-dark" />
+    <>
+      {!collapsed && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={onToggle}
+          aria-hidden="true"
+        />
+      )}
 
-      {/* Logo area */}
-      <div className="p-5 border-b border-surface-800/50 relative z-10">
-        <Link
-          href="/admin"
-          className="flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-ink rounded-xl px-2 py-1 -ml-2"
-          aria-label="RIZKI MOTOR Admin Panel"
-        >
-          <div className="bg-brand-600 text-white p-2.5 rounded-xl group-hover:bg-brand-500 transition-colors shadow-brutal-sm">
-            <Wrench className="h-5 w-5" aria-hidden="true" />
-          </div>
-          <div>
-            <div className="font-display font-800 text-white text-sm tracking-tight">RIZKI MOTOR</div>
-            <div className="text-[10px] text-surface-500 font-mono uppercase tracking-[0.15em]">Admin Panel</div>
-          </div>
-        </Link>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-0.5 relative z-10" aria-label="Navigasi admin">
-        {navItems.map((item) => {
-          const active = item.exact
-            ? pathname === item.href
-            : pathname.startsWith(item.href);
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              {...(active ? { "aria-current": "page" } : {})}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-ink ${
-                active
-                  ? "bg-brand-600 text-white shadow-brutal-sm"
-                  : "text-surface-400 hover:bg-surface-800/50 hover:text-white"
-              }`}
-            >
-              <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
-              {item.label}
+      <aside
+        className={`
+          fixed top-0 left-0 z-50 h-full w-64
+          bg-surface-base border-r border-surface-outline-variant
+          transition-transform duration-200 ease-out
+          lg:static lg:translate-x-0 lg:w-64
+          ${collapsed ? "-translate-x-full" : "translate-x-0"}
+        `}
+        role="navigation"
+        aria-label="Menu admin"
+      >
+        <div className="flex flex-col h-full">
+          <div className="h-14 flex items-center justify-between px-4 border-b border-surface-outline-variant">
+            <Link href="/admin" className="flex items-center gap-2 min-w-0 focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-lg px-1" aria-label="RIZKI MOTOR - Dashboard">
+              <div className="w-8 h-8 rounded-lg bg-primary text-surface-base flex items-center justify-center flex-shrink-0">
+                <Wrench className="h-4 w-4" aria-hidden="true" />
+              </div>
+              <span className="text-sm font-bold text-zinc-100 truncate">RIZKI MOTOR</span>
             </Link>
-          );
-        })}
-      </nav>
+            {onToggle && (
+              <button
+                onClick={onToggle}
+                className="text-zinc-500 hover:text-zinc-200 p-1.5 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 lg:hidden min-h-[36px] min-w-[36px]"
+                aria-label="Tutup sidebar"
+              >
+                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+              </button>
+            )}
+          </div>
 
-      {/* Quick links */}
-      <div className="p-3 border-t border-surface-800/50 space-y-0.5 relative z-10" aria-label="Aksi cepat">
-        <Link
-          href="/pos"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-surface-400 hover:bg-surface-800/50 hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-ink"
-        >
-          <ShoppingCart className="h-[18px] w-[18px]" aria-hidden="true" />
-          Buka POS / Kasir
-        </Link>
-        <Link
-          href="/"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-surface-400 hover:bg-surface-800/50 hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-ink"
-        >
-          <Wrench className="h-[18px] w-[18px]" aria-hidden="true" />
-          Katalog Publik
-        </Link>
-      </div>
-    </aside>
+          <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`
+                    flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm font-medium
+                    transition-colors duration-150 min-h-[44px]
+                    ${
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-zinc-400 hover:text-zinc-200 hover:bg-surface-container-high"
+                    }
+                  `}
+                  aria-label={item.label}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  <Icon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                  <span className="truncate">{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="border-t border-surface-outline-variant p-2 space-y-0.5 pb-20 lg:pb-2">
+            <Link
+              href="/"
+              className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-zinc-500 hover:text-zinc-300 hover:bg-surface-container-high transition-colors min-h-[44px]"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Wrench className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+              <span className="truncate">Katalog Publik</span>
+            </Link>
+            <button
+              onClick={() => fetch("/api/auth/signout").then(() => location.reload())}
+              className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors min-h-[44px] w-full text-left"
+              aria-label="Logout dari akun"
+            >
+              <LogOut className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+              <span className="truncate">Logout</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }

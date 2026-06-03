@@ -2,20 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  Package,
-  Tag,
-  Receipt,
-  ShoppingCart,
-} from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut } from "lucide-react";
 
 const navItems = [
-  { href: "/admin", label: "Home", icon: LayoutDashboard, exact: true },
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/produk", label: "Produk", icon: Package },
-  { href: "/admin/kategori", label: "Kategori", icon: Tag },
-  { href: "/admin/transaksi", label: "Transaksi", icon: Receipt },
-  { href: "/pos", label: "Kasir", icon: ShoppingCart },
+  { href: "/admin/transaksi", label: "Transaksi", icon: ShoppingCart },
+  { href: "/admin/pengguna", label: "Pengguna", icon: Users },
+  { href: "/admin/pengaturan", label: "Pengaturan", icon: Settings },
 ];
 
 export function AdminMobileNav() {
@@ -23,29 +17,25 @@ export function AdminMobileNav() {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-ink/95 backdrop-blur-xl border-t border-surface-800/50 safe-area-bottom"
-      aria-label="Navigasi admin mobile"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-surface-base/95 backdrop-blur-xl border-t border-surface-outline-variant safe-area-bottom lg:hidden"
+      aria-label="Menu admin (mobile)"
     >
-      <div className="flex items-center justify-around px-2 py-1">
+      <div className="grid grid-cols-5 h-14">
         {navItems.map((item) => {
-          const active = item.exact
-            ? pathname === item.href
-            : pathname.startsWith(item.href);
+          const isActive = pathname === item.href;
           const Icon = item.icon;
           return (
             <Link
               key={item.href}
               href={item.href}
-              aria-label={item.label}
-              {...(active ? { "aria-current": "page" } : {})}
-              className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl text-[10px] font-medium transition-all duration-200 min-w-[56px] min-h-[44px] justify-center ${
-                active
-                  ? "text-brand-400"
-                  : "text-surface-500 hover:text-surface-300"
+              className={`flex flex-col items-center justify-center gap-0.5 min-h-[48px] transition-colors duration-150 ${
+                isActive ? "text-primary" : "text-zinc-500 active:text-zinc-300"
               }`}
+              aria-label={item.label}
+              aria-current={isActive ? "page" : undefined}
             >
               <Icon className="h-5 w-5" aria-hidden="true" />
-              <span>{item.label}</span>
+              <span className="text-[10px] font-medium leading-tight">{item.label}</span>
             </Link>
           );
         })}

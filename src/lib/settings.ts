@@ -13,6 +13,19 @@ export const DEFAULT_SETTINGS = {
 
   // === Tampilan Katalog Publik ===
   "store.tagline": "Sparepart Motor Terlengkap",
+  "store.description": "",
+  "store.whatsapp": "",
+
+  // === Jam Operasional ===
+  "store.openDays": "Senin - Sabtu",
+  "store.openStart": "08:00",
+  "store.openEnd": "17:00",
+
+  // === Maps ===
+  "store.mapsEmbedUrl": "",
+
+  // === Reseller ===
+  "store.resellerCategoryId": "",
 
   // === Struk / Printer Thermal ===
   "receipt.paperSize": "80mm", // "58mm" | "80mm"
@@ -25,6 +38,12 @@ export const DEFAULT_SETTINGS = {
   "receipt.showWebsite": "false",
   "receipt.showKasir": "true",
   "receipt.showInvoiceDate": "true",
+
+  // === Metode Pembayaran ===
+  "payment.CASH": "Tunai",
+  "payment.QRIS": "QRIS Scan",
+  "payment.TRANSFER_BCA": "",
+  "payment.TRANSFER_MANDIRI": "",
 } as const;
 
 export type SettingKey = keyof typeof DEFAULT_SETTINGS;

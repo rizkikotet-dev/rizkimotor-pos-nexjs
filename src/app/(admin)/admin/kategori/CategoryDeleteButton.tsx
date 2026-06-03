@@ -11,8 +11,8 @@ export function CategoryDeleteButton({ id, name, isDefault }: { id: number; name
 
   if (isDefault) {
     return (
-      <div className="inline-flex items-center gap-1 text-[10px] text-amber-700 italic font-medium" title="Kategori default dilindungi">
-        <ShieldCheck className="h-3 w-3" />
+      <div className="inline-flex items-center gap-1 text-[10px] text-amber-400 font-medium" title="Kategori default dilindungi">
+        <ShieldCheck className="h-3 w-3" aria-hidden="true" />
         default
       </div>
     );
@@ -46,12 +46,12 @@ export function CategoryDeleteButton({ id, name, isDefault }: { id: number; name
       <button
         onClick={handleDelete}
         disabled={loading}
-        className="btn-ghost p-1.5 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 disabled:opacity-50 transition-colors"
-        title="Hapus"
+        className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-red-500/40 min-h-[32px] min-w-[32px]"
+        aria-label={`Hapus kategori ${name}`}
       >
-        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+        {loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Trash2 className="h-4 w-4" aria-hidden="true" />}
       </button>
-      {error && <p className="text-[10px] text-red-600 mt-1 max-w-[200px] text-right">{error}</p>}
+      {error && <p className="text-[10px] text-red-400 mt-1 max-w-[200px] text-right" role="alert">{error}</p>}
     </div>
   );
 }
