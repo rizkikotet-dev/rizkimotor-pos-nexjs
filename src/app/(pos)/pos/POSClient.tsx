@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
+import { PaymentModal } from "@/components/pos/PaymentModal";
 interface Product {
   id: number;
   name: string;
@@ -48,6 +49,7 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const cartEndRef = useRef<HTMLDivElement>(null);
 
@@ -117,18 +119,12 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
     setCart((prev) => prev.filter((c) => !(c.productId === productId && c.price === price)));
   }
 
-  async function submitOrder() {
+  function handleOpenPayment() {
     if (cart.length === 0) return;
-    
-    const payment = prompt("Masukkan jumlah bayar:");
-    if (!payment || isNaN(Number(payment))) return;
-    
-    const paymentAmount = Number(payment);
-    if (paymentAmount < grandTotal) {
-      toast.error(`Pembayaran kurang! Total: ${formatRupiah(grandTotal)}`);
-      return;
-    }
+    setShowPayment(true);
+  }
 
+  async function handleConfirmPayment(paymentAmount: number) {
     setSubmitting(true);
 
     try {
@@ -154,6 +150,7 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
 
       const result = await res.json();
       setCart([]);
+      setShowPayment(false);
       router.refresh();
       toast.success(`Transaksi berhasil! Invoice: ${result.invoiceNo} | Kembalian: ${formatRupiah(result.change)}`);
       router.push(`/pos/struk/${result.id}`);
@@ -319,7 +316,7 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
             <span className="text-lg font-bold text-primary" aria-live="polite">{formatRupiah(grandTotal)}</span>
           </div>
           <button
-            onClick={submitOrder}
+            onClick={handleOpenPayment}
             disabled={cart.length === 0 || submitting}
             className="btn-primary w-full"
             aria-label={submitting ? "Memproses pesanan" : "Buat Pesanan"}
@@ -336,6 +333,14 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
           </div>
         </div>
       </div>
+
+      <PaymentModal
+        open={showPayment}
+        onClose={() => setShowPayment(false)}
+        onConfirm={handleConfirmPayment}
+        grandTotal={grandTotal}
+        submitting={submitting}
+      />
     </div>
   );
 }
