@@ -1,0 +1,99 @@
+// Rizki Motor — Prisma schema
+// SQLite (file-based) untuk development; bisa di-migrasi ke PostgreSQL untuk production.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User: ADMIN atau KASIR
+// role disimpan sebagai string karena SQLite tidak support enum di Prisma
+model User {
+  id           Int           @id @default(autoincrement())
+  username     String        @unique
+  name         String
+  password     String // bcrypt hash
+  role         String        @default("KASIR") // "ADMIN" | "KASIR"
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+
+  @@index([username])
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  slug      String    @unique
+  isDefault Boolean   @default(false) // kategori default, tidak bisa dihapus
+  createdAt DateTime  @default(now())
+  products  Product[]
+
+  @@index([isDefault])
+}
+
+model Product {
+  id          Int                @id @default(autoincrement())
+  sku         String             @unique
+  name        String
+  description String?
+  category    Category           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  categoryId  Int
+  price       Int // harga jual (rupiah, integer)
+  priceReseller  Int                @default(0) // 0 = tidak ada pilihan reseller
+  cost        Int                @default(0) // harga modal
+  stock       Int                @default(0)
+  minStock    Int                @default(5) // threshold alert stok menipis
+  image       String? // path /uploads/xxx.jpg atau URL
+  active      Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  items       TransactionItem[]
+
+  @@index([categoryId])
+  @@index([name])
+}
+
+model Transaction {
+  id        Int                @id @default(autoincrement())
+  invoiceNo String             @unique
+  user      User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  userId    Int
+  total     Int
+  payment   Int // uang bayar
+  change    Int // kembalian
+  note      String?
+  createdAt DateTime           @default(now())
+  items     TransactionItem[]
+
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model TransactionItem {
+  id            Int         @id @default(autoincrement())
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  transactionId Int
+  product       Product?    @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productId     Int?   // nullable untuk produk manual (tidak ada di database)
+  productName   String // snapshot nama produk saat transaksi
+  productSku    String // snapshot SKU saat transaksi
+  quantity      Int
+  price         Int // harga satuan saat transaksi
+  subtotal      Int
+
+  @@index([transactionId])
+  @@index([productId])
+}
+
+// Pengaturan toko & struk (key-value store sederhana)
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

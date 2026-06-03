@@ -1,0 +1,71 @@
+import Link from "next/link";
+import { Wrench, LayoutDashboard } from "lucide-react";
+import { getSettings } from "@/lib/settings";
+import { getCurrentUser } from "@/lib/auth";
+import { PublicMobileNav } from "./PublicMobileNav";
+
+export async function PublicHeader() {
+  const [settings, user] = await Promise.all([getSettings(), getCurrentUser()]);
+  const s = settings;
+
+  return (
+    <>
+      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-surface-200/80">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <div className="bg-brand-600 text-white p-2 rounded-xl group-hover:bg-brand-500 transition-colors shadow-sm shadow-brand-600/20">
+                <Wrench className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="font-bold text-base leading-none text-surface-900 tracking-tight">
+                  {s["store.name"]}
+                </div>
+                <div className="text-[10px] text-surface-500 leading-tight mt-0.5">
+                  {s["store.tagline"]}
+                </div>
+              </div>
+            </Link>
+
+            {/* Desktop nav */}
+            <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
+              {[
+                { href: "/", label: "Beranda" },
+                { href: "/produk", label: "Produk" },
+                { href: "/tentang", label: "Tentang" },
+                { href: "/kontak", label: "Kontak" },
+              ].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="px-3 py-2 rounded-lg text-surface-600 hover:text-brand-600 hover:bg-surface-50 transition-all duration-200"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Right action */}
+            <div className="flex items-center gap-2">
+              {user ? (
+                <Link
+                  href={user.role === "ADMIN" ? "/admin" : "/pos"}
+                  className="btn-primary text-sm px-4 py-2"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  <span className="hidden sm:inline">Panel</span>
+                </Link>
+              ) : (
+                <Link href="/login" className="btn-secondary text-sm px-4 py-2">
+                  Login
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+      <PublicMobileNav user={user} />
+    </>
+  );
+}
