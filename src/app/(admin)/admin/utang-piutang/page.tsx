@@ -11,6 +11,8 @@ import {
   Search,
   DollarSign,
   X,
+  Eye,
+  Receipt,
 } from "lucide-react";
 
 interface Debt {
@@ -20,7 +22,7 @@ interface Debt {
   status: string;
   createdAt: string;
   customer: { id: number; name: string; phone: string | null };
-  transaction: { invoiceNo: string; total: number };
+  transaction: { invoiceNo: string; total: number; id: number; createdAt: string; payment: number; change: number; items: { productName: string; productSku: string; quantity: number; price: number; subtotal: number }[] };
 }
 
 export default function UtangPiutangPage() {
@@ -32,6 +34,7 @@ export default function UtangPiutangPage() {
   const [payingId, setPayingId] = useState<number | null>(null);
   const [payAmount, setPayAmount] = useState("");
   const [paying, setPaying] = useState(false);
+  const [detailDebt, setDetailDebt] = useState<Debt | null>(null);
 
   useEffect(() => {
     fetchDebts();
@@ -201,6 +204,13 @@ export default function UtangPiutangPage() {
                       Bayar
                     </button>
                   )}
+                  <button
+                    onClick={() => setDetailDebt(debt)}
+                    className="btn-ghost btn-sm flex-shrink-0"
+                    aria-label="Lihat detail transaksi"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               </div>
             );
@@ -279,6 +289,83 @@ export default function UtangPiutangPage() {
                 </>
               );
             })()}
+          </div>
+        </div>
+      )}
+
+      {detailDebt && (
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Detail Transaksi">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDetailDebt(null)} />
+          <div className="relative bg-surface-base border border-surface-outline-variant rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-surface-outline-variant flex-shrink-0">
+              <div>
+                <h3 className="text-base font-bold text-zinc-100">Detail Transaksi</h3>
+                <p className="text-xs text-zinc-500 mt-0.5">{detailDebt.transaction.invoiceNo}</p>
+              </div>
+              <button onClick={() => setDetailDebt(null)} className="btn-ghost btn-sm" aria-label="Tutup">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-surface-container rounded-lg p-3">
+                  <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest mb-1">Pelanggan</p>
+                  <p className="text-sm font-semibold text-zinc-200">{detailDebt.customer.name}</p>
+                  {detailDebt.customer.phone && <p className="text-xs text-zinc-500 mt-0.5">{detailDebt.customer.phone}</p>}
+                </div>
+                <div className="bg-surface-container rounded-lg p-3">
+                  <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest mb-1">Status</p>
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full border inline-block ${
+                    detailDebt.status === "PAID" ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                    : detailDebt.status === "PARTIAL" ? "text-amber-400 bg-amber-500/10 border-amber-500/20"
+                    : "text-red-400 bg-red-500/10 border-red-500/20"
+                  }`}>
+                    {detailDebt.status === "PAID" ? "Lunas" : detailDebt.status === "PARTIAL" ? "Sebagian" : "Belum Bayar"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-surface-container rounded-lg p-3">
+                <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest mb-2">Item Pembelian</p>
+                {detailDebt.transaction.items.length === 0 ? (
+                  <p className="text-xs text-zinc-500">Tidak ada item</p>
+                ) : (
+                  <div className="space-y-2">
+                    {detailDebt.transaction.items.map((item, idx) => (
+                      <div key={idx} className="flex items-center justify-between text-xs">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-zinc-200 font-medium truncate">{item.productName}</p>
+                          <p className="text-zinc-500 font-mono text-[10px]">{item.productSku} × {item.quantity}</p>
+                        </div>
+                        <span className="text-zinc-200 font-medium ml-2">{formatRupiah(item.subtotal)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-surface-container rounded-lg p-3 space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-zinc-500">Total</span>
+                  <span className="text-zinc-200 font-semibold">{formatRupiah(detailDebt.amount + detailDebt.paid)}</span>
+                </div>
+                {detailDebt.paid > 0 && (
+                  <div className="flex justify-between text-xs">
+                    <span className="text-zinc-500">Sudah Dibayar</span>
+                    <span className="text-emerald-400 font-semibold">{formatRupiah(detailDebt.paid)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-xs border-t border-surface-outline-variant pt-2">
+                  <span className="text-zinc-400 font-medium">Sisa Utang</span>
+                  <span className="text-red-400 font-bold">{formatRupiah(detailDebt.amount - detailDebt.paid)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 px-5 py-3 border-t border-surface-outline-variant flex-shrink-0">
+              <button onClick={() => setDetailDebt(null)} className="btn-secondary">Tutup</button>
+            </div>
           </div>
         </div>
       )}
