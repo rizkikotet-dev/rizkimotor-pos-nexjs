@@ -66,7 +66,7 @@ export function SettingsForm({ settings, grouped }: SettingsFormProps) {
 
     if (field.type === "boolean") {
       return (
-        <label key={field.key} className="flex items-start gap-3 cursor-pointer">
+        <label key={field.key} htmlFor={id} className="flex items-start gap-3 cursor-pointer">
           <input
             type="checkbox"
             name={field.key}
@@ -95,7 +95,7 @@ export function SettingsForm({ settings, grouped }: SettingsFormProps) {
             defaultValue={value}
             placeholder={field.placeholder}
             rows={2}
-            className="input resize-none"
+            className="input resize-none min-h-[80px]"
           />
           {field.hint && <p className="text-[11px] text-surface-500 mt-1">{field.hint}</p>}
         </div>
@@ -112,7 +112,7 @@ export function SettingsForm({ settings, grouped }: SettingsFormProps) {
             name={field.key}
             id={id}
             defaultValue={value}
-            className="input bg-white"
+            className="input bg-white min-h-[44px]"
           >
             {field.options?.map((opt) => (
               <option key={opt} value={opt}>{opt}</option>
@@ -134,7 +134,7 @@ export function SettingsForm({ settings, grouped }: SettingsFormProps) {
           id={id}
           defaultValue={value}
           placeholder={field.placeholder}
-          className="input"
+          className="input min-h-[44px]"
         />
         {field.hint && <p className="text-[11px] text-surface-500 mt-1">{field.hint}</p>}
       </div>
@@ -142,11 +142,11 @@ export function SettingsForm({ settings, grouped }: SettingsFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
       {/* Toko */}
       <div className="card overflow-hidden">
         <div className="px-5 py-4 border-b border-surface-100 bg-surface-50/50 flex items-center gap-2">
-          <Store className="h-4 w-4 text-brand-600" />
+          <Store className="h-4 w-4 text-brand-600" aria-hidden="true" />
           <h2 className="font-semibold text-surface-900">Informasi Toko</h2>
         </div>
         <div className="p-5 space-y-4">{grouped.store.map(renderField)}</div>
@@ -155,21 +155,21 @@ export function SettingsForm({ settings, grouped }: SettingsFormProps) {
       {/* Struk */}
       <div className="card overflow-hidden">
         <div className="px-5 py-4 border-b border-surface-100 bg-surface-50/50 flex items-center gap-2">
-          <Receipt className="h-4 w-4 text-brand-600" />
+          <Receipt className="h-4 w-4 text-brand-600" aria-hidden="true" />
           <h2 className="font-semibold text-surface-900">Struk / Printer Thermal</h2>
         </div>
         <div className="p-5 space-y-4">{grouped.receipt.map(renderField)}</div>
       </div>
 
       {error && (
-        <div className="flex items-start gap-2.5 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
-          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+        <div role="alert" className="flex items-start gap-2.5 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
           <span>{error}</span>
         </div>
       )}
       {success && (
-        <div className="flex items-center gap-2.5 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700">
-          <Check className="h-4 w-4" />
+        <div role="status" className="flex items-center gap-2.5 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700">
+          <Check className="h-4 w-4" aria-hidden="true" />
           <span className="font-medium">Pengaturan berhasil disimpan.</span>
         </div>
       )}
@@ -179,14 +179,15 @@ export function SettingsForm({ settings, grouped }: SettingsFormProps) {
           type="button"
           onClick={handleReset}
           disabled={resetPending || pending}
-          className="btn-ghost text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
+          className="btn-ghost text-sm text-red-600 hover:text-red-700 hover:bg-red-50 min-h-[44px] min-w-[56px] focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
+          aria-label="Reset semua pengaturan ke default"
         >
-          {resetPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+          {resetPending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <RotateCcw className="h-4 w-4" aria-hidden="true" />}
           Reset ke Default
         </button>
 
-        <button type="submit" disabled={pending} className="btn-primary text-sm">
-          {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+        <button type="submit" disabled={pending} className="btn-primary text-sm min-h-[44px] min-w-[56px] focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1" aria-label={pending ? "Menyimpan pengaturan" : "Simpan pengaturan"}>
+          {pending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Save className="h-4 w-4" aria-hidden="true" />}
           Simpan Pengaturan
         </button>
       </div>

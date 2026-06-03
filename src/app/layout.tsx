@@ -1,10 +1,17 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "RIZKI MOTOR — Sparepart Motor Terlengkap",
   description:
     "Toko sparepart alat-alat sepeda motor. Katalog produk, harga, dan ketersediaan stok terkini.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#ea580c",
 };
 
 export default function RootLayout({
@@ -14,7 +21,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
-      <body className="min-h-screen">{children}</body>
+      <body className="min-h-dvh">
+        <a href="#main-content" className="skip-link">
+          Lewati ke konten utama
+        </a>
+        {children}
+      </body>
     </html>
   );
 }

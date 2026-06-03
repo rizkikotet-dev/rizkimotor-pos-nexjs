@@ -19,7 +19,10 @@ export function PublicMobileNav({ user }: Props) {
   const pathname = usePathname();
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg border-t border-surface-200/80 safe-area-bottom">
+    <nav
+      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg border-t border-surface-200/80 safe-area-bottom"
+      aria-label="Navigasi mobile"
+    >
       <div className="flex items-center justify-around px-1 py-1">
         {navItems.map((item) => {
           const active = pathname === item.href;
@@ -28,13 +31,15 @@ export function PublicMobileNav({ user }: Props) {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl text-[10px] font-medium transition-all min-w-[52px] ${
+              aria-label={item.label}
+              {...(active ? { "aria-current": "page" } : {})}
+              className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl text-[10px] font-medium transition-all duration-200 min-w-[56px] min-h-[44px] justify-center ${
                 active
                   ? "text-brand-600"
-                  : "text-surface-400"
+                  : "text-surface-400 hover:text-surface-600"
               }`}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className="h-5 w-5" aria-hidden="true" />
               <span>{item.label}</span>
             </Link>
           );
@@ -42,9 +47,10 @@ export function PublicMobileNav({ user }: Props) {
         {user && (
           <Link
             href={user.role === "ADMIN" ? "/admin" : "/pos"}
-            className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl text-[10px] font-medium text-surface-400 min-w-[52px]"
+            aria-label="Panel Admin"
+            className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl text-[10px] font-medium text-surface-400 hover:text-surface-600 transition-all duration-200 min-w-[56px] min-h-[44px] justify-center"
           >
-            <LayoutDashboard className="h-5 w-5" />
+            <LayoutDashboard className="h-5 w-5" aria-hidden="true" />
             <span>Panel</span>
           </Link>
         )}

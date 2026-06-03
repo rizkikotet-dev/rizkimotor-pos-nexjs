@@ -47,6 +47,7 @@ const config: Config = {
         "soft": "0 2px 15px -3px rgba(0,0,0,0.07), 0 10px 20px -2px rgba(0,0,0,0.04)",
         "lifted": "0 20px 60px -15px rgba(0,0,0,0.12)",
         "glow": "0 0 20px rgba(249,115,22,0.15)",
+        "inner-soft": "inset 0 2px 4px 0 rgba(0,0,0,0.05)",
       },
       keyframes: {
         "fade-in": {
@@ -57,15 +58,30 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateX(-8px)" },
           "100%": { opacity: "1", transform: "translateX(0)" },
         },
+        "slide-up": {
+          "0%": { opacity: "0", transform: "translateY(100%)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
         "scale-in": {
           "0%": { opacity: "0", transform: "scale(0.95)" },
           "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        "shimmer": {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        "pulse-subtle": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.7" },
         },
       },
       animation: {
         "fade-in": "fade-in 0.4s ease-out",
         "slide-in": "slide-in 0.3s ease-out",
+        "slide-up": "slide-up 0.3s ease-out",
         "scale-in": "scale-in 0.2s ease-out",
+        "shimmer": "shimmer 2s infinite linear",
+        "pulse-subtle": "pulse-subtle 2s infinite ease-in-out",
       },
     },
   },

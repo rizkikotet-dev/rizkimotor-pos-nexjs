@@ -22,7 +22,10 @@ export function AdminMobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-surface-200 safe-area-bottom">
+    <nav
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-surface-200 safe-area-bottom"
+      aria-label="Navigasi admin mobile"
+    >
       <div className="flex items-center justify-around px-2 py-1">
         {navItems.map((item) => {
           const active = item.exact
@@ -33,13 +36,15 @@ export function AdminMobileNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl text-[10px] font-medium transition-all min-w-[56px] ${
+              aria-label={item.label}
+              {...(active ? { "aria-current": "page" } : {})}
+              className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl text-[10px] font-medium transition-all duration-200 min-w-[56px] min-h-[44px] justify-center ${
                 active
                   ? "text-brand-600"
                   : "text-surface-400 hover:text-surface-600"
               }`}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className="h-5 w-5" aria-hidden="true" />
               <span>{item.label}</span>
             </Link>
           );

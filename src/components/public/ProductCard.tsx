@@ -18,7 +18,8 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Link
       href={`/produk/${product.id}`}
-      className="group block card-hover overflow-hidden"
+      className="group block card-hover overflow-hidden focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 rounded-2xl"
+      aria-label={`${product.name}, ${product.category.name}${!inStock ? ', stok habis' : ''}`}
     >
       <div className="aspect-square bg-surface-100 relative overflow-hidden">
         {product.image ? (
@@ -31,7 +32,7 @@ export function ProductCard({ product }: ProductCardProps) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-surface-300">
-            <Package className="h-12 w-12 sm:h-16 sm:w-16" />
+            <Package className="h-12 w-12 sm:h-16 sm:w-16" aria-hidden="true" />
           </div>
         )}
         {!inStock && (
@@ -43,7 +44,7 @@ export function ProductCard({ product }: ProductCardProps) {
         )}
         {inStock && product.stock <= 5 && (
           <div className="absolute top-2 right-2">
-            <span className="badge-warning text-[10px] px-2 py-0.5">
+            <span className="badge-warning text-[10px] px-2 py-0.5" aria-label={`Sisa stok ${product.stock}`}>
               Sisa {product.stock}
             </span>
           </div>

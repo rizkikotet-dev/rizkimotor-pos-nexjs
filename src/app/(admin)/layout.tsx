@@ -12,7 +12,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="flex min-h-screen bg-surface-50">
       <AdminSidebar />
       <div className="flex-1 flex flex-col min-w-0">
-        {children}
+        <main id="main-content">{children}</main>
       </div>
       <AdminMobileNav />
     </div>

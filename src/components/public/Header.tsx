@@ -14,9 +14,13 @@ export async function PublicHeader() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2.5 group">
+            <Link
+              href="/"
+              className="flex items-center gap-2.5 group focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 rounded-xl px-2 py-1 -ml-2"
+              aria-label={`${s["store.name"]} - Beranda`}
+            >
               <div className="bg-brand-600 text-white p-2 rounded-xl group-hover:bg-brand-500 transition-colors shadow-sm shadow-brand-600/20">
-                <Wrench className="h-5 w-5" />
+                <Wrench className="h-5 w-5" aria-hidden="true" />
               </div>
               <div>
                 <div className="font-bold text-base leading-none text-surface-900 tracking-tight">
@@ -29,7 +33,7 @@ export async function PublicHeader() {
             </Link>
 
             {/* Desktop nav */}
-            <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
+            <nav className="hidden md:flex items-center gap-1 text-sm font-medium" aria-label="Navigasi utama">
               {[
                 { href: "/", label: "Beranda" },
                 { href: "/produk", label: "Produk" },
@@ -39,7 +43,7 @@ export async function PublicHeader() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="px-3 py-2 rounded-lg text-surface-600 hover:text-brand-600 hover:bg-surface-50 transition-all duration-200"
+                  className="px-3 py-2 rounded-lg text-surface-600 hover:text-brand-600 hover:bg-surface-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1"
                 >
                   {item.label}
                 </Link>
@@ -52,8 +56,9 @@ export async function PublicHeader() {
                 <Link
                   href={user.role === "ADMIN" ? "/admin" : "/pos"}
                   className="btn-primary text-sm px-4 py-2"
+                  aria-label={`${user.role === "ADMIN" ? "Admin" : "POS"} Panel`}
                 >
-                  <LayoutDashboard className="h-4 w-4" />
+                  <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
                   <span className="hidden sm:inline">Panel</span>
                 </Link>
               ) : (

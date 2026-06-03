@@ -61,15 +61,17 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
 
       {/* TOOLBAR */}
       <div className="max-w-md mx-auto no-print mb-3 px-3 flex items-center justify-between gap-2">
-        <Link href={backUrl} className="btn-ghost text-sm">
-          <ArrowLeft className="h-4 w-4" />
+        <Link href={backUrl} className="btn-ghost text-sm min-h-[44px] min-w-[56px]" aria-label="Kembali ke riwayat transaksi">
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Kembali
         </Link>
 
-        <div className="flex items-center gap-0.5 bg-white border border-surface-200 rounded-xl p-0.5 text-xs">
+        <div className="flex items-center gap-0.5 bg-white border border-surface-200 rounded-xl p-0.5 text-xs" role="radiogroup" aria-label="Ukuran kertas">
           <button
             onClick={() => setPaperSize("58mm")}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+            role="radio"
+            aria-checked={paperSize === "58mm"}
+            className={`px-3 py-1.5 rounded-lg font-semibold transition-all min-h-[36px] focus:outline-none focus:ring-2 focus:ring-brand-500 ${
               paperSize === "58mm" ? "bg-brand-600 text-white shadow-sm" : "text-surface-600 hover:bg-surface-50"
             }`}
           >
@@ -77,7 +79,9 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
           </button>
           <button
             onClick={() => setPaperSize("80mm")}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+            role="radio"
+            aria-checked={paperSize === "80mm"}
+            className={`px-3 py-1.5 rounded-lg font-semibold transition-all min-h-[36px] focus:outline-none focus:ring-2 focus:ring-brand-500 ${
               paperSize === "80mm" ? "bg-brand-600 text-white shadow-sm" : "text-surface-600 hover:bg-surface-50"
             }`}
           >
@@ -85,8 +89,8 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
           </button>
         </div>
 
-        <button onClick={() => window.print()} className="btn-primary text-sm print:hidden">
-          <Printer className="h-4 w-4" />
+        <button onClick={() => window.print()} className="btn-primary text-sm print:hidden min-h-[44px] min-w-[56px]" aria-label={`Cetak struk ukuran ${paperSize}`}>
+          <Printer className="h-4 w-4" aria-hidden="true" />
           Cetak
         </button>
       </div>
@@ -94,7 +98,7 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
       {/* Tips */}
       <div className="max-w-md mx-auto no-print mb-3 px-3">
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-800 flex items-start gap-2">
-          <Info className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+          <Info className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" aria-hidden="true" />
           <div>
             <strong>Tips cetak:</strong> Saat dialog cetak muncul, set{" "}
             <em>Margins: None / Minimum</em> dan pilih ukuran kertas <strong>{paperSize}</strong>{" "}
@@ -183,7 +187,7 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
       <div className="max-w-md mx-auto no-print mt-3 px-3 text-center text-xs text-surface-500">
         <p>
           Struk di-print dengan ukuran {paperSize}. Atur di{" "}
-          <Link href="/admin/pengaturan" className="text-brand-600 hover:underline font-medium">
+          <Link href="/admin/pengaturan" className="text-brand-600 hover:underline font-medium" aria-label="Ubah pengaturan struk">
             Pengaturan
           </Link>{" "}
           untuk mengubah default.
