@@ -19,6 +19,7 @@
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "bcryptjs": "^2.4.3",
+    "jsbarcode": "^3.12.3",
     "lucide-react": "^0.460.0",
     "next": "^16.2.7",
     "next-auth": "^4.24.10",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/jsbarcode": "^3.11.4",
     "@types/node": "^22.9.0",
     "@types/react": "^19.2.16",
     "@types/react-dom": "^19.2.3",
