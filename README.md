@@ -465,11 +465,11 @@ npm run db:seed
 
 ---
 
-## CI/CD — Docker ke DockerHub
+## CI/CD — Docker ke DockerHub & GHCR
 
 ### GitHub Actions
 
-Pipeline otomatis build & push Docker image ke DockerHub.
+Pipeline otomatis build & push Docker image ke **DockerHub** dan **GitHub Container Registry (ghcr.io)**.
 
 **Trigger:**
 | Event | Action |
@@ -480,32 +480,36 @@ Pipeline otomatis build & push Docker image ke DockerHub.
 
 ### Setup
 
-1. **Buat akun DockerHub** di https://hub.docker.com
+#### 1. DockerHub
 
-2. **Buat Access Token:**
-   - Login ke DockerHub → Account Settings → Security → New Access Token
-   - Copy token-nya
+1. Buat akun di https://hub.docker.com
+2. Buat Access Token: Account Settings → Security → New Access Token
+3. Tambah Secret di GitHub:
+   - `DOCKERHUB_USERNAME` — username DockerHub
+   - `DOCKERHUB_TOKEN` — access token
 
-3. **Tambah Secrets di GitHub:**
-   - Buka repository → Settings → Secrets and variables → Actions
-   - Tambahkan:
-     - `DOCKERHUB_USERNAME` — username DockerHub kamu
-     - `DOCKERHUB_TOKEN` — access token dari langkah 2
+#### 2. GitHub Container Registry (ghcr.io)
 
-4. **Push ke GitHub:**
-   ```bash
-   git add .
-   git commit -m "feat: add CI/CD pipeline"
-   git push origin main
-   ```
+GHCR sudah otomatis aktif — `GITHUB_TOKEN` tersedia secara default. Tidak perlu setup tambahan.
+
+### Push ke GitHub
+
+```bash
+git add .
+git commit -m "feat: add CI/CD pipeline"
+git push origin main
+```
 
 ### Pull Image
 
 ```bash
-# Pull image terbaru
+# Dari DockerHub
 docker pull [username]/rizki-motor:main
 
-# Jalankan
+# Dari GHCR
+docker pull ghcr.io/[username]/rizki-motor:main
+
+# Jalankan (keduanya sama)
 docker run -d \
   --name rizki-motor \
   -p 3000:3000 \
@@ -516,11 +520,11 @@ docker run -d \
 
 ### Tag yang Dihasilkan
 
-| Source | Tag |
-|--------|-----|
-| Push ke main | `main`, `sha-abc1234` |
-| Tag v1.2.3 | `1.2.3`, `1.2`, `latest` |
-| PR #42 | `pr-42` |
+| Source | DockerHub | GHCR |
+|--------|-----------|------|
+| Push ke main | `main`, `sha-abc1234` | `main`, `sha-abc1234` |
+| Tag v1.2.3 | `1.2.3`, `1.2`, `latest` | `1.2.3`, `1.2`, `latest` |
+| PR #42 | `pr-42` | `pr-42` |
 
 ### File terkait
 
