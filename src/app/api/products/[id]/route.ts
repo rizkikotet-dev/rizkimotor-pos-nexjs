@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { withAuth } from "@/lib/auth";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -28,13 +28,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   return NextResponse.json(product);
 }
 
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const { id: idStr } = await params;
-  const id = parseInt(idStr);
+export const PUT = withAuth<{ id: string }>(async (req, { params }) => {
+  const id = parseInt(params.id);
 
   const body = await req.json();
   const parsed = updateSchema.safeParse(body);
@@ -53,15 +48,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const product = await prisma.product.update({ where: { id }, data: parsed.data });
   return NextResponse.json(product);
-}
+}, { admin: true });
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const { id: idStr } = await params;
-  const id = parseInt(idStr);
+export const DELETE = withAuth<{ id: string }>(async (_req, { params }) => {
+  const id = parseInt(params.id);
 
   const itemCount = await prisma.transactionItem.count({ where: { productId: id } });
   if (itemCount > 0) {
@@ -75,4 +65,4 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
 
   await prisma.product.delete({ where: { id } });
   return NextResponse.json({ success: true });
-}
+}, { admin: true });

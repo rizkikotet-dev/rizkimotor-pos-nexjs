@@ -46,4 +46,6 @@ prisma/dev.db-journal
 # uploads
 /public/uploads/*
 !/public/uploads/.gitkeep
+/uploads/*
+!/uploads/.gitkeep
 data

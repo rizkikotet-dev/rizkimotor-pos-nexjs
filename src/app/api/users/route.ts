@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { withAuth } from "@/lib/auth";
+import { USER_ROLES } from "@/lib/constants";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -8,28 +9,19 @@ const createSchema = z.object({
   username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/),
   name: z.string().min(1).max(100),
   password: z.string().min(6),
-  role: z.enum(["ADMIN", "KASIR"]),
+  role: z.enum(USER_ROLES as unknown as [string, ...string[]]),
   active: z.boolean().default(true),
 });
 
-export async function GET() {
-  const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+export const GET = withAuth(async () => {
   const users = await prisma.user.findMany({
     orderBy: { name: "asc" },
     select: { id: true, username: true, name: true, role: true, active: true, createdAt: true },
   });
   return NextResponse.json(users);
-}
+}, { admin: true });
 
-export async function POST(req: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const POST = withAuth(async (req) => {
   const body = await req.json();
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
@@ -47,4 +39,4 @@ export async function POST(req: NextRequest) {
     select: { id: true, username: true, name: true, role: true, active: true },
   });
   return NextResponse.json(newUser, { status: 201 });
-}
+}, { admin: true });

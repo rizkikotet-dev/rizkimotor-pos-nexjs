@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { withAuth } from "@/lib/auth";
+import { UserRole } from "@/lib/constants";
 import { z } from "zod";
 import { generateInvoiceNo } from "@/lib/format";
 
@@ -27,13 +28,10 @@ const createSchema = z.object({
   isDebt: z.boolean().optional(),
 });
 
-export async function GET(req: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
+export const GET = withAuth(async (req, { user }) => {
   const url = new URL(req.url);
   const limit = parseInt(url.searchParams.get("limit") || "50");
-  const where = user.role === "ADMIN" ? {} : { userId: parseInt(user.id) };
+  const where = user.role === UserRole.ADMIN ? {} : { userId: parseInt(user.id) };
 
   const transactions = await prisma.transaction.findMany({
     where,
@@ -42,12 +40,9 @@ export async function GET(req: NextRequest) {
     include: { user: true, _count: { select: { items: true } } },
   });
   return NextResponse.json(transactions);
-}
+});
 
-export async function POST(req: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
+export const POST = withAuth(async (req, { user }) => {
   const body = await req.json();
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
@@ -172,12 +167,35 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Decrement stok hanya untuk item DB
+    // Decrement stok hanya untuk item DB dengan atomic check
+    // untuk mencegah race condition saat concurrent transactions
     for (const item of dbItems) {
-      await tx.product.update({
-        where: { id: item.productId },
+      const result = await tx.product.updateMany({
+        where: {
+          id: item.productId,
+          active: true,
+          stock: { gte: item.quantity },
+        },
         data: { stock: { decrement: item.quantity } },
       });
+
+      if (result.count === 0) {
+        // Stok tidak cukup ATAU produk sudah nonaktif
+        // Ambil info produk untuk pesan error yang informatif
+        const product = await tx.product.findUnique({
+          where: { id: item.productId },
+          select: { name: true, stock: true, active: true },
+        });
+        if (!product) {
+          throw new Error(`Produk ID ${item.productId} tidak ditemukan`);
+        }
+        if (!product.active) {
+          throw new Error(`Produk "${product.name}" sudah nonaktif`);
+        }
+        throw new Error(
+          `Stok "${product.name}" tidak cukup (tersisa ${product.stock}, diminta ${item.quantity})`
+        );
+      }
     }
 
     return t;
@@ -194,4 +212,4 @@ export async function POST(req: NextRequest) {
     },
     { status: 201 }
   );
-}
+});

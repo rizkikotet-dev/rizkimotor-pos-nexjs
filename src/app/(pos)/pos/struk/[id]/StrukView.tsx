@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Printer, ArrowLeft, Info } from "lucide-react";
 import Link from "next/link";
 import { formatRupiah, formatDateTime } from "@/lib/format";
+import { PaperSize } from "@/lib/constants";
 import { printStruk } from "./printStruk";
 import type { Settings } from "@/lib/settings";
 
@@ -35,8 +36,8 @@ interface StrukViewProps {
 
 export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: StrukViewProps) {
   const s = settings;
-  const [paperSize, setPaperSize] = useState<"58mm" | "80mm">(
-    (s["receipt.paperSize"] as "58mm" | "80mm") || "80mm"
+  const [paperSize, setPaperSize] = useState<PaperSize>(
+    (s["receipt.paperSize"] as PaperSize) || PaperSize.P80MM
   );
 
   const showAddress = s["receipt.showAddress"] === "true" && s["store.address"];
@@ -47,7 +48,7 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
   const showDate = s["receipt.showInvoiceDate"] === "true";
   const headerNote = s["receipt.headerNote"];
 
-  const strukWidthClass = paperSize === "58mm" ? "struk-58mm" : "struk-80mm";
+  const strukWidthClass = paperSize === PaperSize.P58MM ? "struk-58mm" : "struk-80mm";
 
   const printPageCss = `
     @page {
@@ -72,21 +73,21 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
 
         <div className="flex items-center gap-0.5 bg-surface-container rounded-lg p-0.5 text-xs border border-surface-outline-variant" role="radiogroup" aria-label="Ukuran kertas">
           <button
-            onClick={() => setPaperSize("58mm")}
+            onClick={() => setPaperSize(PaperSize.P58MM)}
             role="radio"
-            aria-checked={paperSize === "58mm"}
+            aria-checked={paperSize === PaperSize.P58MM}
             className={`px-3 py-1.5 rounded-lg font-semibold transition-all min-h-[36px] focus:outline-none focus:ring-2 focus:ring-primary/40 ${
-              paperSize === "58mm" ? "bg-primary text-surface-base" : "text-zinc-400 hover:text-zinc-200 hover:bg-surface-container-high"
+              paperSize === PaperSize.P58MM ? "bg-primary text-surface-base" : "text-zinc-400 hover:text-zinc-200 hover:bg-surface-container-high"
             }`}
           >
             58mm
           </button>
           <button
-            onClick={() => setPaperSize("80mm")}
+            onClick={() => setPaperSize(PaperSize.P80MM)}
             role="radio"
-            aria-checked={paperSize === "80mm"}
+            aria-checked={paperSize === PaperSize.P80MM}
             className={`px-3 py-1.5 rounded-lg font-semibold transition-all min-h-[36px] focus:outline-none focus:ring-2 focus:ring-primary/40 ${
-              paperSize === "80mm" ? "bg-primary text-surface-base" : "text-zinc-400 hover:text-zinc-200 hover:bg-surface-container-high"
+              paperSize === PaperSize.P80MM ? "bg-primary text-surface-base" : "text-zinc-400 hover:text-zinc-200 hover:bg-surface-container-high"
             }`}
           >
             80mm

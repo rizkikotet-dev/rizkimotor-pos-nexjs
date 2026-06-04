@@ -1,6 +1,7 @@
 "use client";
 
 import { formatRupiah, formatDateTime } from "@/lib/format";
+import { PaperSize } from "@/lib/constants";
 import type { Settings } from "@/lib/settings";
 
 interface StrukItem {
@@ -26,7 +27,7 @@ interface StrukTransaction {
 function buildStrukHtml(
   transaction: StrukTransaction,
   settings: Settings,
-  paperSize: "58mm" | "80mm"
+  paperSize: PaperSize
 ): string {
   const s = settings;
   const showAddress = s["receipt.showAddress"] === "true" && s["store.address"];
@@ -37,7 +38,7 @@ function buildStrukHtml(
   const showDate    = s["receipt.showInvoiceDate"] === "true";
   const headerNote  = s["receipt.headerNote"];
 
-  const is58 = paperSize === "58mm";
+  const is58 = paperSize === PaperSize.P58MM;
   const rp   = (n: number) => formatRupiah(n);
 
   // font sizes (base / small / xsmall / large / xlarge)
@@ -306,10 +307,10 @@ function buildStrukHtml(
 export function printStruk(
   transaction: StrukTransaction,
   settings: Settings,
-  paperSize: "58mm" | "80mm"
+  paperSize: PaperSize
 ) {
   const html = buildStrukHtml(transaction, settings, paperSize);
-  const winW = paperSize === "58mm" ? 240 : 320;
+  const winW = paperSize === PaperSize.P58MM ? 240 : 320;
   const printWindow = window.open("", "_blank", `width=${winW},height=620`);
   if (!printWindow) {
     alert("Popup diblokir browser. Izinkan popup untuk cetak struk.");

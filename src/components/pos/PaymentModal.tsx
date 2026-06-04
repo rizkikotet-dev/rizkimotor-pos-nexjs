@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { X, Loader2, Banknote, CreditCard, QrCode, Building2, UserPlus, Search } from "lucide-react";
 import { formatRupiah } from "@/lib/format";
+import { PaymentMethod } from "@/lib/constants";
 
 interface Customer {
   id: number;
@@ -19,17 +20,17 @@ interface PaymentModalProps {
   customers: Customer[];
 }
 
-const PAYMENT_METHODS = [
-  { id: "TUNAI", label: "Tunai", icon: Banknote },
-  { id: "QRIS", label: "QRIS", icon: QrCode },
-  { id: "TRANSFER", label: "Transfer", icon: Building2 },
-  { id: "KARTU", label: "Kartu", icon: CreditCard },
+const PAYMENT_METHODS: Array<{ id: PaymentMethod; label: string; icon: typeof Banknote }> = [
+  { id: PaymentMethod.TUNAI, label: "Tunai", icon: Banknote },
+  { id: PaymentMethod.QRIS, label: "QRIS", icon: QrCode },
+  { id: PaymentMethod.TRANSFER, label: "Transfer", icon: Building2 },
+  { id: "KARTU" as PaymentMethod, label: "Kartu", icon: CreditCard },
 ];
 
 const QUICK_AMOUNTS = [50000, 100000, 150000, 200000, 500000];
 
 export function PaymentModal({ open, onClose, onConfirm, grandTotal, submitting, customers }: PaymentModalProps) {
-  const [paymentMethod, setPaymentMethod] = useState("TUNAI");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PaymentMethod.TUNAI);
   const [inputValue, setInputValue] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customerSearch, setCustomerSearch] = useState("");
@@ -45,7 +46,7 @@ export function PaymentModal({ open, onClose, onConfirm, grandTotal, submitting,
   useEffect(() => {
     if (open) {
       setInputValue("");
-      setPaymentMethod("TUNAI");
+      setPaymentMethod(PaymentMethod.TUNAI);
       setSelectedCustomer(null);
       setIsDebt(false);
       setShowCustomerList(false);

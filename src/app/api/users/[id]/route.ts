@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { withAuth } from "@/lib/auth";
+import { UserRole, USER_ROLES } from "@/lib/constants";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -8,36 +9,26 @@ const updateSchema = z.object({
   username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/).optional(),
   name: z.string().min(1).max(100).optional(),
   password: z.string().min(6).optional(),
-  role: z.enum(["ADMIN", "KASIR"]).optional(),
+  role: z.enum(USER_ROLES as unknown as [string, ...string[]]).optional(),
   active: z.boolean().optional(),
 });
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const { id: idStr } = await params;
-  const id = parseInt(idStr);
+export const GET = withAuth<{ id: string }>(async (_req, { params }) => {
+  const id = parseInt(params.id);
   const target = await prisma.user.findUnique({
     where: { id },
     select: { id: true, username: true, name: true, role: true, active: true, createdAt: true },
   });
   if (!target) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(target);
-}
+}, { admin: true });
 
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const { id: idStr } = await params;
-  const id = parseInt(idStr);
+export const PUT = withAuth<{ id: string }>(async (req, { params, user }) => {
+  const id = parseInt(params.id);
 
   if (id === parseInt(user.id)) {
     const body = await req.json();
-    if (body.role && body.role !== "ADMIN") {
+    if (body.role && body.role !== UserRole.ADMIN) {
       return NextResponse.json({ error: "Tidak dapat mengubah role sendiri" }, { status: 400 });
     }
     if (body.active === false) {
@@ -69,15 +60,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     select: { id: true, username: true, name: true, role: true, active: true },
   });
   return NextResponse.json(target);
-}
+}, { admin: true });
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const { id: idStr } = await params;
-  const id = parseInt(idStr);
+export const DELETE = withAuth<{ id: string }>(async (_req, { params, user }) => {
+  const id = parseInt(params.id);
 
   if (id === parseInt(user.id)) {
     return NextResponse.json({ error: "Tidak dapat menghapus akun sendiri" }, { status: 400 });
@@ -94,4 +80,4 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
 
   await prisma.user.delete({ where: { id } });
   return NextResponse.json({ success: true });
-}
+}, { admin: true });

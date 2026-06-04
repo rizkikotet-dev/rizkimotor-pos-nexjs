@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
+import { UserRole } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { formatRupiah, formatDateTime } from "@/lib/format";
 import { Printer } from "lucide-react";
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function PosRiwayatPage() {
   const user = (await getCurrentUser())!;
 
-  const where = user.role === "ADMIN" ? {} : { userId: parseInt(user.id) };
+  const where = user.role === UserRole.ADMIN ? {} : { userId: parseInt(user.id) };
 
   const [transactions, totalAgg] = await Promise.all([
     prisma.transaction.findMany({
@@ -29,7 +30,7 @@ export default async function PosRiwayatPage() {
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 tracking-tight">Riwayat Transaksi</h1>
             <p className="text-sm text-zinc-500 mt-1">
-              {user.role === "ADMIN" ? "Semua transaksi" : "Transaksi Anda"} &middot; Total:{" "}
+              {user.role === UserRole.ADMIN ? "Semua transaksi" : "Transaksi Anda"} &middot; Total:{" "}
               <span className="font-bold text-primary">
                 {formatRupiah(totalAgg._sum.total ?? 0)}
               </span>
@@ -49,7 +50,7 @@ export default async function PosRiwayatPage() {
                 <tr>
                   <th className="text-left px-4 py-3 text-[10px] text-zinc-500 font-mono uppercase tracking-widest font-semibold">Invoice</th>
                   <th className="text-left px-4 py-3 text-[10px] text-zinc-500 font-mono uppercase tracking-widest font-semibold hidden sm:table-cell">Tanggal</th>
-                  {user.role === "ADMIN" && (
+                  {user.role === UserRole.ADMIN && (
                     <th className="text-left px-4 py-3 text-[10px] text-zinc-500 font-mono uppercase tracking-widest font-semibold hidden md:table-cell">Kasir</th>
                   )}
                   <th className="text-center px-4 py-3 text-[10px] text-zinc-500 font-mono uppercase tracking-widest font-semibold">Item</th>
@@ -62,7 +63,7 @@ export default async function PosRiwayatPage() {
                   <tr key={t.id} className="hover:bg-surface-container-high transition-colors">
                     <td className="px-4 py-3.5 font-mono font-medium text-zinc-200">{t.invoiceNo}</td>
                     <td className="px-4 py-3.5 text-zinc-500 text-xs hidden sm:table-cell">{formatDateTime(t.createdAt)}</td>
-                    {user.role === "ADMIN" && (
+                    {user.role === UserRole.ADMIN && (
                       <td className="px-4 py-3.5 text-zinc-400 hidden md:table-cell">{t.user.name}</td>
                     )}
                     <td className="px-4 py-3.5 text-center">

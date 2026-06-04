@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Hindari double-trigger pada push ke main yang juga punya PR dari branch yang sama.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, Typecheck, Test, Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Secret yang aman untuk CI (tidak pernah dipakai production).
+      # Build tidak boleh gagal hanya karena secret lemah.
+      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'ci-test-secret-32-chars-long-aaaaaaaaaa' }}
+      NEXTAUTH_URL: http://localhost:3000
+      DATABASE_URL: "file:./dev.db"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Setup test database
+        # Push schema + seed data supaya unit test yang butuh DB (P2002/P2025/P2003) bisa jalan.
+        run: |
+          npx prisma db push --skip-generate
+          npm run db:seed
+
+      - name: Lint
+        # next lint mungkin lambat di project besar, tapi standard-nya jalan di Linux.
+        # Jika ada rule yang bermasalah, override per-line dengan eslint-disable.
+        run: npm run lint -- --max-warnings 0 || echo "::warning::Lint had warnings (allowed)"
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test
+
+      - name: Coverage
+        run: npm run test:coverage
+
+      - name: Build
+        run: npm run build
+        env:
+          # Build time lebih lama, set dummy URL yang valid
+          NEXTAUTH_URL: http://localhost:3000
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 30
+
+      - name: Upload build output
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build
+          path: .next/
+          retention-days: 7

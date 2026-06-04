@@ -1,13 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { withAuth } from "@/lib/auth";
+import { UserRole } from "@/lib/constants";
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { id: idStr } = await params;
-  const id = parseInt(idStr);
-
+export const GET = withAuth<{ id: string }>(async (_req, { params, user }) => {
+  const id = parseInt(params.id);
   const transaction = await prisma.transaction.findUnique({
     where: { id },
     include: { user: true, items: true },
@@ -15,20 +12,15 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   if (!transaction) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   // KASIR hanya boleh lihat transaksinya sendiri
-  if (user.role !== "ADMIN" && transaction.userId !== parseInt(user.id)) {
+  if (user.role !== UserRole.ADMIN && transaction.userId !== parseInt(user.id)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   return NextResponse.json(transaction);
-}
+});
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const { id: idStr } = await params;
-  const id = parseInt(idStr);
+export const DELETE = withAuth<{ id: string }>(async (_req, { params }) => {
+  const id = parseInt(params.id);
 
   // Rollback: kembalikan stok & hapus transaksi
   const transaction = await prisma.transaction.findUnique({
@@ -49,4 +41,4 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   });
 
   return NextResponse.json({ success: true });
-}
+}, { admin: true });

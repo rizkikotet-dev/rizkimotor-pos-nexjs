@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save, Loader2, Printer } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
+import { PaperSize } from "@/lib/constants";
 
 interface SettingsFormProps {
   initialSettings: Record<string, string>;
@@ -158,8 +159,8 @@ export function SettingsForm({ initialSettings, categories }: SettingsFormProps)
           <div>
             <label className={labelClass}>Ukuran Kertas</label>
             <select name="receipt.paperSize" defaultValue={initialSettings["receipt.paperSize"]} className={inputClass}>
-              <option value="58mm">58mm (Kecil)</option>
-              <option value="80mm">80mm (Standar)</option>
+              <option value={PaperSize.P58MM}>58mm (Kecil)</option>
+              <option value={PaperSize.P80MM}>80mm (Standar)</option>
             </select>
             <p className="text-[10px] text-zinc-500 mt-1.5 font-mono">Sesuaikan dengan ukuran printer thermal Anda</p>
           </div>

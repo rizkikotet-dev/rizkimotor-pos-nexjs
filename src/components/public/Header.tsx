@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Wrench, LayoutDashboard } from "lucide-react";
 import { getSettings } from "@/lib/settings";
 import { getCurrentUser } from "@/lib/auth";
+import { UserRole } from "@/lib/constants";
 import { PublicMobileNav } from "./PublicMobileNav";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -53,9 +54,9 @@ export async function PublicHeader() {
               <ThemeToggle />
               {user ? (
                 <Link
-                  href={user.role === "ADMIN" ? "/admin" : "/pos"}
+                  href={user.role === UserRole.ADMIN ? "/admin" : "/pos"}
                   className="btn-primary btn-md"
-                  aria-label={`${user.role === "ADMIN" ? "Admin" : "POS"} Panel`}
+                  aria-label={`${user.role === UserRole.ADMIN ? "Admin" : "POS"} Panel`}
                 >
                   <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
                   <span className="hidden sm:inline">Panel</span>

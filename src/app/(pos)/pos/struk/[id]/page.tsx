@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { UserRole } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { StrukView } from "./StrukView";
@@ -27,7 +28,7 @@ export default async function StrukPage({ params, searchParams }: PageProps) {
   if (!transaction) notFound();
 
   // Permission: KASIR hanya bisa lihat transaksinya sendiri
-  if (user!.role !== "ADMIN" && transaction.userId !== parseInt(user!.id)) {
+  if (user!.role !== UserRole.ADMIN && transaction.userId !== parseInt(user!.id)) {
     notFound();
   }
 

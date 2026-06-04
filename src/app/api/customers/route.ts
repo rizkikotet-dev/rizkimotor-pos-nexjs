@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { withAuth } from "@/lib/auth";
 import { z } from "zod";
 
 const createSchema = z.object({
@@ -10,10 +10,7 @@ const createSchema = z.object({
   note: z.string().max(200).optional().nullable(),
 });
 
-export async function GET() {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
+export const GET = withAuth(async () => {
   const customers = await prisma.customer.findMany({
     where: { active: true },
     orderBy: { name: "asc" },
@@ -35,12 +32,9 @@ export async function GET() {
   }));
 
   return NextResponse.json(result);
-}
+});
 
-export async function POST(req: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
+export const POST = withAuth(async (req) => {
   const body = await req.json();
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
@@ -56,4 +50,4 @@ export async function POST(req: NextRequest) {
 
   const customer = await prisma.customer.create({ data: parsed.data });
   return NextResponse.json(customer, { status: 201 });
-}
+});

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { UserRole, USER_ROLES } from "@/lib/constants";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -11,7 +12,7 @@ const createSchema = z.object({
   username: z.string().min(3, "Min 3 karakter").max(30).regex(/^[a-zA-Z0-9_]+$/, "Hanya huruf, angka, underscore"),
   name: z.string().min(1, "Nama wajib diisi").max(100),
   password: z.string().min(6, "Password minimal 6 karakter"),
-  role: z.enum(["ADMIN", "KASIR"]),
+  role: z.enum(USER_ROLES as unknown as [string, ...string[]]),
   active: z.coerce.boolean().default(true),
 });
 
@@ -19,7 +20,7 @@ const updateSchema = z.object({
   username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/),
   name: z.string().min(1).max(100),
   password: z.string().min(6).optional().or(z.literal("")),
-  role: z.enum(["ADMIN", "KASIR"]),
+  role: z.enum(USER_ROLES as unknown as [string, ...string[]]),
   active: z.coerce.boolean(),
 });
 
@@ -45,7 +46,7 @@ function parseFormUpdate(formData: FormData) {
 
 async function assertAdminAccess() {
   const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") {
+  if (!user || user.role !== UserRole.ADMIN) {
     throw new Error("Unauthorized: ADMIN only");
   }
   return user;
@@ -82,7 +83,7 @@ export async function updateUser(id: number, formData: FormData) {
     throw new Error("Anda tidak dapat menonaktifkan akun sendiri.");
   }
   // Cegah admin turunkan role diri sendiri
-  if (id === parseInt(currentUser.id) && data.role !== "ADMIN") {
+  if (id === parseInt(currentUser.id) && data.role !== UserRole.ADMIN) {
     throw new Error("Anda tidak dapat mengubah role akun sendiri.");
   }
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Package, Info, Phone, LayoutDashboard } from "lucide-react";
+import { UserRole } from "@/lib/constants";
 
 interface Props {
   user: { role: string } | null;
@@ -46,7 +47,7 @@ export function PublicMobileNav({ user }: Props) {
         })}
         {user && (
           <Link
-            href={user.role === "ADMIN" ? "/admin" : "/pos"}
+            href={user.role === UserRole.ADMIN ? "/admin" : "/pos"}
             aria-label="Panel Admin"
             className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg text-[10px] font-medium text-zinc-500 hover:text-zinc-300 transition-colors duration-150 min-w-[56px] min-h-[44px] justify-center"
           >

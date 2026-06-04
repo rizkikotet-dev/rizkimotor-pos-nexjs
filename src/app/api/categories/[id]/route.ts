@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { withAuth } from "@/lib/auth";
 import { z } from "zod";
 import { slugify } from "@/lib/format";
 
@@ -14,13 +14,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   return NextResponse.json(cat);
 }
 
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const { id: idStr } = await params;
-  const id = parseInt(idStr);
+export const PUT = withAuth<{ id: string }>(async (req, { params }) => {
+  const id = parseInt(params.id);
 
   const body = await req.json();
   const parsed = updateSchema.safeParse(body);
@@ -39,15 +34,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     data: { name: parsed.data.name, slug },
   });
   return NextResponse.json(cat);
-}
+}, { admin: true });
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const { id: idStr } = await params;
-  const id = parseInt(idStr);
+export const DELETE = withAuth<{ id: string }>(async (_req, { params }) => {
+  const id = parseInt(params.id);
 
   const category = await prisma.category.findUnique({ where: { id } });
   if (!category) return NextResponse.json({ error: "Kategori tidak ditemukan" }, { status: 404 });
@@ -93,4 +83,4 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
         ? `Kategori "${category.name}" dihapus. ${productCount} produk dialihkan ke "${defaultCat.name}".`
         : `Kategori "${category.name}" dihapus.`,
   });
-}
+}, { admin: true });

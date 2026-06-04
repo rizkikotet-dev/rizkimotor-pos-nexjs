@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { withAuth } from "@/lib/auth";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -11,13 +11,9 @@ const updateSchema = z.object({
   active: z.boolean().optional(),
 });
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const { id } = await params;
+export const GET = withAuth<{ id: string }>(async (_req, { params }) => {
   const customer = await prisma.customer.findUnique({
-    where: { id: parseInt(id) },
+    where: { id: parseInt(params.id) },
     include: {
       transactions: { orderBy: { createdAt: "desc" }, take: 10, include: { items: true } },
       debts: { orderBy: { createdAt: "desc" }, include: { transaction: true } },
@@ -26,13 +22,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
   if (!customer) return NextResponse.json({ error: "Pelanggan tidak ditemukan" }, { status: 404 });
   return NextResponse.json(customer);
-}
+});
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const { id } = await params;
+export const PATCH = withAuth<{ id: string }>(async (req, { params }) => {
   const body = await req.json();
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) {
@@ -40,26 +32,22 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   if (parsed.data.phone) {
-    const existing = await prisma.customer.findFirst({ where: { phone: parsed.data.phone, id: { not: parseInt(id) } } });
+    const existing = await prisma.customer.findFirst({ where: { phone: parsed.data.phone, id: { not: parseInt(params.id) } } });
     if (existing) {
       return NextResponse.json({ error: "Nomor telepon sudah digunakan" }, { status: 400 });
     }
   }
 
-  const customer = await prisma.customer.update({ where: { id: parseInt(id) }, data: parsed.data });
+  const customer = await prisma.customer.update({ where: { id: parseInt(params.id) }, data: parsed.data });
   return NextResponse.json(customer);
-}
+});
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const { id } = await params;
-  const hasDebt = await prisma.debt.findFirst({ where: { customerId: parseInt(id), status: { not: "PAID" } } });
+export const DELETE = withAuth<{ id: string }>(async (_req, { params }) => {
+  const hasDebt = await prisma.debt.findFirst({ where: { customerId: parseInt(params.id), status: { not: "PAID" } } });
   if (hasDebt) {
     return NextResponse.json({ error: "Tidak bisa hapus pelanggan yang masih memiliki utang" }, { status: 400 });
   }
 
-  await prisma.customer.update({ where: { id: parseInt(id) }, data: { active: false } });
+  await prisma.customer.update({ where: { id: parseInt(params.id) }, data: { active: false } });
   return NextResponse.json({ ok: true });
-}
+});

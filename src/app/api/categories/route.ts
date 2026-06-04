@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { withAuth } from "@/lib/auth";
 import { z } from "zod";
 import { slugify } from "@/lib/format";
 
@@ -14,12 +14,7 @@ export async function GET() {
   return NextResponse.json(categories);
 }
 
-export async function POST(req: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const POST = withAuth(async (req) => {
   const body = await req.json();
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
@@ -36,4 +31,4 @@ export async function POST(req: NextRequest) {
     data: { name: parsed.data.name, slug, isDefault: false },
   });
   return NextResponse.json(cat, { status: 201 });
-}
+}, { admin: true });

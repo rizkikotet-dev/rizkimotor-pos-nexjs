@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { Wrench, ShoppingCart, History, LogOut, LayoutDashboard } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
+import { UserRole } from "@/lib/constants";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LogoutButton } from "@/components/LogoutButton";
 
 export async function POSHeader() {
   const user = await getCurrentUser();
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = user?.role === UserRole.ADMIN;
 
   return (
     <header className="sticky top-0 z-40 bg-surface-base/80 backdrop-blur-xl border-b border-surface-outline-variant">

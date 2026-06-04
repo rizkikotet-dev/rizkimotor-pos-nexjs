@@ -1,5 +1,6 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import { UserRole } from "@/lib/constants";
 
 export default withAuth(
   function middleware(req) {
@@ -7,7 +8,7 @@ export default withAuth(
     const pathname = req.nextUrl.pathname;
 
     // /admin/* -> hanya ADMIN
-    if (pathname.startsWith("/admin") && token?.role !== "ADMIN") {
+    if (pathname.startsWith("/admin") && token?.role !== UserRole.ADMIN) {
       return NextResponse.redirect(new URL("/pos", req.url));
     }
 

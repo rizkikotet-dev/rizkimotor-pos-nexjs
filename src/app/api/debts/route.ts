@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { withAuth } from "@/lib/auth";
 import { z } from "zod";
 
 const paySchema = z.object({
@@ -8,10 +8,7 @@ const paySchema = z.object({
   amount: z.number().int().positive(),
 });
 
-export async function GET(req: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
+export const GET = withAuth(async (req) => {
   const url = new URL(req.url);
   const status = url.searchParams.get("status"); // UNPAID, PARTIAL, PAID
   const customerId = url.searchParams.get("customerId");
@@ -40,12 +37,9 @@ export async function GET(req: NextRequest) {
   });
 
   return NextResponse.json(debts);
-}
+});
 
-export async function POST(req: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
+export const POST = withAuth(async (req) => {
   const body = await req.json();
   const parsed = paySchema.safeParse(body);
   if (!parsed.success) {
@@ -71,4 +65,4 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(updated);
-}
+});

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Wrench, AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
+import { UserRole } from "@/lib/constants";
 
 export function LoginForm() {
   const router = useRouter();
@@ -47,9 +48,9 @@ export function LoginForm() {
     const session = await res2.json();
 
     const role = session?.user?.role;
-    if (role === "ADMIN") {
+    if (role === UserRole.ADMIN) {
       router.push(search.get("callbackUrl") || "/admin");
-    } else if (role === "KASIR") {
+    } else if (role === UserRole.KASIR) {
       router.push(search.get("callbackUrl") || "/pos");
     } else {
       router.push("/");

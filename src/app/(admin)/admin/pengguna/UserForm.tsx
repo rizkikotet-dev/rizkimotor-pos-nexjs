@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save, Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
+import { UserRole } from "@/lib/constants";
 
 interface UserFormProps {
   action: (formData: FormData) => Promise<void>;
@@ -129,12 +130,12 @@ export function UserForm({ action, initial, isEdit }: UserFormProps) {
             id="user-role"
             name="role"
             required
-            defaultValue={initial?.role ?? "KASIR"}
+            defaultValue={initial?.role ?? UserRole.KASIR}
             className="select min-h-[44px]"
             aria-required="true"
           >
-            <option value="KASIR">KASIR — Hanya POS</option>
-            <option value="ADMIN">ADMIN — Akses penuh</option>
+            <option value={UserRole.KASIR}>KASIR — Hanya POS</option>
+            <option value={UserRole.ADMIN}>ADMIN — Akses penuh</option>
           </select>
         </div>
 

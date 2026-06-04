@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { withAuth } from "@/lib/auth";
+import { withErrorHandler } from "@/lib/api-error";
 import { z } from "zod";
 
 const createSchema = z.object({
@@ -18,7 +19,10 @@ const createSchema = z.object({
   active: z.boolean().default(true),
 });
 
-export async function GET(req: NextRequest) {
+// Public endpoint — dipakai POS kasir & katalog publik.
+// Auth tidak wajib (produk aktif boleh dilihat siapa saja),
+// tapi error tetap disanitasi untuk konsistensi.
+export const GET = withErrorHandler(async (req: NextRequest) => {
   const url = new URL(req.url);
   const q = url.searchParams.get("q");
   const categoryId = url.searchParams.get("categoryId");
@@ -37,14 +41,9 @@ export async function GET(req: NextRequest) {
     orderBy: { name: "asc" },
   });
   return NextResponse.json(products);
-}
+});
 
-export async function POST(req: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const POST = withAuth(async (req) => {
   const body = await req.json();
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
@@ -58,4 +57,4 @@ export async function POST(req: NextRequest) {
 
   const product = await prisma.product.create({ data: parsed.data });
   return NextResponse.json(product, { status: 201 });
-}
+}, { admin: true });

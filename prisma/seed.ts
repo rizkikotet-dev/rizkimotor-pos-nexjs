@@ -2,10 +2,50 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { DEFAULT_SETTINGS } from "../src/lib/settings";
+import { DEFAULT_CATEGORY } from "../src/lib/constants";
 
 const prisma = new PrismaClient();
 
+function assertSafeToSeed(): void {
+  const isProd = process.env.NODE_ENV === "production";
+  const dbUrl = process.env.DATABASE_URL ?? "";
+  const allowSeed = process.env.ALLOW_SEED === "1" || process.env.ALLOW_SEED === "true";
+
+  // Defense layer 1: tolak seed jika NODE_ENV=production.
+  if (isProd && !allowSeed) {
+    throw new Error(
+      "\n⛔  REFUSING TO SEED: NODE_ENV=production terdeteksi.\n" +
+        "    Seed menggunakan deleteMany({}) yang akan MENGHAPUS SEMUA DATA.\n" +
+        "    Set ALLOW_SEED=1 jika Anda benar-benar yakin ingin melanjutkan.\n"
+    );
+  }
+
+  // Defense layer 2: tolak seed jika DATABASE_URL tampak production (PostgreSQL,
+  // atau host/path mengandung 'prod'/'production'). Berlaku bahkan di NODE_ENV=development
+  // untuk mencegah kecelakaan (mis. .env pointing ke prod DB).
+  if (!allowSeed) {
+    const looksLikeProd =
+      dbUrl.startsWith("postgres://") ||
+      dbUrl.startsWith("postgresql://") ||
+      /(^|[\/\-_:.])(prod|production)([\/\-_.]|$)/i.test(dbUrl);
+
+    if (looksLikeProd) {
+      throw new Error(
+        "\n⛔  REFUSING TO SEED: DATABASE_URL tampak seperti production " +
+          "(PostgreSQL atau host/path mengandung 'prod'/'production').\n" +
+          "    Set ALLOW_SEED=1 jika Anda benar-benar yakin ingin melanjutkan.\n" +
+          `    DATABASE_URL: ${dbUrl.replace(/:[^:@]+@/, ":***@")}\n`
+      );
+    }
+  }
+
+  if (allowSeed) {
+    console.warn("⚠️  ALLOW_SEED aktif. Semua data akan di-wipe & re-seed.");
+  }
+}
+
 async function main() {
+  assertSafeToSeed();
   console.log("🌱 Seeding database...");
 
   // Hapus dalam urutan benar (foreign key constraints)
@@ -51,13 +91,13 @@ async function main() {
   const existingDefault = await prisma.category.findFirst({ where: { isDefault: true } });
   if (!existingDefault) {
     // Generate slug unik
-    let slug = "lainnya";
+    let slug: string = DEFAULT_CATEGORY.SLUG;
     let i = 1;
     while (await prisma.category.findUnique({ where: { slug } })) {
-      slug = `lainnya-${i++}`;
+      slug = `${DEFAULT_CATEGORY.SLUG}-${i++}`;
     }
     const defaultCat = await prisma.category.create({
-      data: { name: "Lainnya", slug, isDefault: true },
+      data: { name: DEFAULT_CATEGORY.NAME, slug, isDefault: true },
     });
     console.log(`✅ Kategori default dibuat: "${defaultCat.name}" (untuk produk fallback)`);
   } else {
@@ -67,7 +107,7 @@ async function main() {
 
 main()
   .catch((e) => {
-    console.error("❌ Seed gagal:", e);
+    console.error("❌ Seed gagal:", e.message ?? e);
     process.exit(1);
   })
   .finally(async () => {

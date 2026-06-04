@@ -1,0 +1,3 @@
+# Placeholder agar folder tracked di git.
+# Isi folder ini dipakai sebagai persistent volume untuk upload produk
+# di production (lihat docker-compose.yml: ./uploads:/app/public/uploads).

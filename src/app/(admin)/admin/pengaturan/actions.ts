@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
@@ -23,6 +23,8 @@ export async function updateSetting(key: string, value: string) {
   });
   // Revalidate semua path yang mungkin menampilkan setting
   revalidatePath("/", "layout");
+  // Next.js 16: di server action, pakai updateTag (read-your-own-writes semantics).
+  updateTag("settings");
 }
 
 export async function updateSettingsBulk(formData: FormData) {
@@ -48,6 +50,7 @@ export async function updateSettingsBulk(formData: FormData) {
   }
   await Promise.all(ops);
   revalidatePath("/", "layout");
+  updateTag("settings");
 }
 
 export async function resetSettings() {
@@ -55,4 +58,5 @@ export async function resetSettings() {
   // Hapus semua, biarkan DEFAULT_SETTINGS yang di-handle oleh getSettings()
   await prisma.setting.deleteMany({});
   revalidatePath("/", "layout");
+  updateTag("settings");
 }

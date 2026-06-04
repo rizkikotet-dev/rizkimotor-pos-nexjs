@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/StatusBadge";
+import { UserRole } from "@/lib/constants";
 import Link from "next/link";
 import { Plus, Pencil, Users } from "lucide-react";
 import { FadeIn } from "@/components/ui/FadeIn";
@@ -45,7 +46,7 @@ export default async function AdminPenggunaPage() {
                     <td className="px-4 py-3 text-zinc-200 font-medium">{user.name}</td>
                     <td className="px-4 py-3 text-zinc-500 font-mono text-xs">{user.username}</td>
                     <td className="px-4 py-3">
-                      <span className={`tag ${user.role === "ADMIN" ? "tag-brand" : "tag-dark"}`}>
+                      <span className={`tag ${user.role === UserRole.ADMIN ? "tag-brand" : "tag-dark"}`}>
                         {user.role}
                       </span>
                     </td>

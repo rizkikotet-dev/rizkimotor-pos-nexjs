@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { withAuth } from "@/lib/auth";
 import { DEFAULT_SETTINGS, type SettingKey } from "@/lib/settings";
 import { z } from "zod";
 
 const ALLOWED_KEYS = Object.keys(DEFAULT_SETTINGS);
 
-export async function GET() {
-  const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+export const GET = withAuth(async () => {
   const stored = await prisma.setting.findMany();
   const result: Record<string, string> = {};
   for (const key of ALLOWED_KEYS) {
@@ -18,16 +15,11 @@ export async function GET() {
     result[key] = found?.value ?? (DEFAULT_SETTINGS as Record<string, string>)[key];
   }
   return NextResponse.json(result);
-}
+}, { admin: true });
 
 const batchSchema = z.record(z.string(), z.string().max(500));
 
-export async function PUT(req: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const PUT = withAuth(async (req) => {
   const body = await req.json();
 
   const settings = body.settings ?? body;
@@ -49,5 +41,9 @@ export async function PUT(req: NextRequest) {
 
   await Promise.all(ops);
 
+  // Invalidate cache settings di semua server component.
+  // Next.js 16: revalidateTag butuh 2nd arg (cache profile); "max" = aman (segera revalidate).
+  revalidateTag("settings", "max");
+
   return NextResponse.json({ ok: true, saved: ops.length });
-}
+}, { admin: true });
