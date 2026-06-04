@@ -8,10 +8,14 @@ interface UseCartReturn {
   cart: CartItem[];
   grandTotal: number;
   addToCart: (product: Product, selectedPrice: number) => void;
+  addManualItem: (name: string, price: number, quantity: number) => void;
   updateQty: (productId: number, price: number, delta: number) => void;
   removeItem: (productId: number, price: number) => void;
   clearCart: () => void;
 }
+
+// Counter untuk ID unik item manual (negatif agar tidak tabrakan dengan productId dari DB)
+let manualIdCounter = 0;
 
 // Custom hook untuk cart state management. Extracted dari POSClient
 // untuk testability + reusability. Pure state — no UI.
@@ -59,6 +63,32 @@ export function useCart(): UseCartReturn {
     [toast]
   );
 
+  const addManualItem = useCallback((name: string, price: number, quantity: number) => {
+    setCart((prev) => {
+      // Merge jika item manual dengan nama+harga sama sudah ada
+      const existing = prev.find((c) => c.isManual && c.name === name && c.price === price);
+      if (existing) {
+        return prev.map((c) =>
+          c.isManual && c.name === name && c.price === price
+            ? { ...c, quantity: c.quantity + quantity }
+            : c
+        );
+      }
+      manualIdCounter++;
+      return [
+        ...prev,
+        {
+          productId: -manualIdCounter,
+          name,
+          price,
+          quantity,
+          maxStock: 999999,
+          isManual: true,
+        },
+      ];
+    });
+  }, []);
+
   const updateQty = useCallback((productId: number, price: number, delta: number) => {
     setCart((prev) =>
       prev
@@ -88,5 +118,5 @@ export function useCart(): UseCartReturn {
     0
   );
 
-  return { cart, grandTotal, addToCart, updateQty, removeItem, clearCart };
+  return { cart, grandTotal, addToCart, addManualItem, updateQty, removeItem, clearCart };
 }

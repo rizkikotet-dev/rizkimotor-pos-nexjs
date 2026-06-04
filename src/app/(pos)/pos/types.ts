@@ -21,6 +21,7 @@ export interface CartItem {
   price: number;
   quantity: number;
   maxStock: number;
+  isManual?: boolean;
 }
 
 export interface Customer {

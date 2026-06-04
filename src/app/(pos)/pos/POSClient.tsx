@@ -8,9 +8,11 @@ import { PaymentModal } from "@/components/pos/PaymentModal";
 import { ProductSearchBar } from "./ProductSearchBar";
 import { ProductGrid } from "./ProductGrid";
 import { CartPanel } from "./CartPanel";
+import { ManualItemModal } from "./ManualItemModal";
 import { useCart } from "./useCart";
 import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
 import { filterProducts, type POSClientProps, type Customer, type Product } from "./types";
+import { PackagePlus } from "lucide-react";
 
 // Main orchestrator. Composes:
 //   - ProductSearchBar: search input (with focus ref + Enter to add first match)
@@ -31,10 +33,11 @@ import { filterProducts, type POSClientProps, type Customer, type Product } from
 export function POSClient({ products }: POSClientProps) {
   const router = useRouter();
   const toast = useToast();
-  const { cart, grandTotal, addToCart, updateQty, removeItem, clearCart } = useCart();
+  const { cart, grandTotal, addToCart, addManualItem, updateQty, removeItem, clearCart } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [showManualInput, setShowManualInput] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -75,6 +78,15 @@ export function POSClient({ products }: POSClientProps) {
     setShowPayment(true);
   }, [cart.length]);
 
+  const handleAddManualItem = useCallback(
+    (name: string, price: number, quantity: number) => {
+      addManualItem(name, price, quantity);
+      setShowManualInput(false);
+      searchInputRef.current?.focus();
+    },
+    [addManualItem]
+  );
+
   // Global keyboard shortcuts (/, F2, F9, Esc)
   useKeyboardShortcuts({
     searchInputRef,
@@ -97,7 +109,11 @@ export function POSClient({ products }: POSClientProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: cart.map((c) => ({ productId: c.productId, price: c.price, quantity: c.quantity })),
+          items: cart.map((c) =>
+            c.isManual
+              ? { name: c.name, sku: "", price: c.price, quantity: c.quantity }
+              : { productId: c.productId, price: c.price, quantity: c.quantity }
+          ),
           payment: paymentAmount,
           note: null,
           customerId,
@@ -129,12 +145,25 @@ export function POSClient({ products }: POSClientProps) {
     <div className="page-container">
       <div className="flex flex-col lg:flex-row gap-4 h-full">
         <div className="flex-1 flex flex-col min-h-0 lg:h-[calc(100dvh-7rem)]">
-          <ProductSearchBar
-            ref={searchInputRef}
-            value={searchQuery}
-            onChange={setSearchQuery}
-            onEnter={handleAddFirstMatch}
-          />
+          <div className="flex items-start gap-2 mb-3">
+            <div className="flex-1 min-w-0">
+              <ProductSearchBar
+                ref={searchInputRef}
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onEnter={handleAddFirstMatch}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowManualInput(true)}
+              className="btn-secondary btn-md flex-shrink-0 mt-0.5"
+              title="Input manual item"
+            >
+              <PackagePlus className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Manual</span>
+            </button>
+          </div>
           <ProductGrid
             products={products}
             searchQuery={searchQuery}
@@ -151,6 +180,12 @@ export function POSClient({ products }: POSClientProps) {
           onSubmit={handleOpenPayment}
         />
       </div>
+
+      <ManualItemModal
+        open={showManualInput}
+        onClose={() => setShowManualInput(false)}
+        onAdd={handleAddManualItem}
+      />
 
       <PaymentModal
         open={showPayment}
