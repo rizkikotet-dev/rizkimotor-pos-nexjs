@@ -278,17 +278,39 @@ Klik **Deploy**. Vercel akan build dan deploy aplikasi.
 
 Database akan otomatis tersinkronisasi saat build berkat `prisma db push` di build command.
 
-Jika tabel belum terbentuk (misalnya error koneksi saat build), akses endpoint setup:
+**Jika tabel belum terbentuk**, jangan khawatir — aplikasi otomatis mendeteksi database kosong dan menampilkan **Setup Wizard** di halaman pertama kali akses. Wizard akan memandu Anda melalui:
+
+1. **Inisialisasi database** — menjalankan `prisma db push` secara otomatis via `POST /api/setup`
+2. **Buat akun admin** — username, nama, dan password
+3. **Konfigurasi toko** — nama toko, tagline, dan kontak
+4. **Selesai** — redirect ke halaman login
+
+Tidak perlu akses terminal — semua dilakukan dari browser.
+
+> Jika wizard tidak muncul, akses endpoint setup manual:
+> ```bash
+> curl -X POST https://domain-anda.vercel.app/api/setup
+> ```
+
+#### 7. Seed Data (User & Pengaturan Default)
+
+Setelah database siap, isi data awal:
 
 ```bash
-curl -X POST https://domain-anda.vercel.app/api/setup
+curl -X POST https://domain-anda.vercel.app/api/seed \
+  -H "x-allow-seed: 1"
 ```
 
-Atau dari browser: buka `https://domain-anda.vercel.app/api/setup` dengan method POST.
+Ini akan membuat:
 
-Endpoint ini akan menjalankan `prisma db push` dan membuat seluruh tabel yang diperlukan.
+| Role | Username | Password |
+|------|----------|----------|
+| Admin | `admin` | `admin123` |
+| Kasir | `kasir` | `kasir123` |
 
-> **Seed data** tetap manual (belum ada akun default). Setelah deploy, login dengan akun admin yang ada atau buat via `/api/setup` + seed manual.
+Serta pengaturan toko default dan kategori "Umum".
+
+> **Idempotent** — aman dipanggil berulang. Hanya mengisi data jika belum ada.
 
 ### Catatan Penting Vercel
 
@@ -348,17 +370,20 @@ rizkimotor/
 │   │       ├── debts/            #   Utang/piutang
 │   │       ├── users/            #   CRUD pengguna
 │   │       ├── settings/         #   Pengaturan toko
-│   │       └── setup/            #   Inisialisasi database (POST)
+│   │       ├── setup/            #   Inisialisasi database (POST)
+│   │       └── seed/             #   Seed data default (POST)
 │   ├── components/
 │   │   ├── admin/                # Sidebar, header admin
 │   │   ├── pos/                  # Komponen POS
 │   │   ├── public/               # Header, footer, ProductCard
-│   │   └── ui/                   # Button, Toast, Pagination, dll
+│   │   ├── ui/                   # Button, Toast, Pagination, dll
+│   │   └── SetupWizard.tsx       # Setup wizard (auto-redirect saat DB kosong)
 │   ├── lib/
 │   │   ├── auth.ts               # NextAuth config
 │   │   ├── prisma.ts             # Prisma client singleton
 │   │   ├── format.ts             # formatRupiah, formatDate
-│   │   └── settings.ts           # App settings
+│   │   ├── settings.ts           # App settings + getSettings cache
+│   │   └── setup.ts              # checkNeedsSetup — deteksi setup awal
 │   └── types/                    # TypeScript types
 ├── Dockerfile                    # Multi-stage build
 ├── docker-compose.yml            # 3 profile orchestration
@@ -520,7 +545,13 @@ Bayar utang:
 POST /api/setup
 ```
 
-Menjalankan `prisma db push` untuk membuat tabel database. Berguna setelah deploy pertama atau jika tabel belum terbentuk. Response:
+Menjalankan `prisma db push` untuk membuat tabel database. Panggil **pertama kali** setelah deploy:
+
+```bash
+curl -X POST https://domain-anda.vercel.app/api/setup
+```
+
+Response:
 
 ```json
 {
@@ -531,6 +562,37 @@ Menjalankan `prisma db push` untuk membuat tabel database. Berguna setelah deplo
 ```
 
 > Endpoint ini memiliki lock untuk mencegah eksekusi ganda per cold start. Aman dipanggil berulang kali.
+
+### Seed Data Default
+
+```
+POST /api/seed
+```
+
+Mengisi data awal (user admin/kasir, pengaturan toko, kategori default). Panggil **setelah** `/api/setup`:
+
+```bash
+curl -X POST https://domain-anda.vercel.app/api/seed \
+  -H "x-allow-seed: 1"
+```
+
+Header `x-allow-seed: 1` wajib untuk mencegah eksekusi tidak sengaja.
+
+Response:
+
+```json
+{
+  "ok": true,
+  "results": [
+    "✅ User ADMIN dibuat (admin / admin123)",
+    "✅ User KASIR dibuat (kasir / kasir123)",
+    "✅ 18 pengaturan default dimuat.",
+    "✅ Kategori default dibuat: \"Umum\""
+  ]
+}
+```
+
+> **Idempotent** — hanya mengisi data jika belum ada, tidak menghapus data existing. Aman dipanggil berulang.
 
 ---
 

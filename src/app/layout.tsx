@@ -3,6 +3,9 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastProvider } from "@/components/ui/Toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { SetupWizard } from "@/components/SetupWizard";
+import { checkNeedsSetup } from "@/lib/setup";
+import { cookies } from "next/headers";
 
 export const metadata: Metadata = {
   title: "RIZKI MOTOR — Sparepart Motor Terlengkap",
@@ -20,11 +23,25 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Opt out of static rendering + cek setup
+  await cookies();
+  const needsSetup = await checkNeedsSetup();
+
+  if (needsSetup) {
+    return (
+      <html lang="id" className="dark" suppressHydrationWarning>
+        <body className="min-h-dvh bg-[#09090b] antialiased">
+          <SetupWizard />
+        </body>
+      </html>
+    );
+  }
+
   return (
     <html lang="id" className="dark" suppressHydrationWarning>
       <body className="min-h-dvh" style={{ background: "var(--surface-base)" }}>
