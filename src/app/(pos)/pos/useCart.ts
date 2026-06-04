@@ -42,8 +42,12 @@ export function useCart(): UseCartReturn {
               : c
           );
         }
-        if (product.stock <= 0) {
-          toast.error("Stok habis");
+        if (product.stock < 3) {
+          if (product.stock <= 0) {
+            toast.error("Stok habis");
+          } else {
+            toast.warning(`Stok menipis! Sisa ${product.stock}`);
+          }
           return prev;
         }
         didAdd = true;

@@ -17,24 +17,34 @@ function ProductCard({
   product: Product;
   onAddToCart: (product: Product, selectedPrice: number) => void;
 }) {
-  const inStock = product.stock > 0;
   const hasResellerPrice = product.priceReseller > 0;
 
   return (
     <div
       className={`text-left p-3 rounded-lg border transition-all duration-150 min-h-[120px] ${
-        inStock
+        product.stock > 0
           ? "border-surface-outline-variant bg-surface-base"
           : "border-surface-outline-variant bg-surface-container-low opacity-50"
       }`}
     >
-      <p className="text-xs font-semibold text-zinc-200 line-clamp-2 leading-snug mb-1">
-        {product.name}
-      </p>
+      <div className="flex items-start justify-between gap-1 mb-1">
+        <p className="text-xs font-semibold text-zinc-200 line-clamp-2 leading-snug">
+          {product.name}
+        </p>
+        {product.stock > 0 && product.stock < 3 && (
+          <span className="shrink-0 bg-red-600/15 text-red-400 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider leading-tight">
+            Stok {product.stock}
+          </span>
+        )}
+      </div>
       <p className="text-[10px] text-zinc-500 font-mono mb-2">{product.sku}</p>
       <p className="text-[10px] text-zinc-500 mb-2">Stok: {product.stock}</p>
 
-      {inStock ? (
+      {product.stock < 3 ? (
+        <div className="text-center py-2 text-xs text-red-500 font-medium bg-red-600/10 rounded">
+          {product.stock <= 0 ? "Stok Habis" : `Stok Menipis (${product.stock})`}
+        </div>
+      ) : (
         <div className="space-y-1">
           <button
             type="button"
@@ -57,8 +67,6 @@ function ProductCard({
             </button>
           )}
         </div>
-      ) : (
-        <div className="text-center py-2 text-xs text-zinc-600 font-medium">Stok Habis</div>
       )}
     </div>
   );

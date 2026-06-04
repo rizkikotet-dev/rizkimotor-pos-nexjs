@@ -34,7 +34,7 @@ export default async function AdminProdukPage({ searchParams }: PageProps) {
   const [products, total, categories] = await Promise.all([
     prisma.product.findMany({
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ stock: "asc" }, { createdAt: "desc" }],
       skip,
       take,
       include: { category: true },
@@ -91,8 +91,17 @@ export default async function AdminProdukPage({ searchParams }: PageProps) {
               </thead>
               <tbody className="divide-y divide-surface-outline-variant">
                 {products.map((product) => (
-                  <tr key={product.id} className="hover:bg-surface-container-high transition-colors">
-                    <td className="px-4 py-3">
+                  <tr
+                    key={product.id}
+                    className={`hover:bg-surface-container-high transition-colors ${
+                      product.stock < 3
+                        ? "bg-red-600/[0.04]"
+                        : product.stock <= 5
+                          ? "bg-amber-600/[0.02]"
+                          : ""
+                    }`}
+                  >
+                    <td className={`px-4 py-3 ${product.stock < 3 ? "border-l-2 border-l-red-500/60" : ""}`}>
                       {product.image ? (
                         <Image
                           src={product.image}
@@ -114,9 +123,21 @@ export default async function AdminProdukPage({ searchParams }: PageProps) {
                     <td className="px-4 py-3 text-right text-primary font-semibold">{formatRupiah(product.price)}</td>
                     <td className="px-4 py-3 text-right text-zinc-400">{product.priceReseller ? formatRupiah(product.priceReseller) : "-"}</td>
                     <td className="px-4 py-3 text-right">
-                      <span className={product.stock > 0 ? "text-emerald-400" : "text-red-400"}>
-                        {product.stock}
-                      </span>
+                      {product.stock === 0 ? (
+                        <span className="inline-flex items-center gap-1 bg-red-600/15 text-red-400 text-[10px] font-semibold px-2 py-0.5 rounded">
+                          Habis
+                        </span>
+                      ) : product.stock < 3 ? (
+                        <span className="inline-flex items-center gap-1 bg-red-600/15 text-red-400 text-[10px] font-semibold px-2 py-0.5 rounded">
+                          {product.stock}
+                        </span>
+                      ) : product.stock <= 5 ? (
+                        <span className="inline-flex items-center gap-1 bg-amber-600/15 text-amber-400 text-[10px] font-semibold px-2 py-0.5 rounded">
+                          {product.stock}
+                        </span>
+                      ) : (
+                        <span className="text-emerald-400 font-medium">{product.stock}</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-1">

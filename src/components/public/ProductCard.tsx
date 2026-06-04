@@ -48,10 +48,20 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        {inStock && product.stock <= 5 && (
+        {inStock && product.stock <= 2 && (
           <div className="absolute top-2 right-2">
             <span
-              className="bg-amber-600 text-white text-[10px] font-semibold px-2 py-0.5 rounded-md"
+              className="bg-red-600/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm"
+              aria-label={`Stok menipis, sisa ${product.stock}`}
+            >
+              Stok {product.stock}
+            </span>
+          </div>
+        )}
+        {inStock && product.stock > 2 && product.stock <= 5 && (
+          <div className="absolute top-2 right-2">
+            <span
+              className="bg-amber-600/90 text-white text-[10px] font-semibold px-2 py-0.5 rounded-md"
               aria-label={`Sisa stok ${product.stock}`}
             >
               Sisa {product.stock}

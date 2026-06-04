@@ -31,7 +31,7 @@ export default async function ProductListPage({ searchParams }: PageProps) {
             }
           : {}),
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ stock: "asc" }, { createdAt: "desc" }],
       include: { category: true },
     }),
   ]);
