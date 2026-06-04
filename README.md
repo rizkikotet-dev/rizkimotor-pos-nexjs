@@ -265,8 +265,10 @@ Buka project → **Settings** → **Environment Variables** → tambahkan:
 
 Vercel akan otomatis membaca `vercel.json`:
 
-- **Build Command:** `npx prisma generate --schema=prisma/schema.vercel.prisma && next build`
+- **Build Command:** `npx prisma generate --schema=prisma/schema.vercel.prisma && npx prisma db push --schema=prisma/schema.vercel.prisma --skip-generate --accept-data-loss 2>/dev/null; next build`
 - **Schema khusus PostgreSQL** — `prisma/schema.vercel.prisma` digunakan, bukan `schema.prisma` (SQLite)
+
+> Build command secara otomatis menjalankan `prisma db push` untuk membuat/menyinkronkan tabel database setiap deploy. Jika database belum siap saat build, build tetap lanjut (tidak blocking).
 
 #### 5. Deploy
 
@@ -274,19 +276,19 @@ Klik **Deploy**. Vercel akan build dan deploy aplikasi.
 
 #### 6. Setup Database Production
 
-```bash
-# Buka terminal di Vercel Dashboard atau jalankan via API
-npx prisma db push --schema=prisma/schema.vercel.prisma
+Database akan otomatis tersinkronisasi saat build berkat `prisma db push` di build command.
 
-# Seed data
-npx tsx prisma/seed.ts
-```
-
-Atau gunakan Vercel CLI:
+Jika tabel belum terbentuk (misalnya error koneksi saat build), akses endpoint setup:
 
 ```bash
-npx vercel db push
+curl -X POST https://domain-anda.vercel.app/api/setup
 ```
+
+Atau dari browser: buka `https://domain-anda.vercel.app/api/setup` dengan method POST.
+
+Endpoint ini akan menjalankan `prisma db push` dan membuat seluruh tabel yang diperlukan.
+
+> **Seed data** tetap manual (belum ada akun default). Setelah deploy, login dengan akun admin yang ada atau buat via `/api/setup` + seed manual.
 
 ### Catatan Penting Vercel
 
@@ -345,7 +347,8 @@ rizkimotor/
 │   │       ├── customers/        #   CRUD pelanggan
 │   │       ├── debts/            #   Utang/piutang
 │   │       ├── users/            #   CRUD pengguna
-│   │       └── settings/         #   Pengaturan
+│   │       ├── settings/         #   Pengaturan toko
+│   │       └── setup/            #   Inisialisasi database (POST)
 │   ├── components/
 │   │   ├── admin/                # Sidebar, header admin
 │   │   ├── pos/                  # Komponen POS
@@ -510,6 +513,24 @@ Bayar utang:
   "amount": 50000
 }
 ```
+
+### Setup Database
+
+```
+POST /api/setup
+```
+
+Menjalankan `prisma db push` untuk membuat tabel database. Berguna setelah deploy pertama atau jika tabel belum terbentuk. Response:
+
+```json
+{
+  "ok": true,
+  "message": "Database initialized successfully",
+  "log": "..."
+}
+```
+
+> Endpoint ini memiliki lock untuk mencegah eksekusi ganda per cold start. Aman dipanggil berulang kali.
 
 ---
 

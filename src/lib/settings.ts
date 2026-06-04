@@ -2,6 +2,7 @@
 // dengan schema didefinisikan di kode (type-safe).
 
 import { unstable_cache } from "next/cache";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { PaperSize } from "./constants";
 import { prisma } from "./prisma";
 
@@ -57,7 +58,16 @@ export type Settings = Record<SettingKey, string>;
 // TTL 60 detik sebagai safety net jika invalidation terlewat.
 export const getSettings = unstable_cache(
   async (): Promise<Settings> => {
-    const stored = await prisma.setting.findMany();
+    let stored: { key: string; value: string }[];
+    try {
+      stored = await prisma.setting.findMany();
+    } catch (e) {
+      // P2021 = table not found (database belum di-inisialisasi)
+      if (e instanceof PrismaClientKnownRequestError && e.code === "P2021") {
+        return DEFAULT_SETTINGS as unknown as Settings;
+      }
+      throw e;
+    }
     const map = {} as Settings;
     for (const key of Object.keys(DEFAULT_SETTINGS) as SettingKey[]) {
       const found = stored.find((s) => s.key === key);

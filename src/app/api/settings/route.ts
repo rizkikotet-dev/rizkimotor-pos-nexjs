@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/auth";
 import { DEFAULT_SETTINGS, type SettingKey } from "@/lib/settings";
@@ -8,7 +9,16 @@ import { z } from "zod";
 const ALLOWED_KEYS = Object.keys(DEFAULT_SETTINGS);
 
 export const GET = withAuth(async () => {
-  const stored = await prisma.setting.findMany();
+  let stored: { key: string; value: string }[];
+  try {
+    stored = await prisma.setting.findMany();
+  } catch (e) {
+    // P2021 = table not found — database belum diinisialisasi, return defaults
+    if (e instanceof PrismaClientKnownRequestError && e.code === "P2021") {
+      return NextResponse.json(DEFAULT_SETTINGS);
+    }
+    throw e;
+  }
   const result: Record<string, string> = {};
   for (const key of ALLOWED_KEYS) {
     const found = stored.find((s) => s.key === key);

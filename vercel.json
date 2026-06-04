@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npx prisma generate --schema=prisma/schema.vercel.prisma && next build",
+  "buildCommand": "npx prisma generate --schema=prisma/schema.vercel.prisma && npx prisma db push --schema=prisma/schema.vercel.prisma --skip-generate --accept-data-loss 2>/dev/null; next build",
   "installCommand": "npm install",
   "outputDirectory": ".next",
   "git": {
