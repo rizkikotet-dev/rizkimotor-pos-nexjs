@@ -3,6 +3,9 @@ FROM node:20-slim AS deps
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
+# Default database URL untuk prisma generate (postinstall)
+ENV DATABASE_URL=file:./dev.db
+
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
 
@@ -23,8 +26,6 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV SKIP_ENV_VALIDATION=1
 
 RUN npx prisma generate
-
-RUN npx prisma db push --skip-generate --accept-data-loss
 
 RUN npm run build
 
@@ -48,11 +49,16 @@ COPY --from=builder /app/node_modules/.bin ./node_modules/.bin
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/docker-entrypoint.sh ./docker-entrypoint.sh
 
-RUN mkdir -p /app/data /app/public/uploads && chown -R nextjs:nodejs /app/data /app/public/uploads /app
+RUN mkdir -p /app/data /app/public/uploads && chown -R nextjs:nodejs /app/data /app/public/uploads
 
 RUN chmod +x ./docker-entrypoint.sh
 
-USER nextjs
+# Install gosu untuk drop privileges di entrypoint
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends gosu; \
+    rm -rf /var/lib/apt/lists/*; \
+    gosu nobody true
 
 EXPOSE 3000
 ENV PORT=3000

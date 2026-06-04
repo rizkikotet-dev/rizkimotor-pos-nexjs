@@ -1,5 +1,6 @@
 services:
-  # Default: pull from GHCR. Jalankan: docker compose up -d
+  # === Production (pull from GHCR) ===
+  # Jalankan: docker compose up -d
   app:
     image: ghcr.io/rizkikotet-dev/rizkimotor-pos-nexjs:main
     container_name: rizki-motor
@@ -22,7 +23,8 @@ services:
     profiles:
       - default
 
-  # Build local: jalankan: docker compose --profile build up -d
+  # === Production (build local) ===
+  # Jalankan: docker compose --profile build up -d
   build:
     build: .
     container_name: rizki-motor
@@ -44,3 +46,36 @@ services:
       start_period: 10s
     profiles:
       - build
+
+  # === Development (hot reload) ===
+  # Jalankan: docker compose --profile dev up -d
+  # Akses: http://localhost:3000
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: deps
+    container_name: rizki-motor-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=file:/app/data/dev.db
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=dev-secret-rizki-motor
+      - SKIP_ENV_VALIDATION=1
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/public/uploads
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    command: >
+      sh -c "
+        npx prisma generate &&
+        npx prisma db push &&
+        npm run dev
+      "
+    profiles:
+      - dev

@@ -1,23 +1,33 @@
 #!/bin/sh
 set -e
 
-# Ensure persistent directories exist (sama-sama di-mount sebagai volume)
-mkdir -p /app/data
-mkdir -p /app/public/uploads
+echo "RIZKI MOTOR — Docker Entrypoint"
+echo "================================"
 
-# Fix permission agar user nextjs bisa tulis (volume mount awal dibuat oleh root)
-chown -R nextjs:nodejs /app/data /app/public/uploads 2>/dev/null || true
-chmod -R 755 /app/data /app/public/uploads 2>/dev/null || true
+# Ensure persistent directories exist
+mkdir -p /app/data /app/public/uploads
 
-# Initialize database if it doesn't exist
-if [ ! -f /app/data/prod.db ]; then
-  echo "Database not found, initializing..."
-  npx prisma db push --skip-generate
-  echo "Database initialized."
-else
-  echo "Database found, running migrations..."
-  npx prisma db push --skip-generate 2>/dev/null || true
+# Fix permission jika running sebagai root
+if [ "$(id -u)" = "0" ]; then
+  chown -R nextjs:nodejs /app/data /app/public/uploads 2>/dev/null || true
 fi
 
-# Start the application
-exec node server.js
+# Generate Prisma client
+echo ""
+echo "Generating Prisma client..."
+gosu nextjs npx prisma generate
+
+# Initialize / migrate database
+if [ ! -f /app/data/prod.db ]; then
+  echo "Database not found, initializing..."
+  gosu nextjs npx prisma db push --skip-generate
+  echo "Database initialized."
+else
+  echo "Database found, running schema sync..."
+  gosu nextjs npx prisma db push --skip-generate 2>/dev/null || true
+fi
+
+# Start the application as nextjs user
+echo ""
+echo "Starting RIZKI MOTOR..."
+exec gosu nextjs node server.js
