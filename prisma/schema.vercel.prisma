@@ -1,0 +1,138 @@
+// Rizki Motor — Prisma schema for Vercel (PostgreSQL)
+// Digunakan untuk deployment di Vercel dengan PostgreSQL (Neon, Supabase, dll.)
+// Schema identik dengan prisma/schema.prisma, hanya berbeda datasource provider.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  username     String        @unique
+  name         String
+  password     String
+  role         String        @default("KASIR")
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+
+  @@index([username])
+}
+
+model Customer {
+  id           Int           @id @default(autoincrement())
+  name         String
+  phone        String?       @unique
+  address      String?
+  note         String?
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+  debts        Debt[]
+
+  @@index([name])
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  slug      String    @unique
+  isDefault Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  products  Product[]
+
+  @@index([isDefault])
+}
+
+model Product {
+  id            Int               @id @default(autoincrement())
+  sku           String            @unique
+  name          String
+  description   String?
+  category      Category          @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  categoryId    Int
+  price         Int
+  priceReseller Int               @default(0)
+  cost          Int               @default(0)
+  stock         Int               @default(0)
+  minStock      Int               @default(5)
+  image         String?
+  active        Boolean           @default(true)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  items         TransactionItem[]
+
+  @@index([categoryId])
+  @@index([name])
+  @@index([active, categoryId])
+}
+
+model Transaction {
+  id         Int               @id @default(autoincrement())
+  invoiceNo  String            @unique
+  user       User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  userId     Int
+  customer   Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerId Int?
+  total      Int
+  payment    Int
+  change     Int
+  note       String?
+  createdAt  DateTime          @default(now())
+  items      TransactionItem[]
+  debt       Debt?
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([customerId])
+  @@index([userId, createdAt])
+  @@index([customerId, createdAt])
+}
+
+model TransactionItem {
+  id            Int         @id @default(autoincrement())
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  transactionId Int
+  product       Product?    @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productId     Int?
+  productName   String
+  productSku    String
+  quantity      Int
+  price         Int
+  subtotal      Int
+
+  @@index([transactionId])
+  @@index([productId])
+}
+
+model Debt {
+  id            Int         @id @default(autoincrement())
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  transactionId Int         @unique
+  customer      Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  customerId    Int
+  amount        Int
+  paid          Int         @default(0)
+  status        String      @default("UNPAID")
+  dueDate       DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+  @@index([status, createdAt])
+  @@index([customerId, status])
+}
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

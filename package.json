@@ -10,6 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "vercel:build": "prisma generate --schema=prisma/schema.vercel.prisma && next build",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",

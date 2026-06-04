@@ -1,6 +1,6 @@
 # RIZKI MOTOR — Sistem POS & Manajemen Toko Sparepart Motor
 
-Aplikasi manajemen toko sparepart motor lengkap dengan fitur **Point of Sale (POS)**, manajemen inventory, **utang piutang**, dan katalog publik.
+Aplikasi manajemen toko sparepart motor lengkap dengan fitur **Point of Sale (POS)** modern, manajemen inventory, **utang piutang**, dan katalog publik. Dibangun dengan Next.js 16, TypeScript, Prisma, dan Tailwind CSS.
 
 ---
 
@@ -8,12 +8,16 @@ Aplikasi manajemen toko sparepart motor lengkap dengan fitur **Point of Sale (PO
 
 - [Fitur Utama](#fitur-utama)
 - [Tech Stack](#tech-stack)
-- [Quick Start](#quick-start)
+- [Quick Start (Local)](#quick-start-local)
+- [Docker](#docker)
+- [Vercel Deployment](#vercel-deployment)
 - [Struktur Project](#struktur-project)
 - [Database Schema](#database-schema)
 - [API Reference](#api-reference)
+- [Environment Variables](#environment-variables)
 - [Panduan Penggunaan](#panduan-penggunaan)
-- [Deployment](#deployment)
+- [Scripts](#scripts)
+- [CI/CD — Docker ke GHCR & DockerHub](#cicd--docker-ke-ghcr--dockerhub)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -23,12 +27,14 @@ Aplikasi manajemen toko sparepart motor lengkap dengan fitur **Point of Sale (PO
 ### 1. Point of Sale (POS)
 - Interface kasir modern dengan **payment modal** (bukan prompt)
 - Pencarian produk real-time (nama, SKU, deskripsi)
+- **Input item manual** — tambah item kustom ke transaksi (jasa, barang tidak terdaftar)
 - Keranjang belanja dengan update qty otomatis
 - Dukungan **harga normal & reseller**
 - Pilih **metode bayar** (Tunai, QRIS, Transfer, Kartu)
 - **Bayar Cepat** — tombol Uang Pas, Rp50rb, Rp100rb, dll.
 - Pilih **pelanggan** saat transaksi
 - Fitur **Bayar Nanti (Utang)** — transaksi kredit ke pelanggan
+- **Proteksi stok** — stok < 3 tidak bisa ditambahkan ke transaksi, badge peringatan
 - Kembalian otomatis
 - Cetak struk transaksi
 
@@ -47,6 +53,8 @@ Aplikasi manajemen toko sparepart motor lengkap dengan fitur **Point of Sale (PO
 
 ### 4. Admin Dashboard
 - Manajemen produk (CRUD + upload gambar)
+- Tampilan stok menipis dengan badge tiered (Habis, Stok Menipis, Normal)
+- Sorting otomatis: stok menipis tampil paling atas
 - Manajemen kategori
 - Manajemen pengguna (Admin & Kasir)
 - Daftar transaksi dengan **badge status utang**
@@ -58,6 +66,7 @@ Aplikasi manajemen toko sparepart motor lengkap dengan fitur **Point of Sale (PO
 - Tampilan produk modern dan profesional
 - Filter berdasarkan kategori
 - Pencarian produk
+- Badge stok menipis pada produk dengan stok rendah
 - Responsive design, dark mode
 
 ### 6. Keamanan
@@ -75,20 +84,22 @@ Aplikasi manajemen toko sparepart motor lengkap dengan fitur **Point of Sale (PO
 |-------|-----------|
 | Framework | Next.js 16 (App Router) |
 | Language | TypeScript 5.6 |
-| Database | Prisma ORM + SQLite (dev) / PostgreSQL (prod) |
+| Database | Prisma ORM + SQLite (dev) / PostgreSQL (production) |
 | Authentication | NextAuth.js 4 |
 | Styling | Tailwind CSS 3.4 |
 | Icons | Lucide React |
 | Validation | Zod |
+| Container | Docker (multi-stage build) |
+| Registry | GHCR & DockerHub |
 
 ---
 
-## Quick Start
+## Quick Start (Local)
 
 ### Prasyarat
 
-- Node.js 18+ atau 20+
-- npm, yarn, atau pnpm
+- Node.js 20+
+- npm
 
 ### Instalasi
 
@@ -124,61 +135,233 @@ Aplikasi berjalan di **http://localhost:3000**
 
 ---
 
+## Docker
+
+Tiga profile Docker untuk kebutuhan berbeda: pull registry, build lokal, dan development hot-reload.
+
+### Prasyarat
+
+- Docker & Docker Compose v2+
+
+### Profile 1: Pull dari Registry (Production)
+
+Menarik image dari GHCR, cocok untuk production. Tidak perlu build.
+
+```bash
+# Clone
+git clone https://github.com/rizkikotet-dev/rizkimotor-pos-nexjs.git
+cd rizkimotor-pos-nexjs
+
+# Buat .env dengan secret
+echo "NEXTAUTH_SECRET=$(openssl rand -base64 32)" > .env
+
+# Jalankan
+docker compose up -d
+
+# Setup database (pertama kali)
+docker compose exec app npx prisma db push
+
+# Seed data (opsional)
+docker compose exec app npx tsx prisma/seed.ts
+```
+
+Akses di **http://localhost:3000**
+
+### Profile 2: Build Lokal (Production)
+
+Build image dari Dockerfile lokal, cocok untuk development atau kustomisasi.
+
+```bash
+docker compose --profile build up -d --build
+
+# Setup database (pertama kali)
+docker compose --profile build exec app npx prisma db push
+```
+
+### Profile 3: Development (Hot Reload)
+
+Mount source code dengan hot reload. Perubahan kode langsung terlihat tanpa rebuild.
+
+```bash
+docker compose --profile dev up -d
+
+# Akses di http://localhost:3000
+```
+
+### Perintah Docker Lainnya
+
+```bash
+# Logs
+docker compose logs -f
+docker compose --profile build logs -f
+
+# Stop
+docker compose down
+docker compose --profile build down
+docker compose --profile dev down
+```
+
+### File Docker
+
+| File | Keterangan |
+|------|------------|
+| `Dockerfile` | Multi-stage build: `deps` → `builder` → `runner` |
+| `docker-compose.yml` | 3 profile: `app` (pull), `build` (lokal), `dev` (hot-reload) |
+| `docker-entrypoint.sh` | Entrypoint: prisma generate, db push, lalu start app |
+| `.dockerignore` | File yang di-exclude dari build |
+
+### Docker Architecture
+
+- **Multi-stage build** — image production minimal (~200 MB)
+- **gosu** — entrypoint jalan sebagai root untuk inisialisasi, lalu turun privilege ke user `nextjs`
+- **Volume persistensi** — database SQLite di `/app/data`, uploads di `/app/public/uploads`
+- **Healthcheck** — wget ke port 3000 tiap 30 detik
+- **Dev mode** — mount source code, anon volume untuk node_modules & .next
+
+---
+
+## Vercel Deployment
+
+### Prasyarat
+
+1. Akun [Vercel](https://vercel.com)
+2. Database PostgreSQL (rekomendasi: [Neon](https://neon.tech) — free tier sudah cukup)
+3. Repository di GitHub
+
+### Langkah Deployment
+
+#### 1. Buat Database PostgreSQL
+
+Buka [Neon](https://neon.tech) → Create project → Copy connection string:
+
+```
+postgresql://user:pass@ep-xxx.us-east-2.aws.neon.tech/rizkimotor?sslmode=require
+```
+
+#### 2. Import Project ke Vercel
+
+```bash
+# Push repository ke GitHub
+git remote add origin https://github.com/rizkikotet-dev/rizkimotor-pos-nexjs.git
+git push -u origin main
+```
+
+Buka [Vercel Dashboard](https://vercel.com) → **Add New Project** → Import repository.
+
+#### 3. Set Environment Variables di Vercel
+
+Buka project → **Settings** → **Environment Variables** → tambahkan:
+
+| Variable | Value |
+|----------|-------|
+| `DATABASE_URL` | Connection string PostgreSQL dari Neon |
+| `NEXTAUTH_URL` | Domain Vercel (contoh: `https://rizki-motor.vercel.app`) |
+| `NEXTAUTH_SECRET` | Hasil dari `openssl rand -base64 32` |
+| `SKIP_ENV_VALIDATION` | `1` |
+
+> **Catatan:** NEXTAUTH_URL harus diisi domain production Vercel. Untuk production, set juga di **Preview** dan **Development** dengan URL masing-masing.
+
+#### 4. Build Settings
+
+Vercel akan otomatis membaca `vercel.json`:
+
+- **Build Command:** `npx prisma generate --schema=prisma/schema.vercel.prisma && next build`
+- **Schema khusus PostgreSQL** — `prisma/schema.vercel.prisma` digunakan, bukan `schema.prisma` (SQLite)
+
+#### 5. Deploy
+
+Klik **Deploy**. Vercel akan build dan deploy aplikasi.
+
+#### 6. Setup Database Production
+
+```bash
+# Buka terminal di Vercel Dashboard atau jalankan via API
+npx prisma db push --schema=prisma/schema.vercel.prisma
+
+# Seed data
+npx tsx prisma/seed.ts
+```
+
+Atau gunakan Vercel CLI:
+
+```bash
+npx vercel db push
+```
+
+### Catatan Penting Vercel
+
+- **File upload** tidak bisa disimpan di filesystem Vercel (ephemeral). Untuk production, gunakan cloud storage (Uploadthing, Cloudinary, S3).
+- **SQLite tidak bisa digunakan di Vercel** karena serverless function read-only filesystem. Wajib PostgreSQL.
+- **Prisma schema khusus** (`schema.vercel.prisma`) identik dengan schema utama tapi menggunakan `provider = "postgresql"`.
+- **Database migration** dilakukan manual via `prisma db push` atau `prisma migrate`.
+
+---
+
 ## Struktur Project
 
 ```
 rizkimotor/
 ├── prisma/
-│   ├── schema.prisma          # Database schema
-│   └── seed.ts                # Seed data
+│   ├── schema.prisma              # SQLite (development)
+│   ├── schema.vercel.prisma       # PostgreSQL (Vercel)
+│   └── seed.ts                    # Seed data
 ├── public/
-│   └── uploads/               # Upload gambar produk
-├── data/                      # Database SQLite (Docker volume)
-├── Dockerfile                 # Multi-stage Docker build
-├── docker-compose.yml         # Docker orchestration
-├── .dockerignore              # Docker build exclusions
+│   └── uploads/                   # Upload gambar produk
+├── data/                          # Database SQLite (Docker volume)
 ├── src/
 │   ├── app/
-│   │   ├── (admin)/           # Halaman admin
+│   │   ├── (admin)/               # Halaman admin (dashboard, produk, dll)
 │   │   │   └── admin/
-│   │   │       ├── produk/        # Manajemen produk
-│   │   │       ├── kategori/      # Manajemen kategori
-│   │   │       ├── pengguna/      # Manajemen pengguna
-│   │   │       ├── pelanggan/     # Manajemen pelanggan
-│   │   │       ├── transaksi/     # Daftar transaksi
-│   │   │       ├── utang-piutang/ # Kelola utang
-│   │   │       ├── barcode/       # Cetak barcode
-│   │   │       └── pengaturan/    # Pengaturan toko
-│   │   ├── (auth)/            # Login
-│   │   ├── (pos)/             # Point of Sale
+│   │   │       ├── produk/        #   CRUD produk + stok warning
+│   │   │       ├── kategori/      #   CRUD kategori
+│   │   │       ├── pengguna/      #   CRUD pengguna
+│   │   │       ├── pelanggan/     #   CRUD pelanggan
+│   │   │       ├── transaksi/     #   Daftar transaksi
+│   │   │       ├── utang-piutang/ #   Kelola utang
+│   │   │       ├── barcode/       #   Cetak barcode
+│   │   │       └── pengaturan/    #   Pengaturan toko
+│   │   ├── (auth)/                # Login
+│   │   ├── (pos)/                 # Point of Sale
 │   │   │   └── pos/
-│   │   │       ├── page.tsx       # Halaman kasir
-│   │   │       ├── riwayat/       # Riwayat transaksi
-│   │   │       └── struk/[id]/    # Struk transaksi
-│   │   ├── (public)/          # Katalog publik
-│   │   └── api/               # API routes
-│   │       ├── auth/          # NextAuth
-│   │       ├── products/      # Produk CRUD
-│   │       ├── categories/    # Kategori CRUD
-│   │       ├── transactions/  # Transaksi
-│   │       ├── customers/     # Pelanggan CRUD
-│   │       ├── debts/         # Utang/piutang
-│   │       ├── users/         # Pengguna
-│   │       └── settings/      # Pengaturan
+│   │   │       ├── page.tsx       #   Halaman kasir utama
+│   │   │       ├── POSClient.tsx  #   Client component POS
+│   │   │       ├── ProductGrid.tsx#   Grid produk + stok badge
+│   │   │       ├── ProductSearchBar.tsx
+│   │   │       ├── CartPanel.tsx  #   Keranjang belanja
+│   │   │       ├── ManualItemModal.tsx # Input item manual
+│   │   │       ├── PaymentModal.tsx#   Modal pembayaran
+│   │   │       ├── useCart.ts     #   Hook state keranjang
+│   │   │       ├── types.ts      #   Tipe data POS
+│   │   │       ├── riwayat/      #   Riwayat transaksi
+│   │   │       └── struk/[id]/   #   Cetak struk
+│   │   ├── (public)/             # Katalog publik
+│   │   │   ├── produk/           #   Halaman produk publik
+│   │   │   └── page.tsx          #   Beranda
+│   │   └── api/                  # API routes
+│   │       ├── auth/             #   NextAuth
+│   │       ├── products/         #   CRUD produk
+│   │       ├── categories/       #   CRUD kategori
+│   │       ├── transactions/     #   Transaksi + item manual
+│   │       ├── customers/        #   CRUD pelanggan
+│   │       ├── debts/            #   Utang/piutang
+│   │       ├── users/            #   CRUD pengguna
+│   │       └── settings/         #   Pengaturan
 │   ├── components/
-│   │   ├── admin/             # Sidebar, header admin
-│   │   ├── pos/               # PaymentModal
-│   │   ├── public/            # Header, footer publik
-│   │   └── ui/                # Button, Toast, dll.
+│   │   ├── admin/                # Sidebar, header admin
+│   │   ├── pos/                  # Komponen POS
+│   │   ├── public/               # Header, footer, ProductCard
+│   │   └── ui/                   # Button, Toast, Pagination, dll
 │   ├── lib/
-│   │   ├── auth.ts            # NextAuth config
-│   │   ├── prisma.ts          # Prisma client
-│   │   ├── format.ts          # formatRupiah, formatDate
-│   │   └── settings.ts        # App settings
-│   └── types/                 # TypeScript types
+│   │   ├── auth.ts               # NextAuth config
+│   │   ├── prisma.ts             # Prisma client singleton
+│   │   ├── format.ts             # formatRupiah, formatDate
+│   │   └── settings.ts           # App settings
+│   └── types/                    # TypeScript types
+├── Dockerfile                    # Multi-stage build
+├── docker-compose.yml            # 3 profile orchestration
+├── docker-entrypoint.sh          # Container entrypoint
+├── vercel.json                   # Vercel config
 ├── .env.example
-├── PRODUCT.md                 # Dokumentasi produk
-├── DESIGN.md                  # Design system
 └── package.json
 ```
 
@@ -206,6 +389,14 @@ rizkimotor/
 | note | String? | Catatan |
 | active | Boolean | Aktif/nonaktif |
 
+### Category
+| Field | Type | Keterangan |
+|-------|------|------------|
+| id | Int | Primary key |
+| name | String | Unique, nama kategori |
+| slug | String | Unique, URL-friendly |
+| isDefault | Boolean | Kategori default (tidak bisa dihapus) |
+
 ### Product
 | Field | Type | Keterangan |
 |-------|------|------------|
@@ -216,7 +407,7 @@ rizkimotor/
 | priceReseller | Int | Harga reseller (0 = tidak ada) |
 | cost | Int | Harga modal |
 | stock | Int | Stok tersedia |
-| minStock | Int | Threshold alert stok menipis |
+| minStock | Int | Threshold alert stok menipis (default: 5) |
 | image | String? | Path gambar |
 | categoryId | Int | Relasi ke kategori |
 
@@ -232,11 +423,23 @@ rizkimotor/
 | change | Int | Kembalian |
 | note | String? | Catatan |
 
-### Debt (Utang/Piutang)
+### TransactionItem
 | Field | Type | Keterangan |
 |-------|------|------------|
 | id | Int | Primary key |
 | transactionId | Int | Relasi ke transaksi |
+| productId | Int? | Relasi ke produk (nullable untuk item manual) |
+| productName | String | Nama item (snapshot) |
+| productSku | String | SKU item (snapshot) |
+| quantity | Int | Jumlah |
+| price | Int | Harga per item |
+| subtotal | Int | Total per item |
+
+### Debt (Utang/Piutang)
+| Field | Type | Keterangan |
+|-------|------|------------|
+| id | Int | Primary key |
+| transactionId | Int | Relasi unik ke transaksi |
 | customerId | Int | Relasi ke pelanggan |
 | amount | Int | Jumlah utang |
 | paid | Int | Sudah dibayar |
@@ -258,7 +461,8 @@ POST /api/transactions
 ```json
 {
   "items": [
-    { "productId": 1, "price": 50000, "quantity": 2 }
+    { "productId": 1, "price": 50000, "quantity": 2 },
+    { "name": "Jasa Service", "sku": "", "price": 25000, "quantity": 1 }
   ],
   "payment": 100000,
   "customerId": 1,
@@ -267,24 +471,36 @@ POST /api/transactions
 }
 ```
 
+- `items[].productId` — untuk produk database (nullable untuk item manual)
+- `items[].name` — nama item manual (hanya untuk item tanpa productId)
 - `isDebt: true` + `customerId` → transaksi kredit, otomatis buat record Debt
 - `payment: 0` + `isDebt: true` → bayar nanti
+
+### Produk
+
+```
+GET    /api/products?q=&categoryId=&page=1&pageSize=20
+POST   /api/products
+GET    /api/products/:id
+PATCH  /api/products/:id
+DELETE /api/products/:id
+```
 
 ### Pelanggan
 
 ```
-GET    /api/customers          # List semua pelanggan
-POST   /api/customers          # Buat pelanggan baru
-GET    /api/customers/:id      # Detail pelanggan
-PATCH  /api/customers/:id      # Update pelanggan
-DELETE /api/customers/:id      # Soft delete
+GET    /api/customers?q=
+POST   /api/customers
+GET    /api/customers/:id
+PATCH  /api/customers/:id
+DELETE /api/customers/:id
 ```
 
 ### Utang/Piutang
 
 ```
-GET  /api/debts                # List utang (filter: ?status=UNPAID|PARTIAL|PAID)
-POST /api/debts                # Bayar utang
+GET  /api/debts?status=UNPAID|PARTIAL|PAID
+POST /api/debts
 ```
 
 Bayar utang:
@@ -297,19 +513,55 @@ Bayar utang:
 
 ---
 
+## Environment Variables
+
+| Variable | Wajib | Default | Deskripsi |
+|----------|-------|---------|-----------|
+| `DATABASE_URL` | Ya | `file:./dev.db` | SQLite (dev) atau PostgreSQL (production) |
+| `NEXTAUTH_URL` | Ya | `http://localhost:3000` | URL aplikasi (ganti di production) |
+| `NEXTAUTH_SECRET` | Ya | — | Generate dengan `openssl rand -base64 32` |
+| `SKIP_ENV_VALIDATION` | Tidak | — | Set `1` untuk skip validasi env di build |
+
+### Development (SQLite)
+
+```env
+DATABASE_URL="file:./dev.db"
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-secret-here"
+```
+
+### Vercel / Production (PostgreSQL)
+
+```env
+DATABASE_URL="postgresql://user:password@host:5432/dbname?sslmode=require"
+NEXTAUTH_URL="https://rizki-motor.vercel.app"
+NEXTAUTH_SECRET="your-strong-secret"
+```
+
+---
+
 ## Panduan Penggunaan
 
 ### Transaksi di POS (Kasir)
 
 1. **Cari produk** — ketik nama atau SKU di kolom pencarian
-2. **Tambah ke keranjang** — klik tombol "Normal" atau "Reseller"
-3. **Atur jumlah** — gunakan tombol +/-
-4. **Klik "Buat Pesanan"** — payment modal muncul
-5. **Pilih pelanggan** (opsional) — klik area pelanggan, cari nama
-6. **Pilih metode bayar** — Tunai/QRIS/Transfer/Kartu
-7. **Input nominal bayar** — atau klik tombol bayar cepat
-8. **Jika utang** — nyalakan toggle "Bayar Nanti"
-9. **Klik "Bayar"** atau **"Catat Utang"**
+2. **Item manual** — klik tombol "Manual" untuk input item kustom (jasa, barang tidak terdaftar)
+3. **Tambah ke keranjang** — klik "Normal" (harga jual) atau "Reseller" (harga reseller)
+4. **Atur jumlah** — gunakan tombol +/- di keranjang
+5. **Klik "Buat Pesanan"** — payment modal muncul
+6. **Pilih pelanggan** (opsional) — klik area pelanggan, cari nama
+7. **Pilih metode bayar** — Tunai/QRIS/Transfer/Kartu
+8. **Input nominal bayar** — atau klik tombol bayar cepat (Uang Pas, Rp50rb, Rp100rb, Rp200rb)
+9. **Jika utang** — nyalakan toggle "Bayar Nanti", pastikan pelanggan dipilih
+10. **Klik "Bayar"** atau **"Catat Utang"**
+
+### Proteksi Stok
+
+- Produk dengan stok **< 3** tidak bisa ditambahkan ke transaksi
+- Stok **0** → badge merah "Habis" dengan pesan error
+- Stok **1–2** → badge merah "Stok Menipis" dengan toast warning
+- Stok **3–5** → badge amber "Sisa N" sebagai pengingat
+- Sorting otomatis: stok terendah muncul paling atas di semua halaman produk
 
 ### Kelola Utang (Admin)
 
@@ -330,143 +582,85 @@ Bayar utang:
 ## Scripts
 
 ```bash
-npm run dev          # Development server
-npm run build        # Production build
-npm run start        # Production server
-npm run lint         # ESLint check
-npm run db:push      # Push schema ke database
-npm run db:migrate   # Buat migration
-npm run db:seed      # Seed database
-npm run db:studio    # Buka Prisma Studio
+npm run dev             # Development server (Next.js)
+npm run build           # Production build
+npm run start           # Production server
+npm run lint            # ESLint check
+
+npm run vercel:build    # Build untuk Vercel (Prisma PostgreSQL + Next.js)
+
+npm run db:push         # Push schema ke database
+npm run db:migrate      # Buat migration
+npm run db:seed         # Seed data awal
+npm run db:studio       # Buka Prisma Studio
+
+npm test                # Jalankan test (Vitest)
+npm run test:watch      # Test mode watch
+npm run test:coverage   # Test dengan coverage
 ```
 
 ---
 
-## Environment Variables
+## CI/CD — Docker ke GHCR & DockerHub
 
-```env
-DATABASE_URL="file:./dev.db"
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-secret-here"
-```
+Pipeline otomatis build & push Docker image ke **DockerHub** dan **GitHub Container Registry (ghcr.io)**.
 
-### Production (PostgreSQL)
+### Trigger
 
-```env
-DATABASE_URL="postgresql://user:password@host:5432/dbname"
-NEXTAUTH_URL="https://your-domain.com"
-NEXTAUTH_SECRET="your-strong-secret"
-```
+| Event | Action |
+|-------|--------|
+| Push ke `main` | Build & push dengan tag `main` |
+| Push tag `v*` | Build & push dengan versi (v1.0.0, v1.0, v1) |
+| Pull Request | Build saja (tidak push) |
 
----
+### Setup
 
-## Deployment
+#### DockerHub
 
-### Docker (Recommended)
+1. Buat akun di [DockerHub](https://hub.docker.com)
+2. Access Token: Account Settings → Security → New Access Token
+3. Tambah Secret di GitHub:
+   - `DOCKERHUB_USERNAME` — username DockerHub
+   - `DOCKERHUB_TOKEN` — access token
 
-#### Mode 1: Pull dari Registry (Recommended untuk production)
+#### GHCR
 
-```bash
-# 1. Clone
-git clone https://github.com/rizkikotet-dev/rizkimotor-pos-nexjs.git
-cd rizkimotor-pos-nexjs
+GHCR sudah otomatis aktif — `GITHUB_TOKEN` tersedia secara default.
 
-# 2. Buat file .env
-cat > .env << EOF
-NEXTAUTH_SECRET=$(openssl rand -base64 32)
-EOF
-
-# 3. Buat direktori data
-mkdir -p data
-
-# 4. Jalankan (otomatis pull dari GHCR)
-docker compose up -d
-
-# 5. Setup database (pertama kali)
-docker compose exec app npx prisma db push
-
-# 6. Seed data (opsional)
-docker compose exec app npx tsx prisma/seed.ts
-```
-
-**Gunakan DockerHub sebagai alternatif:**
+### Pull Image
 
 ```bash
-# Edit docker-compose.yml, ganti image:
-# image: rizkikotet/rizkimotor-pos-nexjs:main
+# Dari GHCR (default di docker-compose.yml)
+docker pull ghcr.io/rizkikotet-dev/rizkimotor-pos-nexjs:main
 
-# Atau pull manual
+# Dari DockerHub
 docker pull rizkikotet/rizkimotor-pos-nexjs:main
-docker run -d -p 3000:3000 -v ./data:/app/data rizkikotet/rizkimotor-pos-nexjs:main
-```
-
-#### Mode 2: Build Lokal (Development)
-
-```bash
-# 1. Clone
-git clone [repository-url]
-cd rizkimotor
-mkdir -p data
-
-# 2. Build & jalankan
-docker compose --profile build up -d --build
-
-# 3. Setup database
-docker compose --profile build exec app npx prisma db push
-```
-
-#### Perintah Docker
-
-```bash
-# Mode pull (default)
-docker compose up -d
-docker compose down
-docker compose logs -f
-
-# Mode build lokal
-docker compose --profile build up -d --build
-docker compose --profile build down
-
-# Lihat image
-docker images | grep rizki-motor
-```
-
-#### File Docker
-
-| File | Keterangan |
-|------|------------|
-| `Dockerfile` | Multi-stage build (deps → build → production) |
-| `docker-compose.yml` | 2 service: default (pull) + build (lokal) |
-| `.dockerignore` | File yang di-exclude dari build |
-| File | Keterangan |
-|------|------------|
-| `Dockerfile` | Multi-stage build (deps → build → production) |
-| `docker-compose.yml` | Orchestration dengan volume untuk database |
-| `.dockerignore` | File yang di-exclude dari build |
-
-### Vercel
-
-1. Push repository ke GitHub
-2. Import project di [Vercel](https://vercel.com)
-3. Tambahkan environment variables
-4. Deploy
-
-> **Catatan:** Untuk file upload gambar, gunakan cloud storage (S3, Cloudinary) di production.
-
-### Manual / VPS
-
-```bash
-# Build
-npm run build
 
 # Jalankan
-npm run start
+docker run -d \
+  --name rizki-motor \
+  -p 3000:3000 \
+  -v $(pwd)/data:/app/data \
+  -e NEXTAUTH_SECRET="your-secret" \
+  ghcr.io/rizkikotet-dev/rizkimotor-pos-nexjs:main
 ```
 
-Gunakan PM2 atau systemd untuk process management:
-```bash
-pm2 start npm --name "rizki-motor" -- start
-```
+### Tag yang Dihasilkan
+
+| Source | DockerHub | GHCR |
+|--------|-----------|------|
+| Push ke main | `main`, `sha-abc1234` | `main`, `sha-abc1234` |
+| Tag v1.2.3 | `1.2.3`, `1.2`, `latest` | `1.2.3`, `1.2`, `latest` |
+| PR #42 | `pr-42` | `pr-42` |
+
+### File Terkait
+
+| File | Keterangan |
+|------|------------|
+| `.github/workflows/docker.yml` | GitHub Actions workflow |
+| `Dockerfile` | Multi-stage build (3 stages) |
+| `docker-compose.yml` | 3 profile orchestration |
+| `docker-entrypoint.sh` | Container startup script |
 
 ---
 
@@ -487,96 +681,48 @@ npx prisma generate
 npx tsc --noEmit
 ```
 
-### Reset database
+### Reset database SQLite
 ```bash
 rm prisma/dev.db
 npm run db:push
 npm run db:seed
 ```
 
----
-
-## CI/CD — Docker ke DockerHub & GHCR
-
-### GitHub Actions
-
-Pipeline otomatis build & push Docker image ke **DockerHub** dan **GitHub Container Registry (ghcr.io)**.
-
-**Trigger:**
-| Event | Action |
-|-------|--------|
-| Push ke `main` | Build & push dengan tag `main` |
-| Push tag `v*` | Build & push dengan versi (v1.0.0, v1.0, v1) |
-| Pull Request | Build saja (tidak push) |
-
-### Setup
-
-#### 1. DockerHub
-
-1. Buat akun di https://hub.docker.com
-2. Buat Access Token: Account Settings → Security → New Access Token
-3. Tambah Secret di GitHub:
-   - `DOCKERHUB_USERNAME` — username DockerHub
-   - `DOCKERHUB_TOKEN` — access token
-
-#### 2. GitHub Container Registry (ghcr.io)
-
-GHCR sudah otomatis aktif — `GITHUB_TOKEN` tersedia secara default. Tidak perlu setup tambahan.
-
-### Push ke GitHub
-
+### Reset database PostgreSQL
 ```bash
-git add .
-git commit -m "feat: add CI/CD pipeline"
-git push origin main
+npx prisma db push --force-reset --schema=prisma/schema.vercel.prisma
+npx tsx prisma/seed.ts
 ```
 
-### Pull Image
-
+### Docker: permission denied
 ```bash
-# Dari DockerHub
-docker pull rizkikotet/rizkimotor-pos-nexjs:main
+# Pastikan entrypoint punya execute permission
+chmod +x docker-entrypoint.sh
 
-# Dari GHCR
-docker pull ghcr.io/rizkikotet-dev/rizkimotor-pos-nexjs:main
-
-# Jalankan (keduanya sama)
-docker run -d \
-  --name rizki-motor \
-  -p 3000:3000 \
-  -v $(pwd)/data:/app/data \
-  -e NEXTAUTH_SECRET="your-secret" \
-  rizkikotet/rizkimotor-pos-nexjs:main
+# Jika error chown di entrypoint, non-root user mungkin perlu disesuaikan
+# Cek dengan:
+docker compose logs app
 ```
 
-### Tag yang Dihasilkan
+### Vercel: build error Prisma
+Pastikan `DATABASE_URL` sudah diset di Vercel Environment Variables dan menggunakan PostgreSQL URL yang valid. Build Vercel menggunakan `prisma/schema.vercel.prisma` secara otomatis melalui `vercel.json`.
 
-| Source | DockerHub | GHCR |
-|--------|-----------|------|
-| Push ke main | `main`, `sha-abc1234` | `main`, `sha-abc1234` |
-| Tag v1.2.3 | `1.2.3`, `1.2`, `latest` | `1.2.3`, `1.2`, `latest` |
-| PR #42 | `pr-42` | `pr-42` |
-
-### File terkait
-
-| File | Keterangan |
-|------|------------|
-| `.github/workflows/docker.yml` | GitHub Actions workflow |
-| `Dockerfile` | Multi-stage build |
-| `docker-compose.yml` | Local development |
+### Upload gambar tidak muncul di Vercel
+Vercel memiliki filesystem read-only untuk serverless functions. Gunakan layanan eksternal (Uploadthing, Cloudinary, S3) untuk menyimpan gambar di production.
 
 ---
 
 ## Fitur UI/UX
 
-- ✅ Dark mode dengan theme toggle
+- ✅ Dark mode dengan theme toggle (system preference + manual toggle)
 - ✅ Responsive design (mobile-first)
 - ✅ Payment modal modern (bukan prompt)
-- ✅ Toast notifications
-- ✅ Loading states
+- ✅ Toast notifications (sukses, error, warning)
+- ✅ Badge stok tiered (merah = habis/menipis, amber = waspada)
+- ✅ Loading states & skeleton
 - ✅ Error boundaries
 - ✅ Accessibility (ARIA labels, focus management)
-- ✅ Keyboard navigation (Escape untuk tutup modal)
+- ✅ Keyboard navigation (Escape tutup modal, shortcut POS)
 - ✅ Screen reader support
 
 ---
@@ -598,4 +744,5 @@ Proprietary — All rights reserved
 
 ## Contact
 
-Untuk pertanyaan atau dukungan, hubungi tim development.
+RIZKI MOTOR — POS & Management System  
+Dibangun dengan Next.js 16, TypeScript, Prisma, Tailwind CSS
