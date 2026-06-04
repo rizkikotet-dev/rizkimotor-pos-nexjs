@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/auth";
 import { UserRole } from "@/lib/constants";
+import { paginate, parsePagination } from "@/lib/pagination";
 import { z } from "zod";
 import { generateInvoiceNo } from "@/lib/format";
 
@@ -29,17 +30,20 @@ const createSchema = z.object({
 });
 
 export const GET = withAuth(async (req, { user }) => {
-  const url = new URL(req.url);
-  const limit = parseInt(url.searchParams.get("limit") || "50");
+  const { page, pageSize, skip, take } = parsePagination(req.nextUrl.searchParams);
   const where = user.role === UserRole.ADMIN ? {} : { userId: parseInt(user.id) };
 
-  const transactions = await prisma.transaction.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    take: limit,
-    include: { user: true, _count: { select: { items: true } } },
-  });
-  return NextResponse.json(transactions);
+  const [transactions, total] = await Promise.all([
+    prisma.transaction.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take,
+      include: { user: true, _count: { select: { items: true } } },
+    }),
+    prisma.transaction.count({ where }),
+  ]);
+  return NextResponse.json(paginate(transactions, page, pageSize, total));
 });
 
 export const POST = withAuth(async (req, { user }) => {

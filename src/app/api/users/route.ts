@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/auth";
 import { USER_ROLES } from "@/lib/constants";
+import { paginate, parsePagination } from "@/lib/pagination";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -13,12 +14,19 @@ const createSchema = z.object({
   active: z.boolean().default(true),
 });
 
-export const GET = withAuth(async () => {
-  const users = await prisma.user.findMany({
-    orderBy: { name: "asc" },
-    select: { id: true, username: true, name: true, role: true, active: true, createdAt: true },
-  });
-  return NextResponse.json(users);
+export const GET = withAuth(async (req) => {
+  const { page, pageSize, skip, take } = parsePagination(req.nextUrl.searchParams);
+
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      orderBy: { name: "asc" },
+      skip,
+      take,
+      select: { id: true, username: true, name: true, role: true, active: true, createdAt: true },
+    }),
+    prisma.user.count(),
+  ]);
+  return NextResponse.json(paginate(users, page, pageSize, total));
 }, { admin: true });
 
 export const POST = withAuth(async (req) => {

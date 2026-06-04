@@ -1,16 +1,32 @@
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/StatusBadge";
 import { UserRole } from "@/lib/constants";
+import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
+import { Pagination } from "@/components/ui/Pagination";
 import Link from "next/link";
 import { Plus, Pencil, Users } from "lucide-react";
 import { FadeIn } from "@/components/ui/FadeIn";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminPenggunaPage() {
-  const users = await prisma.user.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+interface PageProps {
+  searchParams: Promise<{ page?: string; pageSize?: string }>;
+}
+
+export default async function AdminPenggunaPage({ searchParams }: PageProps) {
+  const sp = await searchParams;
+  const { page, pageSize, skip, take } = parsePagination(sp);
+  const preserve = { pageSize: sp.pageSize };
+
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+      skip,
+      take,
+    }),
+    prisma.user.count(),
+  ]);
+  const pagination = buildPaginationMeta(page, pageSize, total);
 
   return (
     <div>
@@ -18,7 +34,7 @@ export default async function AdminPenggunaPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 tracking-tight">Pengguna</h1>
-            <p className="text-sm text-zinc-500 mt-0.5 font-mono">{users.length} pengguna terdaftar</p>
+            <p className="text-sm text-zinc-500 mt-0.5 font-mono">{total} pengguna terdaftar</p>
           </div>
           <Link href="/admin/pengguna/tambah" className="btn-primary">
             <Plus className="h-4 w-4" />
@@ -76,6 +92,16 @@ export default async function AdminPenggunaPage() {
               </tbody>
             </table>
           </div>
+        </div>
+        <div className="mt-4">
+          <Pagination
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            total={pagination.total}
+            basePath="/admin/pengguna"
+            pageSize={pageSize}
+            preserveParams={preserve}
+          />
         </div>
       </FadeIn>
     </div>

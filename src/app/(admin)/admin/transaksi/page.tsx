@@ -1,26 +1,42 @@
 import { prisma } from "@/lib/prisma";
 import { formatRupiah } from "@/lib/format";
+import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
+import { Pagination } from "@/components/ui/Pagination";
 import { ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { FadeIn } from "@/components/ui/FadeIn";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminTransaksiPage() {
-  const transactions = await prisma.transaction.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      user: { select: { name: true } },
-      debt: { select: { amount: true, paid: true, status: true } },
-    },
-  });
+interface PageProps {
+  searchParams: Promise<{ page?: string; pageSize?: string }>;
+}
+
+export default async function AdminTransaksiPage({ searchParams }: PageProps) {
+  const sp = await searchParams;
+  const { page, pageSize, skip, take } = parsePagination(sp);
+  const preserve = { pageSize: sp.pageSize };
+
+  const [transactions, total] = await Promise.all([
+    prisma.transaction.findMany({
+      orderBy: { createdAt: "desc" },
+      skip,
+      take,
+      include: {
+        user: { select: { name: true } },
+        debt: { select: { amount: true, paid: true, status: true } },
+      },
+    }),
+    prisma.transaction.count(),
+  ]);
+  const pagination = buildPaginationMeta(page, pageSize, total);
 
   return (
     <div>
       <FadeIn>
         <div className="mb-6">
           <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 tracking-tight">Transaksi</h1>
-          <p className="text-sm text-zinc-500 mt-0.5 font-mono">{transactions.length} transaksi tercatat</p>
+          <p className="text-sm text-zinc-500 mt-0.5 font-mono">{total} transaksi tercatat</p>
         </div>
       </FadeIn>
 
@@ -82,6 +98,16 @@ export default async function AdminTransaksiPage() {
               </tbody>
             </table>
           </div>
+        </div>
+        <div className="mt-4">
+          <Pagination
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            total={pagination.total}
+            basePath="/admin/transaksi"
+            pageSize={pageSize}
+            preserveParams={preserve}
+          />
         </div>
       </FadeIn>
     </div>

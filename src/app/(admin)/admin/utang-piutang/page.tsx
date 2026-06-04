@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/Toast";
+import { Pagination } from "@/components/ui/Pagination";
 import { formatRupiah } from "@/lib/format";
 import {
   AlertTriangle,
@@ -25,27 +26,55 @@ interface Debt {
   transaction: { invoiceNo: string; total: number; id: number; createdAt: string; payment: number; change: number; items: { productName: string; productSku: string; quantity: number; price: number; subtotal: number }[] };
 }
 
+interface PaginationMeta {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+interface DebtStats {
+  totalOutstanding: number;
+  unpaidCount: number;
+  partialCount: number;
+  paidCount: number;
+}
+
 export default function UtangPiutangPage() {
   const toast = useToast();
   const [debts, setDebts] = useState<Debt[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"ALL" | "UNPAID" | "PARTIAL" | "PAID">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+  const [stats, setStats] = useState<DebtStats | null>(null);
   const [payingId, setPayingId] = useState<number | null>(null);
   const [payAmount, setPayAmount] = useState("");
   const [paying, setPaying] = useState(false);
   const [detailDebt, setDetailDebt] = useState<Debt | null>(null);
 
   useEffect(() => {
-    fetchDebts();
+    setPage(1);
   }, [filter]);
+
+  useEffect(() => {
+    fetchDebts();
+  }, [filter, page]);
 
   async function fetchDebts() {
     setLoading(true);
     try {
-      const url = filter === "ALL" ? "/api/debts" : `/api/debts?status=${filter}`;
-      const res = await fetch(url);
-      if (res.ok) setDebts(await res.json());
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), includeStats: "true" });
+      if (filter !== "ALL") params.set("status", filter);
+      const res = await fetch(`/api/debts?${params}`);
+      if (res.ok) {
+        const json = await res.json();
+        setDebts(json.data);
+        setPagination(json.pagination);
+        if (json.stats) setStats(json.stats);
+      }
     } finally {
       setLoading(false);
     }
@@ -86,11 +115,10 @@ export default function UtangPiutangPage() {
     return d.customer.name.toLowerCase().includes(q) || d.transaction.invoiceNo.toLowerCase().includes(q);
   });
 
-  const totalOutstanding = debts
-    .filter((d) => d.status !== "PAID")
-    .reduce((sum, d) => sum + (d.amount - d.paid), 0);
-
-  const unpaidCount = debts.filter((d) => d.status !== "PAID").length;
+  // Stats global (tidak dipagination) — null sampai load pertama selesai
+  const totalOutstanding = stats?.totalOutstanding ?? 0;
+  const unpaidCount = stats ? stats.unpaidCount + stats.partialCount : 0;
+  const paidCount = stats?.paidCount ?? 0;
 
   return (
     <div>
@@ -110,7 +138,7 @@ export default function UtangPiutangPage() {
         </div>
         <div className="card p-4">
           <p className="text-xs text-zinc-500 mb-1">Lunas</p>
-          <p className="text-xl font-bold text-emerald-400">{debts.filter((d) => d.status === "PAID").length} transaksi</p>
+          <p className="text-xl font-bold text-emerald-400">{paidCount} transaksi</p>
         </div>
       </div>
 
@@ -215,6 +243,19 @@ export default function UtangPiutangPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {pagination && pagination.totalPages > 1 && !loading && (
+        <div className="mt-4">
+          <Pagination
+            currentPage={page}
+            totalPages={pagination.totalPages}
+            total={pagination.total}
+            basePath="/admin/utang-piutang"
+            pageSize={pageSize}
+            onPageChange={setPage}
+          />
         </div>
       )}
 

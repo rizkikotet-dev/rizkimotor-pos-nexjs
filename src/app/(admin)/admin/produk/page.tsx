@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatRupiah } from "@/lib/format";
+import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
+import { Pagination } from "@/components/ui/Pagination";
 import { Plus, Pencil, Trash2, Package } from "lucide-react";
 import { DeleteButton } from "./DeleteButton";
 import { FadeIn } from "@/components/ui/FadeIn";
@@ -8,32 +10,38 @@ import { FadeIn } from "@/components/ui/FadeIn";
 export const dynamic = "force-dynamic";
 
 interface PageProps {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; pageSize?: string }>;
 }
 
 export default async function AdminProdukPage({ searchParams }: PageProps) {
-  const { q } = await searchParams;
+  const { q, page: pageStr, pageSize: pageSizeStr } = await searchParams;
   const query = q?.trim() || "";
+  const { page, pageSize, skip, take } = parsePagination({ page: pageStr, pageSize: pageSizeStr });
+  const preserve = { q, pageSize: pageSizeStr };
 
-  const [products, categories] = await Promise.all([
+  const where = query
+    ? {
+        OR: [
+          { name: { contains: query } },
+          { sku: { contains: query } },
+          { description: { contains: query } },
+          { category: { name: { contains: query } } },
+        ],
+      }
+    : {};
+
+  const [products, total, categories] = await Promise.all([
     prisma.product.findMany({
-      where: {
-        ...(query
-          ? {
-              OR: [
-                { name: { contains: query } },
-                { sku: { contains: query } },
-                { description: { contains: query } },
-                { category: { name: { contains: query } } },
-              ],
-            }
-          : {}),
-      },
+      where,
       orderBy: { createdAt: "desc" },
+      skip,
+      take,
       include: { category: true },
     }),
+    prisma.product.count({ where }),
     prisma.category.findMany({ orderBy: { name: "asc" } }),
   ]);
+  const pagination = buildPaginationMeta(page, pageSize, total);
 
   return (
     <div>
@@ -41,7 +49,7 @@ export default async function AdminProdukPage({ searchParams }: PageProps) {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 tracking-tight">Produk</h1>
-            <p className="text-sm text-zinc-500 mt-0.5 font-mono">{products.length} produk ditemukan</p>
+            <p className="text-sm text-zinc-500 mt-0.5 font-mono">{total} produk ditemukan</p>
           </div>
           <Link href="/admin/produk/tambah" className="btn-primary">
             <Plus className="h-4 w-4" />
@@ -134,6 +142,16 @@ export default async function AdminProdukPage({ searchParams }: PageProps) {
               </tbody>
             </table>
           </div>
+        </div>
+        <div className="mt-4">
+          <Pagination
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            total={pagination.total}
+            basePath="/admin/produk"
+            pageSize={pageSize}
+            preserveParams={preserve}
+          />
         </div>
       </FadeIn>
     </div>

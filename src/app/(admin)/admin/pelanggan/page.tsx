@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
+import { Pagination } from "@/components/ui/Pagination";
 import { formatRupiah } from "@/lib/format";
 import {
   Users,
@@ -28,23 +29,39 @@ interface Customer {
   unpaidDebtCount: number;
 }
 
+interface PaginationMeta {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
 export default function PelangganPage() {
   const toast = useToast();
   const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchCustomers();
-  }, []);
+  }, [page]);
 
   async function fetchCustomers() {
+    setLoading(true);
     try {
-      const res = await fetch("/api/customers");
-      if (res.ok) setCustomers(await res.json());
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+      const res = await fetch(`/api/customers?${params}`);
+      if (res.ok) {
+        const json = await res.json();
+        setCustomers(json.data);
+        setPagination(json.pagination);
+      }
     } finally {
       setLoading(false);
     }
@@ -111,6 +128,7 @@ export default function PelangganPage() {
           </p>
         </div>
       ) : (
+        <>
         <div className="space-y-2">
           {filtered.map((customer) => (
             <div
@@ -171,6 +189,19 @@ export default function PelangganPage() {
             </div>
           ))}
         </div>
+        {pagination && pagination.totalPages > 1 && (
+          <div className="mt-4">
+            <Pagination
+              currentPage={page}
+              totalPages={pagination.totalPages}
+              total={pagination.total}
+              basePath="/admin/pelanggan"
+              pageSize={pageSize}
+              onPageChange={setPage}
+            />
+          </div>
+        )}
+        </>
       )}
 
       {deleteId && (

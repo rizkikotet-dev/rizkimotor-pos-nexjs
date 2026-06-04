@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/auth";
+import { paginate, parsePagination } from "@/lib/pagination";
 import { z } from "zod";
 
 const paySchema = z.object({
@@ -9,34 +10,64 @@ const paySchema = z.object({
 });
 
 export const GET = withAuth(async (req) => {
-  const url = new URL(req.url);
-  const status = url.searchParams.get("status"); // UNPAID, PARTIAL, PAID
-  const customerId = url.searchParams.get("customerId");
+  const { page, pageSize, skip, take } = parsePagination(req.nextUrl.searchParams);
+  const status = req.nextUrl.searchParams.get("status"); // UNPAID, PARTIAL, PAID
+  const customerId = req.nextUrl.searchParams.get("customerId");
+  const includeStats = req.nextUrl.searchParams.get("includeStats") === "true";
 
   const where: Record<string, unknown> = {};
   if (status) where.status = status;
   if (customerId) where.customerId = parseInt(customerId);
 
-  const debts = await prisma.debt.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    include: {
-      customer: true,
-      transaction: {
-        select: {
-          id: true,
-          invoiceNo: true,
-          total: true,
-          createdAt: true,
-          payment: true,
-          change: true,
-          items: { select: { productName: true, productSku: true, quantity: true, price: true, subtotal: true } },
+  const [debts, total] = await Promise.all([
+    prisma.debt.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take,
+      include: {
+        customer: true,
+        transaction: {
+          select: {
+            id: true,
+            invoiceNo: true,
+            total: true,
+            createdAt: true,
+            payment: true,
+            change: true,
+            items: { select: { productName: true, productSku: true, quantity: true, price: true, subtotal: true } },
+          },
         },
       },
+    }),
+    prisma.debt.count({ where }),
+  ]);
+
+  if (!includeStats) {
+    return NextResponse.json(paginate(debts, page, pageSize, total));
+  }
+
+  // Stats dihitung di luar pagination (global, tidak difilter status)
+  const [unpaidAgg, unpaidCount, partialCount, paidCount] = await Promise.all([
+    prisma.debt.aggregate({
+      _sum: { amount: true, paid: true },
+      where: { status: { not: "PAID" } },
+    }),
+    prisma.debt.count({ where: { status: "UNPAID" } }),
+    prisma.debt.count({ where: { status: "PARTIAL" } }),
+    prisma.debt.count({ where: { status: "PAID" } }),
+  ]);
+  const totalOutstanding = (unpaidAgg._sum.amount ?? 0) - (unpaidAgg._sum.paid ?? 0);
+
+  return NextResponse.json({
+    ...paginate(debts, page, pageSize, total),
+    stats: {
+      totalOutstanding,
+      unpaidCount,
+      partialCount,
+      paidCount,
     },
   });
-
-  return NextResponse.json(debts);
 });
 
 export const POST = withAuth(async (req) => {

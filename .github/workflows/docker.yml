@@ -74,6 +74,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+          build-args: |
+            DATABASE_URL=file:./build.db
 
       - name: Build and push to GHCR
         uses: docker/build-push-action@v5
@@ -85,6 +87,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+          build-args: |
+            DATABASE_URL=file:./build.db
 
       - name: Update DockerHub description
         if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/v')

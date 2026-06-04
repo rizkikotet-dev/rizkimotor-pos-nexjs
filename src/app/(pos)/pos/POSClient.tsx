@@ -66,9 +66,9 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
   }, []);
 
   useEffect(() => {
-    fetch("/api/customers")
+    fetch("/api/customers?pageSize=100")
       .then((r) => r.json())
-      .then((data) => setCustomers(data))
+      .then((json) => setCustomers(json.data ?? []))
       .catch(() => {});
   }, []);
 
