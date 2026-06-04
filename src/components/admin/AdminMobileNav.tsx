@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Package, Tag, ShoppingCart, Users, Settings, LogOut, Barcode } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, UserCircle, Settings } from "lucide-react";
 
+// Bottom nav follows Material Design guidance: max 5 top-level destinations.
+// Less-used items (Kategori, Barcode, Utang-Piutang, Pengguna) tetap
+// reachable via the sidebar (drawer) yang dibuka dari header menu.
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/produk", label: "Produk", icon: Package },
-  { href: "/admin/kategori", label: "Kategori", icon: Tag },
-  { href: "/admin/barcode", label: "Barcode", icon: Barcode },
   { href: "/admin/transaksi", label: "Transaksi", icon: ShoppingCart },
+  { href: "/admin/pelanggan", label: "Pelanggan", icon: UserCircle },
   { href: "/admin/pengaturan", label: "Pengaturan", icon: Settings },
 ];
 
@@ -21,7 +23,7 @@ export function AdminMobileNav() {
       className="fixed bottom-0 left-0 right-0 z-50 bg-surface-base/95 backdrop-blur-xl border-t border-surface-outline-variant safe-area-bottom lg:hidden"
       aria-label="Menu admin (mobile)"
     >
-      <div className="grid grid-cols-7 h-14">
+      <div className="grid grid-cols-5 h-16">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
@@ -29,12 +31,19 @@ export function AdminMobileNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center gap-0.5 min-h-[48px] transition-colors duration-150 ${
-                isActive ? "text-primary" : "text-zinc-500 active:text-zinc-300"
+              className={`nav-item-hover relative flex flex-col items-center justify-center gap-0.5 min-h-[56px] px-2 ${
+                isActive ? "nav-item-active text-zinc-100 font-semibold" : "text-zinc-400 active:text-zinc-100"
               }`}
               aria-label={item.label}
               aria-current={isActive ? "page" : undefined}
             >
+              {isActive && (
+                <span
+                  aria-hidden="true"
+                  className="absolute top-0 left-1/4 right-1/4 h-0.5 rounded-b-full"
+                  style={{ backgroundColor: "var(--nav-active-indicator)" }}
+                />
+              )}
               <Icon className="h-5 w-5" aria-hidden="true" />
               <span className="text-[10px] font-medium leading-tight">{item.label}</span>
             </Link>

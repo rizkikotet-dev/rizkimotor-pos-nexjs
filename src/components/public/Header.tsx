@@ -27,7 +27,7 @@ export async function PublicHeader() {
                 <div className="font-bold text-sm leading-none text-zinc-100 tracking-tight">
                   {s["store.name"]}
                 </div>
-                <div className="text-[10px] text-zinc-500 leading-tight mt-0.5 font-mono uppercase tracking-widest">
+                <div className="text-[10px] text-zinc-100/70 leading-tight mt-0.5 font-mono uppercase tracking-widest">
                   {s["store.tagline"]}
                 </div>
               </div>
@@ -43,7 +43,7 @@ export async function PublicHeader() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-surface-container-high transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary/40 min-h-[36px]"
+                  className="nav-item-hover px-3 py-1.5 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary/40 min-h-[36px]"
                 >
                   {item.label}
                 </Link>

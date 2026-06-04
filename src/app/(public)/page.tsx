@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, ShieldCheck, Truck, Tag, ChevronRight, Zap } from "lucide-react";
+import { ArrowRight, ShieldCheck, Truck, Tag, Zap } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { ProductCard } from "@/components/public/ProductCard";
@@ -24,53 +24,71 @@ export default async function HomePage() {
     <div>
       <FadeIn direction="none">
       <section className="relative bg-surface-base border-b border-surface-outline-variant overflow-hidden" aria-labelledby="hero-heading">
-        <div className="absolute inset-0 dark-grid opacity-50" aria-hidden="true" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[120px]" aria-hidden="true" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-[120px]" aria-hidden="true" />
+        <div className="absolute inset-0 surface-grid opacity-40 dark:opacity-50" aria-hidden="true" />
+        <div className="absolute -top-32 -right-32 w-[36rem] h-[36rem] bg-primary/10 dark:bg-primary/8 rounded-full blur-[160px]" aria-hidden="true" />
+        <div className="absolute -bottom-32 -left-32 w-[36rem] h-[36rem] bg-accent/8 dark:bg-accent/6 rounded-full blur-[160px]" aria-hidden="true" />
 
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 md:py-28">
-          <div className="max-w-2xl">
-            <div className="tag-brand w-fit mb-5">
-              {settings["store.tagline"]}
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 md:py-32">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div className="max-w-xl">
+              <div className="tag-brand w-fit mb-6">
+                {settings["store.tagline"]}
+              </div>
+
+              <h1 id="hero-heading" className="heading-xl text-4xl sm:text-5xl md:text-7xl text-zinc-100 mb-5">
+                <span className="bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
+                  {settings["store.name"]}
+                </span>
+              </h1>
+
+              <p className="text-base sm:text-lg text-zinc-400 mb-8 leading-relaxed">
+                Solusi terpercaya untuk segala kebutuhan alat-alat sepeda motor Anda.
+                Katalog terlengkap, harga bersaing, kualitas terjamin.
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href="/produk"
+                  className="btn-primary group"
+                >
+                  Jelajahi Katalog
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+                </Link>
+                <Link
+                  href="/kontak"
+                  className="btn-secondary"
+                >
+                  Hubungi Kami
+                </Link>
+              </div>
+
+              <div className="flex items-center gap-6 mt-10 pt-8 border-t border-surface-outline-variant">
+                <div className="flex -space-x-2" aria-hidden="true">
+                  {[1,2,3].map((i) => (
+                    <div key={i} className="w-8 h-8 rounded-full bg-surface-container-high border-2 border-surface-container flex items-center justify-center text-[10px] font-semibold text-zinc-400">
+                      {["A","B","C"][i-1]}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-zinc-500">
+                  Dipercaya <span className="font-semibold text-zinc-300">{productCount}+ pelanggan</span>
+                </p>
+              </div>
             </div>
 
-            <h1 id="hero-heading" className="text-4xl sm:text-5xl md:text-6xl font-bold text-zinc-100 mb-4 leading-[1.1] tracking-tight">
-              {settings["store.name"]}
-            </h1>
-
-            <div className="line-accent mb-5" aria-hidden="true" />
-
-            <p className="text-base sm:text-lg text-zinc-400 mb-8 max-w-lg leading-relaxed">
-              Solusi terpercaya untuk segala kebutuhan alat-alat sepeda motor Anda.
-              Katalog terlengkap, harga bersaing, kualitas terjamin.
-            </p>
-
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/produk"
-                className="btn-primary group"
-              >
-                Jelajahi Katalog
-                <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
-              </Link>
-              <Link
-                href="/kontak"
-                className="btn-secondary"
-              >
-                Hubungi Kami
-              </Link>
-            </div>
-          </div>
-
-          <div className="hidden lg:flex absolute right-12 top-1/2 -translate-y-1/2 flex-col items-end gap-4" aria-hidden="true">
-            <div className="text-right">
-              <p className="text-6xl font-bold text-zinc-300 leading-none">{productCount}+</p>
-              <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest mt-1">Produk</p>
-            </div>
-            <div className="w-px h-16 bg-surface-outline-variant" aria-hidden="true" />
-            <div className="text-right">
-              <p className="text-6xl font-bold text-zinc-300 leading-none">{categoryCount}</p>
-              <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest mt-1">Kategori</p>
+            <div className="hidden lg:flex flex-col gap-5" aria-hidden="true">
+              <div className="card-md p-6 ml-auto w-56">
+                <p className="text-4xl font-bold text-zinc-100 heading-md">{productCount}+</p>
+                <p className="label-uppercase mt-1">Produk Tersedia</p>
+              </div>
+              <div className="card-md p-6 w-48">
+                <p className="text-4xl font-bold text-zinc-100 heading-md">{categoryCount}</p>
+                <p className="label-uppercase mt-1">Kategori</p>
+              </div>
+              <div className="card-md p-6 ml-16 w-52">
+                <p className="text-4xl font-bold text-primary heading-md">100%</p>
+                <p className="label-uppercase mt-1">Kualitas Terjamin</p>
+              </div>
             </div>
           </div>
         </div>
@@ -78,17 +96,17 @@ export default async function HomePage() {
       </FadeIn>
 
       <FadeIn delay={100}>
-      <section className="bg-surface-container-low border-b border-surface-outline-variant" aria-label="Statistik toko">
+      <section className="bg-surface-container-low border-b border-surface-outline-variant py-6" aria-label="Statistik toko">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-3 divide-x divide-surface-outline-variant">
+          <div className="flex items-center justify-center gap-8 sm:gap-12 lg:gap-20">
             {[
-              { value: `${productCount}+`, label: "Produk" },
+              { value: `${productCount}+`, label: "Produk Tersedia" },
               { value: `${categoryCount}`, label: "Kategori" },
-              { value: "100%", label: "Kualitas" },
+              { value: "100%", label: "Kualitas Terjamin" },
             ].map((stat, i) => (
-              <div key={i} className="py-5 text-center">
-                <p className="text-xl sm:text-2xl font-bold text-zinc-100">{stat.value}</p>
-                <p className="text-[10px] text-zinc-500 mt-0.5 font-mono uppercase tracking-widest">{stat.label}</p>
+              <div key={i} className="text-center">
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold heading-sm text-zinc-100">{stat.value}</p>
+                <p className="label-uppercase mt-0.5">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -108,8 +126,8 @@ export default async function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="card-dark p-8 relative overflow-hidden group row-span-2 min-h-[280px] flex flex-col justify-end">
-              <div className="absolute inset-0 dark-grid opacity-30" aria-hidden="true" />
-              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" aria-hidden="true" />
+              <div className="absolute inset-0 surface-grid opacity-25" aria-hidden="true" />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/15 dark:bg-primary/10 rounded-full blur-[80px]" aria-hidden="true" />
               <div className="relative z-10">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center mb-5">
                   <ShieldCheck className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -168,10 +186,10 @@ export default async function HomePage() {
               </div>
               <Link
                 href="/produk"
-                className="hidden sm:inline-flex items-center gap-1.5 text-sm text-zinc-400 hover:text-primary transition-colors group"
+                className="btn-soft-primary text-sm"
               >
                 Lihat Semua
-                <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </div>
 
@@ -181,9 +199,10 @@ export default async function HomePage() {
               ))}
             </div>
 
-            <div className="mt-6 text-center sm:hidden">
-              <Link href="/produk" className="btn-secondary">
+            <div className="mt-8 text-center sm:hidden">
+              <Link href="/produk" className="btn-primary">
                 Lihat Semua Produk
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </div>
           </div>
@@ -195,9 +214,9 @@ export default async function HomePage() {
       <section className="py-14 lg:py-20 border-t border-surface-outline-variant" aria-labelledby="cta-heading">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="card-dark p-10 sm:p-14 text-center relative overflow-hidden">
-            <div className="absolute inset-0 dark-grid opacity-30" aria-hidden="true" />
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" aria-hidden="true" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px]" aria-hidden="true" />
+            <div className="absolute inset-0 surface-grid opacity-25" aria-hidden="true" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/15 dark:bg-primary/10 rounded-full blur-[80px]" aria-hidden="true" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/15 dark:bg-emerald-500/10 rounded-full blur-[80px]" aria-hidden="true" />
 
             <div className="relative z-10 max-w-md mx-auto">
               <Zap className="h-6 w-6 text-primary mx-auto mb-4" aria-hidden="true" />

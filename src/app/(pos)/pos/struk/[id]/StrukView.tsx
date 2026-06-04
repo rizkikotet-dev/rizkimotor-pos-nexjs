@@ -77,7 +77,7 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
             role="radio"
             aria-checked={paperSize === PaperSize.P58MM}
             className={`px-3 py-1.5 rounded-lg font-semibold transition-all min-h-[36px] focus:outline-none focus:ring-2 focus:ring-primary/40 ${
-              paperSize === PaperSize.P58MM ? "bg-primary text-surface-base" : "text-zinc-400 hover:text-zinc-200 hover:bg-surface-container-high"
+              paperSize === PaperSize.P58MM ? "bg-primary text-surface-base" : "text-zinc-400 hover:text-primary hover:bg-surface-container-high"
             }`}
           >
             58mm
@@ -87,7 +87,7 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
             role="radio"
             aria-checked={paperSize === PaperSize.P80MM}
             className={`px-3 py-1.5 rounded-lg font-semibold transition-all min-h-[36px] focus:outline-none focus:ring-2 focus:ring-primary/40 ${
-              paperSize === PaperSize.P80MM ? "bg-primary text-surface-base" : "text-zinc-400 hover:text-zinc-200 hover:bg-surface-container-high"
+              paperSize === PaperSize.P80MM ? "bg-primary text-surface-base" : "text-zinc-400 hover:text-primary hover:bg-surface-container-high"
             }`}
           >
             80mm
@@ -113,7 +113,7 @@ export function StrukView({ transaction, settings, backUrl = "/pos/riwayat" }: S
       </div>
 
       <div
-        className={`bg-white p-2 print:shadow-none mx-auto ${strukWidthClass}`}
+        className={`bg-stone-50 dark:bg-stone-100 p-2 print:bg-white mx-auto shadow-sm dark:shadow-lg print:shadow-none ${strukWidthClass}`}
         id="struk"
         data-paper-size={paperSize}
       >

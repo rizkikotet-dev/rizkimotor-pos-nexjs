@@ -74,10 +74,10 @@ export default async function ProductListPage({ searchParams }: PageProps) {
             )}
           </form>
 
-          <div className="card p-2">
-            <div className="flex items-center gap-2 px-2 mb-1.5">
-              <SlidersHorizontal className="h-3.5 w-3.5 text-zinc-600" aria-hidden="true" />
-              <h2 className="font-mono text-[10px] text-zinc-500 uppercase tracking-widest font-semibold">Kategori</h2>
+          <div className="card p-3">
+            <div className="flex items-center gap-2 px-2 mb-2">
+              <SlidersHorizontal className="h-3.5 w-3.5 text-zinc-500" aria-hidden="true" />
+              <h2 className="label-uppercase">Kategori</h2>
             </div>
             <ul className="space-y-0.5" role="list" aria-label="Daftar kategori">
               <li>
@@ -86,7 +86,7 @@ export default async function ProductListPage({ searchParams }: PageProps) {
                   className={`block px-2.5 py-1.5 rounded-md text-sm transition-colors duration-150 min-h-[36px] ${
                     !categoryId
                       ? "bg-primary/10 text-primary font-medium"
-                      : "text-zinc-400 hover:text-zinc-200 hover:bg-surface-container-high"
+                      : "text-zinc-400 hover:text-primary hover:bg-surface-container-high"
                   }`}
                   aria-current={!categoryId ? "page" : undefined}
                 >
@@ -100,7 +100,7 @@ export default async function ProductListPage({ searchParams }: PageProps) {
                     className={`block px-2.5 py-1.5 rounded-md text-sm transition-colors duration-150 min-h-[36px] ${
                       categoryId === c.id
                         ? "bg-primary/10 text-primary font-medium"
-                        : "text-zinc-400 hover:text-zinc-200 hover:bg-surface-container-high"
+                        : "text-zinc-400 hover:text-primary hover:bg-surface-container-high"
                     }`}
                     aria-current={categoryId === c.id ? "page" : undefined}
                   >

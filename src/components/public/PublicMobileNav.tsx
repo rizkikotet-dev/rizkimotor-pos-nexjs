@@ -34,12 +34,19 @@ export function PublicMobileNav({ user }: Props) {
               href={item.href}
               aria-label={item.label}
               aria-current={active ? "page" : undefined}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors duration-150 min-w-[56px] min-h-[44px] justify-center ${
+              className={`nav-item-hover relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg text-[10px] font-medium min-w-[56px] min-h-[44px] justify-center ${
                 active
-                  ? "text-primary"
-                  : "text-zinc-500 hover:text-zinc-300"
+                  ? "nav-item-active text-zinc-100 font-semibold"
+                  : "text-zinc-400 hover:text-zinc-100"
               }`}
             >
+              {active && (
+                <span
+                  aria-hidden="true"
+                  className="absolute top-0 left-1/3 right-1/3 h-0.5 rounded-b-full"
+                  style={{ backgroundColor: "var(--nav-active-indicator)" }}
+                />
+              )}
               <Icon className="h-5 w-5" aria-hidden="true" />
               <span>{item.label}</span>
             </Link>
@@ -49,7 +56,7 @@ export function PublicMobileNav({ user }: Props) {
           <Link
             href={user.role === UserRole.ADMIN ? "/admin" : "/pos"}
             aria-label="Panel Admin"
-            className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg text-[10px] font-medium text-zinc-500 hover:text-zinc-300 transition-colors duration-150 min-w-[56px] min-h-[44px] justify-center"
+            className="nav-item-hover flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg text-[10px] font-medium text-zinc-500 hover:text-zinc-300 min-w-[56px] min-h-[44px] justify-center"
           >
             <LayoutDashboard className="h-5 w-5" aria-hidden="true" />
             <span>Panel</span>

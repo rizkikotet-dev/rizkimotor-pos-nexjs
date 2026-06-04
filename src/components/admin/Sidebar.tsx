@@ -89,17 +89,20 @@ export function AdminSidebar({ collapsed = false, onToggle }: SidebarProps) {
                   key={item.href}
                   href={item.href}
                   className={`
-                    flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm font-medium
-                    transition-colors duration-150 min-h-[44px]
-                    ${
-                      isActive
-                        ? "bg-primary/10 text-primary"
-                        : "text-zinc-400 hover:text-zinc-200 hover:bg-surface-container-high"
-                    }
+                    nav-item-hover relative flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm font-medium
+                    min-h-[44px] text-zinc-100
+                    ${isActive ? "nav-item-active font-semibold" : ""}
                   `}
                   aria-label={item.label}
                   aria-current={isActive ? "page" : undefined}
                 >
+                  {isActive && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full"
+                      style={{ backgroundColor: "var(--nav-active-indicator)" }}
+                    />
+                  )}
                   <Icon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
                   <span className="truncate">{item.label}</span>
                 </Link>
@@ -109,12 +112,12 @@ export function AdminSidebar({ collapsed = false, onToggle }: SidebarProps) {
 
           <div className="border-t border-surface-outline-variant p-2 space-y-0.5 pb-20 lg:pb-2">
             <div className="flex items-center justify-between px-2.5 py-1.5">
-              <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">Tampilan</span>
+              <span className="text-[10px] text-zinc-100 font-mono uppercase tracking-widest font-semibold">Tampilan</span>
               <ThemeToggle />
             </div>
             <Link
               href="/"
-              className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-zinc-500 hover:text-zinc-300 hover:bg-surface-container-high transition-colors min-h-[44px]"
+              className="nav-item-hover flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-zinc-100 min-h-[44px]"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -123,7 +126,7 @@ export function AdminSidebar({ collapsed = false, onToggle }: SidebarProps) {
             </Link>
             <button
               onClick={() => signOut({ callbackUrl: "/login", redirect: true })}
-              className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors min-h-[44px] w-full text-left"
+              className="nav-item-danger flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-zinc-100 min-h-[44px] w-full text-left"
               aria-label="Logout dari akun"
             >
               <LogOut className="h-4 w-4 flex-shrink-0" aria-hidden="true" />

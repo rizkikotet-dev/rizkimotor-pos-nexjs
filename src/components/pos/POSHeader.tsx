@@ -34,14 +34,14 @@ export async function POSHeader() {
           <nav className="hidden md:flex items-center gap-0.5 text-sm" aria-label="Navigasi POS">
             <Link
               href="/pos"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-surface-container-high transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary/40 min-h-[36px]"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md text-zinc-400 hover:text-primary hover:bg-surface-container-high transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary/40 min-h-[36px]"
             >
               <ShoppingCart className="h-4 w-4" aria-hidden="true" />
               <span>Kasir</span>
             </Link>
             <Link
               href="/pos/riwayat"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-surface-container-high transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary/40 min-h-[36px]"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md text-zinc-400 hover:text-primary hover:bg-surface-container-high transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary/40 min-h-[36px]"
             >
               <History className="h-4 w-4" aria-hidden="true" />
               <span>Riwayat</span>

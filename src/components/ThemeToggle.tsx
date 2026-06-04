@@ -16,7 +16,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={cycleTheme}
-      className="p-2 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-surface-container-high transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 min-h-[36px] min-w-[36px]"
+      className="p-2 rounded-lg text-zinc-100 hover:bg-surface-container-high transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 min-h-[36px] min-w-[36px]"
       aria-label={`Tema: ${label}. Klik untuk ganti.`}
       title={label}
     >
