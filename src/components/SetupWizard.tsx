@@ -148,7 +148,8 @@ export function SetupWizard() {
           }, 800);
         } else {
           setDbLog((prev) => prev + `❌ ${data.message || "Unknown error"}\n`);
-          setError(data.message || "Failed to initialize database");
+          if (data.tip) setDbLog((prev) => prev + `💡 ${data.tip}\n`);
+          setError(data.tip || data.message || "Failed to initialize database");
           setBusy(false);
         }
       }
