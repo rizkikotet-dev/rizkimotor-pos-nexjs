@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 
 /* ─────────────── Types ─────────────── */
 
-type Step = "welcome" | "database" | "admin" | "store" | "done";
+type Step = "welcome" | "dbtype" | "dbconfig" | "database" | "admin" | "store" | "done";
+
+type DbType = "sqlite" | "postgresql";
 
 interface AdminForm {
   username: string;
@@ -47,17 +49,20 @@ function AlertIcon() {
   );
 }
 
-/* ─────────────── Components ─────────────── */
+/* ─────────────── Step indicator ─────────────── */
 
 function StepIndicator({ steps, current }: { steps: Step[]; current: Step }) {
   const labels: Record<Step, string> = {
     welcome: "Mulai",
-    database: "Database",
+    dbtype: "Database",
+    dbconfig: "Koneksi",
+    database: "Init",
     admin: "Admin",
     store: "Toko",
     done: "Selesai",
   };
   const idx = steps.indexOf(current);
+  if (idx < 0) return null;
 
   return (
     <nav className="flex items-center justify-center gap-0 mb-10" aria-label="Progress">
@@ -78,7 +83,7 @@ function StepIndicator({ steps, current }: { steps: Step[]; current: Step }) {
             </div>
             {i < steps.length - 1 && (
               <div
-                className={`w-12 sm:w-20 h-0.5 mx-1.5 transition-colors duration-500 ${
+                className={`w-10 sm:w-16 h-0.5 mx-1 transition-colors duration-500 ${
                   i < idx ? "bg-primary" : "bg-zinc-800"
                 }`}
               />
@@ -87,6 +92,53 @@ function StepIndicator({ steps, current }: { steps: Step[]; current: Step }) {
         );
       })}
     </nav>
+  );
+}
+
+/* ─────────────── Database option card ─────────────── */
+
+function DbOptionCard({
+  value,
+  selected,
+  title,
+  desc,
+  icon,
+  onSelect,
+}: {
+  value: DbType;
+  selected: DbType;
+  title: string;
+  desc: string;
+  icon: string;
+  onSelect: (v: DbType) => void;
+}) {
+  const isActive = value === selected;
+  return (
+    <button
+      onClick={() => onSelect(value)}
+      className={`w-full text-left p-5 rounded-xl border transition-all ${
+        isActive
+          ? "border-primary bg-primary/10 ring-1 ring-primary/30"
+          : "border-zinc-800 bg-zinc-900/60 hover:border-zinc-700 hover:bg-zinc-800/60"
+      }`}
+    >
+      <div className="flex items-start gap-4">
+        <span className="text-2xl">{icon}</span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2.5 mb-1">
+            <h3 className="font-semibold text-zinc-100">{title}</h3>
+            <div
+              className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
+                isActive ? "border-primary" : "border-zinc-600"
+              }`}
+            >
+              {isActive && <div className="w-2 h-2 rounded-full bg-primary" />}
+            </div>
+          </div>
+          <p className="text-sm text-zinc-500 leading-relaxed">{desc}</p>
+        </div>
+      </div>
+    </button>
   );
 }
 
@@ -99,6 +151,12 @@ export function SetupWizard() {
   const [dbLog, setDbLog] = useState<string>("");
   const [dbDone, setDbDone] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  // Database selection
+  const [dbType, setDbType] = useState<DbType>("sqlite");
+  const [connectionString, setConnectionString] = useState("");
+
+  // Forms
   const [adminForm, setAdminForm] = useState<AdminForm>({
     username: "admin",
     name: "Administrator",
@@ -117,28 +175,46 @@ export function SetupWizard() {
     logEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [dbLog]);
 
+  // Deteksi database type dari env saat mounting
+  useEffect(() => {
+    const pg = (window as any).__ENV_DATABASE_URL || "";
+    if (pg.startsWith("postgresql")) {
+      setDbType("postgresql");
+      setConnectionString(pg);
+    }
+  }, []);
+
   // ── Database init ──
   const runDatabaseSetup = useCallback(async () => {
     setBusy(true);
     setError(null);
-    setDbLog("⏳ Initializing database...\n");
+    setDbLog(`⏳ Initializing ${dbType === "postgresql" ? "PostgreSQL" : "SQLite"} database...\n`);
 
     try {
-      const res = await fetch("/api/setup", { method: "POST" });
+      const res = await fetch("/api/setup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: dbType,
+          connectionString: dbType === "postgresql" ? connectionString : undefined,
+        }),
+      });
       const data = await res.json();
+
+      // Tampilkan info log dari server
+      if (data.info) {
+        setDbLog((prev) => prev + data.info.map((l: string) => `${l}\n`).join(""));
+      }
 
       if (data.ok) {
         setDbLog((prev) => prev + `✅ ${data.message}\n`);
         if (data.log) setDbLog((prev) => prev + `${data.log}\n`);
         setDbDone(true);
-
-        // Auto-proceed after 1.2s
         setTimeout(() => {
           setStep("admin");
           setBusy(false);
         }, 1200);
       } else {
-        // Jika error karena table sudah ada (409), tetap proceed
         if (res.status === 409) {
           setDbLog((prev) => prev + "ℹ️ Database already initialized.\n");
           setDbDone(true);
@@ -148,6 +224,7 @@ export function SetupWizard() {
           }, 800);
         } else {
           setDbLog((prev) => prev + `❌ ${data.message || "Unknown error"}\n`);
+          if (data.error) setDbLog((prev) => prev + `\n${data.error}\n`);
           if (data.tip) setDbLog((prev) => prev + `💡 ${data.tip}\n`);
           setError(data.tip || data.message || "Failed to initialize database");
           setBusy(false);
@@ -158,9 +235,9 @@ export function SetupWizard() {
       setError(e.message);
       setBusy(false);
     }
-  }, []);
+  }, [dbType, connectionString]);
 
-  // ── Seed (admin + store settings) ──
+  // ── Seed ──
   const runSeed = useCallback(async () => {
     setBusy(true);
     setError(null);
@@ -192,8 +269,10 @@ export function SetupWizard() {
       if (data.ok) {
         setStep("done");
       } else {
-        // If users already exist, that's OK too
-        if (res.status === 409 || (data.results && data.results.some((r: string) => r.includes("sudah ada")))) {
+        if (
+          res.status === 409 ||
+          (data.results && data.results.some((r: string) => r.includes("sudah ada")))
+        ) {
           setStep("done");
         } else {
           setError(data.message || "Seed failed");
@@ -215,12 +294,16 @@ export function SetupWizard() {
 
   const storeValid = storeForm.name.trim().length >= 1;
 
+  // All steps for indicator
+  const allSteps: Step[] = ["welcome", "dbtype", "dbconfig", "database", "admin", "store", "done"];
+
+  // ────────────── Render steps ──────────────
+
   // ── Welcome ──
   if (step === "welcome") {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-[#09090b]">
         <div className="text-center px-6 animate-[fadeIn_0.7s_ease-out]">
-          {/* Logo mark */}
           <div className="mx-auto mb-8 w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg shadow-primary/20">
             <span className="text-3xl font-bold text-black">RM</span>
           </div>
@@ -235,7 +318,7 @@ export function SetupWizard() {
           </p>
 
           <button
-            onClick={() => setStep("database")}
+            onClick={() => setStep("dbtype")}
             className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-primary text-black font-semibold text-sm hover:brightness-110 transition-all active:scale-[0.98] shadow-lg shadow-primary/25"
           >
             Mulai Setup
@@ -250,18 +333,160 @@ export function SetupWizard() {
     );
   }
 
-  // ── Database ──
+  // ── Database Type ──
+  if (step === "dbtype") {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-[#09090b] p-6 overflow-y-auto">
+        <div className="w-full max-w-lg py-10">
+          <StepIndicator steps={allSteps} current={step} />
+
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 sm:p-8 backdrop-blur-sm">
+            <div className="mb-8">
+              <h2 className="text-xl font-bold text-zinc-100 mb-1">Pilih Database</h2>
+              <p className="text-sm text-zinc-500">
+                Pilih tipe database yang akan digunakan. SQLite untuk lokal/Docker, PostgreSQL untuk production.
+              </p>
+            </div>
+
+            <div className="space-y-3.5">
+              <DbOptionCard
+                value="sqlite"
+                selected={dbType}
+                title="SQLite"
+                desc="Penyimpanan file lokal. Cocok untuk development, testing, dan deployment Docker single-container. Praktis — tanpa setup server database."
+                icon="🗄️"
+                onSelect={setDbType}
+              />
+              <DbOptionCard
+                value="postgresql"
+                selected={dbType}
+                title="PostgreSQL"
+                desc="Database server production-grade. Cocok untuk deployment Vercel, multi-instance, dan aplikasi skala besar. Membutuhkan koneksi ke server PostgreSQL."
+                icon="🐘"
+                onSelect={setDbType}
+              />
+            </div>
+
+            <div className="flex gap-3 mt-8">
+              <button
+                onClick={() => setStep("welcome")}
+                className="px-4 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 font-medium text-sm hover:bg-zinc-800 transition-all"
+              >
+                Kembali
+              </button>
+              <button
+                onClick={() => {
+                  setError(null);
+                  if (dbType === "postgresql") {
+                    setStep("dbconfig");
+                  } else {
+                    setStep("database");
+                  }
+                }}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-black font-semibold text-sm hover:brightness-110 transition-all active:scale-[0.98] shadow-lg shadow-primary/20"
+              >
+                {dbType === "postgresql" ? "Konfigurasi Koneksi" : "Lanjutkan"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Database Config (PostgreSQL) ──
+  if (step === "dbconfig") {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-[#09090b] p-6 overflow-y-auto">
+        <div className="w-full max-w-lg py-10">
+          <StepIndicator steps={allSteps} current={step} />
+
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 sm:p-8 backdrop-blur-sm">
+            <div className="mb-8">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-2xl">🐘</span>
+                <h2 className="text-xl font-bold text-zinc-100">Koneksi PostgreSQL</h2>
+              </div>
+              <p className="text-sm text-zinc-500 leading-relaxed">
+                Masukkan connection string PostgreSQL. Database harus sudah dibuat dan bisa diakses dari lingkungan ini.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="setup-pg-url" className="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wide uppercase">
+                  Connection String
+                </label>
+                <input
+                  id="setup-pg-url"
+                  type="text"
+                  value={connectionString}
+                  onChange={(e) => setConnectionString(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-zinc-800/80 border border-zinc-700 rounded-xl text-zinc-100 text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all font-mono"
+                  placeholder="postgresql://user:password@host:5432/dbname?sslmode=require"
+                  autoFocus
+                />
+                <p className="mt-2 text-xs text-zinc-600 leading-relaxed">
+                  Format: <code className="text-zinc-500">postgresql://user:pass@host:5432/nama_database?sslmode=require</code>
+                </p>
+              </div>
+
+              {/* Info box */}
+              <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                <p className="text-xs text-amber-400/80 leading-relaxed">
+                  <strong className="text-amber-400">Vercel:</strong> Set DATABASE_URL di Vercel Dashboard → Settings → Environment Variables, bukan di sini. Cukup klik Lanjutkan.
+                </p>
+              </div>
+            </div>
+
+            {error && (
+              <div className="mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-2.5">
+                <AlertIcon />
+                <p className="text-sm text-red-300">{error}</p>
+              </div>
+            )}
+
+            <div className="flex gap-3 mt-8">
+              <button
+                onClick={() => setStep("dbtype")}
+                className="px-4 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 font-medium text-sm hover:bg-zinc-800 transition-all"
+              >
+                Kembali
+              </button>
+              <button
+                onClick={() => {
+                  setError(null);
+                  setStep("database");
+                }}
+                disabled={!connectionString.trim()}
+                className={`flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all ${
+                  connectionString.trim()
+                    ? "bg-primary text-black hover:brightness-110 active:scale-[0.98] shadow-lg shadow-primary/20"
+                    : "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                }`}
+              >
+                Lanjutkan
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Database init ──
   if (step === "database") {
-    // Auto-start db setup
+    // Auto-start db setup sekali
     if (!dbDone && !error && !busy) {
-      // Use setTimeout to allow render first
       setTimeout(() => runDatabaseSetup(), 300);
     }
+
+    const displaySteps: Step[] = ["welcome", "dbtype", "database", "admin", "store", "done"];
 
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-[#09090b] p-6">
         <div className="w-full max-w-lg">
-          <StepIndicator steps={["welcome", "database", "admin", "store", "done"]} current={step} />
+          <StepIndicator steps={displaySteps} current={step} />
 
           <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 sm:p-8 backdrop-blur-sm">
             <div className="flex items-center gap-3 mb-6">
@@ -285,13 +510,13 @@ export function SetupWizard() {
                     ? "Database siap"
                     : error
                       ? "Gagal menginisialisasi database"
-                      : "Menyiapkan database..."}
+                      : `Menyiapkan ${dbType === "postgresql" ? "PostgreSQL" : "SQLite"}...`}
                 </p>
               </div>
             </div>
 
             {/* Log output */}
-            <div className="bg-black/50 rounded-xl p-4 font-mono text-xs leading-relaxed max-h-40 overflow-y-auto mb-6">
+            <div className="bg-black/50 rounded-xl p-4 font-mono text-xs leading-relaxed max-h-48 overflow-y-auto mb-6 whitespace-pre-wrap">
               {dbLog || "⏳ Menunggu..."}
               <div ref={logEndRef} />
             </div>
@@ -326,10 +551,12 @@ export function SetupWizard() {
 
   // ── Admin ──
   if (step === "admin") {
+    const adminSteps: Step[] = ["welcome", "dbtype", "database", "admin", "store", "done"];
+
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-[#09090b] p-6 overflow-y-auto">
         <div className="w-full max-w-lg py-10">
-          <StepIndicator steps={["welcome", "database", "admin", "store", "done"]} current={step} />
+          <StepIndicator steps={adminSteps} current={step} />
 
           <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 sm:p-8 backdrop-blur-sm">
             <div className="mb-8">
@@ -338,7 +565,6 @@ export function SetupWizard() {
             </div>
 
             <div className="space-y-5">
-              {/* Username */}
               <div>
                 <label htmlFor="setup-username" className="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wide uppercase">
                   Username
@@ -354,7 +580,6 @@ export function SetupWizard() {
                 />
               </div>
 
-              {/* Name */}
               <div>
                 <label htmlFor="setup-name" className="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wide uppercase">
                   Nama Lengkap
@@ -369,7 +594,6 @@ export function SetupWizard() {
                 />
               </div>
 
-              {/* Password */}
               <div>
                 <label htmlFor="setup-password" className="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wide uppercase">
                   Password
@@ -384,7 +608,6 @@ export function SetupWizard() {
                 />
               </div>
 
-              {/* Confirm Password */}
               <div>
                 <label htmlFor="setup-confirm" className="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wide uppercase">
                   Konfirmasi Password
@@ -440,10 +663,12 @@ export function SetupWizard() {
 
   // ── Store ──
   if (step === "store") {
+    const storeSteps: Step[] = ["welcome", "dbtype", "database", "admin", "store", "done"];
+
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-[#09090b] p-6 overflow-y-auto">
         <div className="w-full max-w-lg py-10">
-          <StepIndicator steps={["welcome", "database", "admin", "store", "done"]} current={step} />
+          <StepIndicator steps={storeSteps} current={step} />
 
           <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 sm:p-8 backdrop-blur-sm">
             <div className="mb-8">
@@ -539,7 +764,6 @@ export function SetupWizard() {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-[#09090b]">
       <div className="text-center px-6 animate-[fadeIn_0.5s_ease-out]">
-        {/* Success check */}
         <div className="mx-auto mb-8 w-20 h-20 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
           <svg className="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />

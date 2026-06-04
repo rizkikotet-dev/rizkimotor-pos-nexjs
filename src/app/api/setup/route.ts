@@ -1,27 +1,108 @@
-// POST /api/setup — Inisialisasi database untuk Vercel/PostgreSQL
+// POST /api/setup — Inisialisasi database
+//
+// Body opsional:
+//   { type: "sqlite" | "postgresql", connectionString?: string }
 //
 // Cara kerja:
-//   1. Cek apakah tabel Setting sudah ada via Prisma query
-//   2. Jika sudah → return ok (existing database)
-//   3. Jika belum → jalankan prisma db push via binary lokal
-//      (tidak pakai npx — npx gagal di serverless Vercel)
-//   4. Return hasil push
-//
-// Catatan:
-//   - Di Vercel, prisma db push seharusnya sudah jalan saat build (via vercel.json)
-//   - Endpoint ini hanya cadangan jika build-time push gagal
-//   - Di environment non-Vercel (Docker, local), endpoint ini juga berfungsi
+//   1. Jika type == "postgresql" dan connectionString diberikan:
+//      a. Simpan ke .env (jika lingkungan mengizinkan — skip di Vercel)
+//      b. Regenerate Prisma client dengan schema PostgreSQL (skip di Vercel)
+//   2. Jalankan prisma db push dengan schema yang sesuai
+//   3. Return hasil
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { execSync } from "child_process";
+import fs from "fs";
+import path from "path";
 
-export async function POST() {
-  // Lock sederhana untuk cegah eksekusi ganda per cold start
+function isVercel(): boolean {
+  return !!process.env.VERCEL;
+}
+
+function getSchemaPath(type: "sqlite" | "postgresql"): string {
+  return type === "postgresql"
+    ? "prisma/schema.vercel.prisma"
+    : "prisma/schema.prisma";
+}
+
+function runPrisma(args: string): string {
+  const prismaBin = "node_modules/.bin/prisma";
+  try {
+    const output = execSync(`${prismaBin} ${args}`, {
+      cwd: process.cwd(),
+      env: { ...process.env, HOME: "/tmp" },
+      stdio: "pipe",
+      timeout: 30_000,
+    });
+    return output.toString().trim();
+  } catch (e: any) {
+    // Fallback ke npx untuk environment tanpa node_modules langsung
+    if (
+      (e?.message && e.message.includes("ENOENT")) ||
+      (e?.stderr && e.stderr.toString().includes("not found"))
+    ) {
+      const fallback = execSync(`npx prisma ${args}`, {
+        cwd: process.cwd(),
+        env: { ...process.env, HOME: "/tmp" },
+        stdio: "pipe",
+        timeout: 60_000,
+      });
+      return fallback.toString().trim();
+    }
+    throw e;
+  }
+}
+
+function saveEnvIfPossible(connectionString: string): string[] {
+  const logs: string[] = [];
+  if (isVercel()) {
+    logs.push("ℹ️  Vercel: skip write .env (gunakan Vercel Dashboard untuk set DATABASE_URL)");
+    return logs;
+  }
+
+  const envPath = path.resolve(process.cwd(), ".env");
+  try {
+    let content = "";
+    if (fs.existsSync(envPath)) {
+      content = fs.readFileSync(envPath, "utf-8");
+      // Replace existing DATABASE_URL
+      if (content.match(/^DATABASE_URL=/m)) {
+        content = content.replace(/^DATABASE_URL=.*$/m, `DATABASE_URL="${connectionString}"`);
+        logs.push("✅ DATABASE_URL diperbarui di .env");
+      } else {
+        content += `\nDATABASE_URL="${connectionString}"\n`;
+        logs.push("✅ DATABASE_URL ditambahkan ke .env");
+      }
+    } else {
+      content = `# RIZKI MOTOR — Database\nDATABASE_URL="${connectionString}"\n`;
+      logs.push("✅ File .env dibuat dengan DATABASE_URL");
+    }
+    fs.writeFileSync(envPath, content, "utf-8");
+  } catch (e: any) {
+    logs.push(`⚠️  Gagal menulis .env: ${e.message}`);
+  }
+  return logs;
+}
+
+export async function POST(req: NextRequest) {
+  // Lock eksekusi ganda per cold start
   if ((globalThis as any).__setupDone) {
     return NextResponse.json({ ok: false, message: "Setup already completed" }, { status: 409 });
   }
 
-  // Cek apakah tabel sudah ada
+  // Parse body
+  let body: { type?: string; connectionString?: string } = {};
+  try {
+    body = await req.json();
+  } catch {
+    // No body — gunakan default dari env
+  }
+
+  const dbType = body.type === "postgresql" ? "postgresql" : "sqlite";
+  const schemaPath = getSchemaPath(dbType);
+  const logs: string[] = [];
+
+  // Cek apakah tabel sudah ada (pakai koneksi yang sudah jalan)
   try {
     const { PrismaClient } = await import("@prisma/client");
     const client = new PrismaClient();
@@ -31,75 +112,71 @@ export async function POST() {
     return NextResponse.json({
       ok: true,
       message: `Database ready (${count} settings found)`,
+      type: dbType,
     });
   } catch {
-    // Table belum ada — lanjut push
+    // Table belum ada — lanjut setup
   }
 
-  // Tentukan schema file berdasarkan database URL
-  const isPostgres = (process.env.DATABASE_URL ?? "").startsWith("postgresql");
-  const schemaPath = isPostgres ? "prisma/schema.vercel.prisma" : "prisma/schema.prisma";
+  // === Jika PostgreSQL dan ada connection string ===
+  const connectionString = body.connectionString || process.env.DATABASE_URL;
+  if (dbType === "postgresql" && connectionString) {
+    logs.push(`📦 Tipe database: PostgreSQL`);
 
-  try {
-    // Pakai binary lokal — npx tidak bisa di serverless Vercel
-    // Binary ada di node_modules/.bin/prisma (deployed sebagai dependency)
-    //
-    // HOME=/tmp penting karena serverless Vercel tidak bisa nulis ke ~
-    const prismaBin = "node_modules/.bin/prisma";
-    const output = execSync(
-      `${prismaBin} db push --schema=${schemaPath} --skip-generate --accept-data-loss`,
-      {
-        cwd: process.cwd(),
-        env: {
-          ...process.env,
-          HOME: "/tmp",
-        },
-        stdio: "pipe",
-        timeout: 30_000,
+    // Simpan ke .env (skip Vercel, gunakan Vercel Dashboard)
+    if (body.connectionString) {
+      logs.push(...saveEnvIfPossible(connectionString));
+    }
+
+    // Regenerate Prisma client jika bukan di Vercel
+    // (di Vercel client sudah PostgreSQL dari build)
+    if (!isVercel()) {
+      try {
+        logs.push("🔄 Regenerating Prisma client for PostgreSQL...");
+        runPrisma(`generate --schema=${schemaPath}`);
+        logs.push("✅ Prisma client regenerated for PostgreSQL");
+      } catch (e: any) {
+        logs.push(`⚠️  Gagal regenerate client: ${e.message}`);
       }
+    } else {
+      logs.push("ℹ️  Vercel: skip regenerate client (sudah PostgreSQL dari build)");
+    }
+  } else {
+    logs.push(`📦 Tipe database: SQLite`);
+  }
+
+  // === Run prisma db push ===
+  try {
+    logs.push("⏳ Menjalankan prisma db push...");
+    const output = runPrisma(
+      `db push --schema=${schemaPath} --skip-generate --accept-data-loss`
     );
+    const lastLines = output.split("\n").slice(-5).join("\n");
+    logs.push("✅ Database berhasil diinisialisasi");
 
     (globalThis as any).__setupDone = true;
 
     return NextResponse.json({
       ok: true,
       message: "Database initialized successfully",
-      log: output.toString().trim().split("\n").slice(-5).join("\n"),
+      type: dbType,
+      log: lastLines,
+      info: logs,
     });
   } catch (e: any) {
     const stderr = e?.stderr?.toString().trim() || "";
     const stdout = e?.stdout?.toString().trim() || "";
-    const message = e?.message || "Unknown error";
-
-    // Jika binary lokal tidak ditemukan, fallback ke npx (untuk non-Vercel)
-    if (message.includes("ENOENT") || stderr.includes("not found")) {
-      try {
-        const fallbackOutput = execSync(
-          `npx prisma db push --schema=${schemaPath} --skip-generate --accept-data-loss`,
-          {
-            cwd: process.cwd(),
-            env: { ...process.env, HOME: "/tmp" },
-            stdio: "pipe",
-            timeout: 30_000,
-          }
-        );
-        (globalThis as any).__setupDone = true;
-        return NextResponse.json({
-          ok: true,
-          message: "Database initialized successfully (fallback)",
-          log: fallbackOutput.toString().trim().split("\n").slice(-5).join("\n"),
-        });
-      } catch {
-        // Fallback juga gagal — laporkan error asli
-      }
-    }
 
     return NextResponse.json(
       {
         ok: false,
         message: "Failed to initialize database",
-        error: stderr || stdout || message,
-        tip: "Pastikan DATABASE_URL benar dan database dapat diakses dari lingkungan ini.",
+        error: stderr || stdout || e?.message || "Unknown error",
+        info: logs,
+        tip:
+          dbType === "postgresql"
+            ? "Pastikan connection string PostgreSQL benar dan database online. Untuk Vercel: set DATABASE_URL di Vercel Dashboard → Settings → Environment Variables."
+            : "Pastikan folder data/ dapat ditulis. Di Docker: pastikan volume ter-mount dengan benar.",
       },
       { status: 500 }
     );

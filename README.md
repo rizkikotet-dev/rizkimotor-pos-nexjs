@@ -265,7 +265,7 @@ Buka project → **Settings** → **Environment Variables** → tambahkan:
 
 Vercel akan otomatis membaca `vercel.json`:
 
-- **Build Command:** `npx prisma generate --schema=prisma/schema.vercel.prisma && npx prisma db push --schema=prisma/schema.vercel.prisma --skip-generate --accept-data-loss 2>/dev/null; next build`
+- **Build Command:** `npx prisma generate --schema=prisma/schema.vercel.prisma && (npx prisma db push --schema=prisma/schema.vercel.prisma --skip-generate --accept-data-loss || echo '⚠️  db push skipped — will run at runtime via /api/setup') && next build`
 - **Schema khusus PostgreSQL** — `prisma/schema.vercel.prisma` digunakan, bukan `schema.prisma` (SQLite)
 
 > Build command secara otomatis menjalankan `prisma db push` untuk membuat/menyinkronkan tabel database setiap deploy. Jika database belum siap saat build, build tetap lanjut (tidak blocking).
@@ -280,12 +280,15 @@ Database akan otomatis tersinkronisasi saat build berkat `prisma db push` di bui
 
 **Jika tabel belum terbentuk**, jangan khawatir — aplikasi otomatis mendeteksi database kosong dan menampilkan **Setup Wizard** di halaman pertama kali akses. Wizard akan memandu Anda melalui:
 
-1. **Inisialisasi database** — menjalankan `prisma db push` secara otomatis via `POST /api/setup`
-2. **Buat akun admin** — username, nama, dan password
-3. **Konfigurasi toko** — nama toko, tagline, dan kontak
-4. **Selesai** — redirect ke halaman login
+1. **Pilih tipe database** — SQLite (untuk Docker/lokal) atau PostgreSQL (untuk Vercel/production)
+2. **Konfigurasi koneksi** (PostgreSQL) — masukkan connection string jika perlu
+3. **Inisialisasi database** — menjalankan `prisma db push` secara otomatis via `POST /api/setup`
+4. **Buat akun admin** — username, nama, dan password
+5. **Konfigurasi toko** — nama toko, tagline, dan kontak
+6. **Selesai** — redirect ke halaman login
 
-Tidak perlu akses terminal — semua dilakukan dari browser.
+> **Untuk Vercel:** Pilih PostgreSQL. Connection string sudah diset sebagai environment variable `DATABASE_URL` — cukup klik Lanjutkan.
+> **Untuk Docker/lokal:** Pilih SQLite — tanpa setup server database.
 
 > Jika wizard tidak muncul, akses endpoint setup manual:
 > ```bash
@@ -545,11 +548,19 @@ Bayar utang:
 POST /api/setup
 ```
 
-Menjalankan `prisma db push` untuk membuat tabel database. Panggil **pertama kali** setelah deploy:
+Menjalankan `prisma db push` untuk membuat tabel database. Body opsional untuk memilih tipe database:
 
-```bash
-curl -X POST https://domain-anda.vercel.app/api/setup
+```json
+{
+  "type": "postgresql",
+  "connectionString": "postgresql://user:pass@host:5432/db"
+}
 ```
+
+| Parameter | Tipe | Default | Deskripsi |
+|-----------|------|---------|-----------|
+| `type` | `"sqlite"` \| `"postgresql"` | `"sqlite"` | Tipe database |
+| `connectionString` | string | `DATABASE_URL` env | Connection string (wajib untuk PostgreSQL) |
 
 Response:
 
@@ -557,7 +568,8 @@ Response:
 {
   "ok": true,
   "message": "Database initialized successfully",
-  "log": "..."
+  "type": "postgresql",
+  "info": ["📦 Tipe database: PostgreSQL", "✅ DATABASE_URL diperbarui di .env", "✅ Database berhasil diinisialisasi"]
 }
 ```
 
@@ -569,7 +581,18 @@ Response:
 POST /api/seed
 ```
 
-Mengisi data awal (user admin/kasir, pengaturan toko, kategori default). Panggil **setelah** `/api/setup`:
+Mengisi data awal (user admin/kasir, pengaturan toko, kategori default). Panggil **setelah** `/api/setup`.
+
+Body opsional untuk kostumisasi dari Setup Wizard:
+
+```json
+{
+  "admin": { "username": "admin", "name": "Administrator", "password": "admin123" },
+  "store": { "name": "Toko Saya", "tagline": "Murah & Terpercaya", "phone": "08123456789" }
+}
+```
+
+Jika body tidak diberikan, akan menggunakan data default. Header `x-allow-seed: 1` wajib untuk mencegah eksekusi tidak sengaja:
 
 ```bash
 curl -X POST https://domain-anda.vercel.app/api/seed \

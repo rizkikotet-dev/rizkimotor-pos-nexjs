@@ -36,6 +36,11 @@ export default async function RootLayout({
     return (
       <html lang="id" className="dark" suppressHydrationWarning>
         <body className="min-h-dvh bg-[#09090b] antialiased">
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `window.__ENV_DATABASE_URL=${JSON.stringify(process.env.DATABASE_URL || "")}`,
+            }}
+          />
           <SetupWizard />
         </body>
       </html>
