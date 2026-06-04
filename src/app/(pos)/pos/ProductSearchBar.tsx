@@ -34,7 +34,7 @@ export const ProductSearchBar = forwardRef<HTMLInputElement, ProductSearchBarPro
               onEnter();
             }
           }}
-          placeholder="Ketik nama atau SKU produk..."
+          placeholder="Cari produk... (tekan / untuk fokus, Enter untuk tambah)"
           className="input pl-9 pr-9"
           aria-label="Cari produk"
         />

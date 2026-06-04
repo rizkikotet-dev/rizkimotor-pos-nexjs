@@ -139,6 +139,7 @@ export function CartPanel({
           disabled={isEmpty || submitting}
           className="btn-primary w-full"
           aria-label={submitting ? "Memproses pesanan" : "Buat Pesanan"}
+          title="Buat Pesanan (F9)"
         >
           {submitting ? (
             <>

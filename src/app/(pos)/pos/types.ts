@@ -32,3 +32,16 @@ export interface Customer {
 export interface POSClientProps {
   products: Product[];
 }
+
+// Client-side product filter. Digunakan oleh ProductGrid (display) dan
+// POSClient (shortcut handler untuk "Enter → add first match").
+export function filterProducts(products: Product[], query: string): Product[] {
+  const q = query.toLowerCase();
+  if (!q) return products;
+  return products.filter(
+    (p) =>
+      p.name.toLowerCase().includes(q) ||
+      p.sku.toLowerCase().includes(q) ||
+      (p.description || "").toLowerCase().includes(q)
+  );
+}

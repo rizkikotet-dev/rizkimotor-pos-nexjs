@@ -2,7 +2,7 @@
 
 import { Package } from "lucide-react";
 import { formatRupiah } from "@/lib/format";
-import type { Product } from "./types";
+import { filterProducts, type Product } from "./types";
 
 interface ProductGridProps {
   products: Product[];
@@ -67,15 +67,7 @@ function ProductCard({
 // Grid product catalog dengan client-side search. Filter by name/SKU/description.
 // Empty state khusus untuk "no match" vs "no products".
 export function ProductGrid({ products, searchQuery, onAddToCart }: ProductGridProps) {
-  const q = searchQuery.toLowerCase();
-  const filtered = q
-    ? products.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.sku.toLowerCase().includes(q) ||
-          (p.description || "").toLowerCase().includes(q)
-      )
-    : products;
+  const filtered = filterProducts(products, searchQuery);
 
   if (filtered.length === 0) {
     return (
