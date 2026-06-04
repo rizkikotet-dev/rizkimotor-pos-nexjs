@@ -1,65 +1,37 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
-import { PaymentModal } from "@/components/pos/PaymentModal";
-interface Product {
-  id: number;
-  name: string;
-  sku: string;
-  price: number;
-  priceReseller: number;
-  stock: number;
-  image: string | null;
-  description: string | null;
-  active: boolean;
-  categoryId: number;
-  category: { name: string };
-}
-
-interface CartItem {
-  productId: number;
-  name: string;
-  price: number;
-  quantity: number;
-  maxStock: number;
-}
-
-interface Customer {
-  id: number;
-  name: string;
-  phone: string | null;
-}
-
 import { formatRupiah } from "@/lib/format";
-import {
-  ShoppingCart,
-  Plus,
-  Minus,
-  Trash2,
-  Search,
-  X,
-  Loader2,
-  Package,
-} from "lucide-react";
+import { PaymentModal } from "@/components/pos/PaymentModal";
+import { ProductSearchBar } from "./ProductSearchBar";
+import { ProductGrid } from "./ProductGrid";
+import { CartPanel } from "./CartPanel";
+import { useCart } from "./useCart";
+import type { POSClientProps, Customer } from "./types";
 
-interface POSClientProps {
-  products: Product[];
-  settings: Record<string, string>;
-  userRole?: string;
-}
-
-export function POSClient({ products, settings, userRole }: POSClientProps) {
+// Main orchestrator. Composes:
+//   - ProductSearchBar: search input (with focus ref)
+//   - ProductGrid: catalog cards
+//   - CartPanel: cart items + submit
+//   - useCart hook: cart state + business logic
+//   - PaymentModal: payment flow (existing @/components/pos)
+//
+// State flow:
+//   1. User search/click product → addToCart() → cart updates → re-render
+//   2. User adjust qty/remove → updateQty/removeItem
+//   3. User click "Buat Pesanan" → PaymentModal opens
+//   4. Confirm payment → POST /api/transactions → success → redirect to receipt
+export function POSClient({ products }: POSClientProps) {
   const router = useRouter();
   const toast = useToast();
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const { cart, grandTotal, addToCart, updateQty, removeItem, clearCart } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const cartEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     searchInputRef.current?.focus();
@@ -72,66 +44,10 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
       .catch(() => {});
   }, []);
 
-  const filtered = products.filter((p) => {
-    const q = searchQuery.toLowerCase();
-    return (
-      p.name.toLowerCase().includes(q) ||
-      p.sku.toLowerCase().includes(q) ||
-      (p.description || "").toLowerCase().includes(q)
-    );
-  });
-
-  const grandTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  const addToCart = useCallback((product: Product, selectedPrice: number) => {
-    setCart((prev) => {
-      const existing = prev.find((c) => c.productId === product.id && c.price === selectedPrice);
-      if (existing) {
-        if (existing.quantity >= product.stock) {
-          toast.warning(`Stok maksimal ${product.stock}`);
-          return prev;
-        }
-        return prev.map((c) =>
-          c.productId === product.id && c.price === selectedPrice
-            ? { ...c, quantity: c.quantity + 1 }
-            : c
-        );
-      }
-      if (product.stock <= 0) {
-        toast.error("Stok habis");
-        return prev;
-      }
-      return [
-        ...prev,
-        {
-          productId: product.id,
-          name: product.name,
-          price: selectedPrice,
-          quantity: 1,
-          maxStock: product.stock,
-        },
-      ];
-    });
+  function handleAddToCart(product: Parameters<typeof addToCart>[0], selectedPrice: number) {
+    addToCart(product, selectedPrice);
     setSearchQuery("");
     searchInputRef.current?.focus();
-  }, [toast]);
-
-  function updateQty(productId: number, price: number, delta: number) {
-    setCart((prev) => {
-      return prev
-        .map((item) => {
-          if (item.productId !== productId || item.price !== price) return item;
-          const newQty = item.quantity + delta;
-          if (newQty <= 0) return null;
-          if (newQty > item.maxStock) return item;
-          return { ...item, quantity: newQty };
-        })
-        .filter(Boolean) as CartItem[];
-    });
-  }
-
-  function removeItem(productId: number, price: number) {
-    setCart((prev) => prev.filter((c) => !(c.productId === productId && c.price === price)));
   }
 
   function handleOpenPayment() {
@@ -139,19 +55,18 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
     setShowPayment(true);
   }
 
-  async function handleConfirmPayment(paymentAmount: number, customerId: number | null, isDebt: boolean) {
+  async function handleConfirmPayment(
+    paymentAmount: number,
+    customerId: number | null,
+    isDebt: boolean
+  ) {
     setSubmitting(true);
-
     try {
       const res = await fetch("/api/transactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: cart.map((c) => ({
-            productId: c.productId,
-            price: c.price,
-            quantity: c.quantity,
-          })),
+          items: cart.map((c) => ({ productId: c.productId, price: c.price, quantity: c.quantity })),
           payment: paymentAmount,
           note: null,
           customerId,
@@ -166,10 +81,11 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
       }
 
       const result = await res.json();
-      setCart([]);
+      clearCart();
       setShowPayment(false);
-      router.refresh();
-      toast.success(`Transaksi berhasil! Invoice: ${result.invoiceNo} | Kembalian: ${formatRupiah(result.change)}`);
+      toast.success(
+        `Transaksi berhasil! Invoice: ${result.invoiceNo} | Kembalian: ${formatRupiah(result.change)}`
+      );
       router.push(`/pos/struk/${result.id}`);
     } catch {
       toast.error("Terjadi kesalahan jaringan");
@@ -182,173 +98,26 @@ export function POSClient({ products, settings, userRole }: POSClientProps) {
     <div className="page-container">
       <div className="flex flex-col lg:flex-row gap-4 h-full">
         <div className="flex-1 flex flex-col min-h-0 lg:h-[calc(100dvh-7rem)]">
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" aria-hidden="true" />
-          <input
+          <ProductSearchBar
             ref={searchInputRef}
-            type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Ketik nama atau SKU produk..."
-            className="input pl-9 pr-9"
-            aria-label="Cari produk"
+            onChange={setSearchQuery}
           />
-          {searchQuery && (
-            <button
-              onClick={() => { setSearchQuery(""); searchInputRef.current?.focus(); }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-sm"
-              aria-label="Hapus pencarian"
-            >
-              <X className="h-4 w-4" aria-hidden="true" />
-            </button>
-          )}
+          <ProductGrid
+            products={products}
+            searchQuery={searchQuery}
+            onAddToCart={handleAddToCart}
+          />
         </div>
 
-        <div className="flex-1 overflow-y-auto rounded-lg border border-surface-outline-variant bg-surface-container-low/50" role="region" aria-label="Daftar produk">
-          {filtered.length === 0 ? (
-            <div className="p-8 text-center text-zinc-500 text-sm">
-              <Package className="h-8 w-8 text-zinc-700 mx-auto mb-2" aria-hidden="true" />
-              <p>Produk tidak ditemukan.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-2 p-2">
-              {filtered.map((product) => {
-                const inStock = product.stock > 0;
-                const hasResellerPrice = product.priceReseller > 0;
-                
-                return (
-                  <div
-                    key={product.id}
-                    className={`text-left p-3 rounded-lg border transition-all duration-150 min-h-[120px] ${
-                      inStock
-                        ? "border-surface-outline-variant bg-surface-base"
-                        : "border-surface-outline-variant bg-surface-container-low opacity-50"
-                    }`}
-                  >
-                    <p className="text-xs font-semibold text-zinc-200 line-clamp-2 leading-snug mb-1">{product.name}</p>
-                    <p className="text-[10px] text-zinc-500 font-mono mb-2">{product.sku}</p>
-                    <p className="text-[10px] text-zinc-500 mb-2">Stok: {product.stock}</p>
-                    
-                    {inStock ? (
-                      <div className="space-y-1">
-                        <button
-                          onClick={() => addToCart(product, product.price)}
-                          className="w-full px-2 py-1.5 bg-primary text-surface-base hover:bg-primary-400 rounded text-xs font-medium transition-colors active:scale-95 flex items-center justify-between"
-                          aria-label={`Tambah ${product.name} harga normal`}
-                        >
-                          <span>Normal</span>
-                          <span className="font-bold">{formatRupiah(product.price)}</span>
-                        </button>
-                        {hasResellerPrice && (
-                          <button
-                            onClick={() => addToCart(product, product.priceReseller)}
-                            className="w-full px-2 py-1.5 bg-emerald-600 text-white hover:bg-emerald-500 rounded text-xs font-medium transition-colors active:scale-95 flex items-center justify-between"
-                            aria-label={`Tambah ${product.name} harga reseller`}
-                          >
-                            <span>Reseller</span>
-                            <span className="font-bold">{formatRupiah(product.priceReseller)}</span>
-                          </button>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="text-center py-2 text-xs text-zinc-600 font-medium">
-                        Stok Habis
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="lg:w-80 xl:w-96 flex-shrink-0 flex flex-col border border-surface-outline-variant rounded-lg bg-surface-base overflow-hidden lg:h-[calc(100dvh-7rem)]">
-        <div className="p-3 border-b border-surface-outline-variant bg-surface-container-low">
-          <div className="flex items-center gap-2">
-            <ShoppingCart className="h-4 w-4 text-primary" aria-hidden="true" />
-            <h2 className="text-sm font-bold text-zinc-200">Keranjang</h2>
-            {cart.length > 0 && (
-              <span className="tag-brand text-[10px]">{cart.length} item</span>
-            )}
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-3 space-y-2" role="region" aria-label="Item di keranjang" ref={cartEndRef}>
-          {cart.length === 0 ? (
-            <div className="text-center text-zinc-600 text-sm py-10">
-              <ShoppingCart className="h-8 w-8 mx-auto mb-2 text-zinc-700" aria-hidden="true" />
-              <p>Belum ada item.</p>
-            </div>
-          ) : (
-            cart.map((item) => (
-              <div
-                key={`${item.productId}-${item.price}`}
-                className="bg-surface-container-low border border-surface-outline-variant rounded-lg p-2.5"
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-zinc-200 truncate">{item.name}</p>
-                    <p className="text-[10px] text-primary font-mono">{formatRupiah(item.price)}</p>
-                  </div>
-                  <button
-                    onClick={() => removeItem(item.productId, item.price)}
-                    className="text-zinc-600 hover:text-red-400 transition-colors p-1.5 rounded focus:outline-none focus:ring-2 focus:ring-red-500/40 min-h-[32px] min-w-[32px]"
-                    aria-label={`Hapus ${item.name} dari keranjang`}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                  </button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => updateQty(item.productId, item.price, -1)}
-                      className="w-8 h-8 flex items-center justify-center rounded border border-surface-outline-variant bg-surface-container-high text-zinc-400 hover:text-zinc-200 hover:border-surface-outline active:scale-90 transition-all"
-                      aria-label="Kurangi jumlah"
-                    >
-                      <Minus className="h-3 w-3" aria-hidden="true" />
-                    </button>
-                    <span className="w-8 text-center text-sm font-bold text-zinc-100" aria-live="polite" aria-label={`Jumlah ${item.quantity}`}>{item.quantity}</span>
-                    <button
-                      onClick={() => updateQty(item.productId, item.price, 1)}
-                      disabled={item.quantity >= item.maxStock}
-                      className="w-8 h-8 flex items-center justify-center rounded border border-surface-outline-variant bg-surface-container-high text-zinc-400 hover:text-zinc-200 hover:border-surface-outline active:scale-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                      aria-label="Tambah jumlah"
-                    >
-                      <Plus className="h-3 w-3" aria-hidden="true" />
-                    </button>
-                  </div>
-                  <p className="text-xs font-bold text-zinc-200">
-                    {formatRupiah(item.price * item.quantity)}
-                  </p>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        <div className="border-t border-surface-outline-variant p-3 bg-surface-container-low space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-zinc-400">Grand Total</span>
-            <span className="text-lg font-bold text-primary" aria-live="polite">{formatRupiah(grandTotal)}</span>
-          </div>
-          <button
-            onClick={handleOpenPayment}
-            disabled={cart.length === 0 || submitting}
-            className="btn-primary w-full"
-            aria-label={submitting ? "Memproses pesanan" : "Buat Pesanan"}
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                Memproses...
-              </>
-            ) : (
-              "Buat Pesanan"
-            )}
-          </button>
-          </div>
-        </div>
+        <CartPanel
+          cart={cart}
+          grandTotal={grandTotal}
+          submitting={submitting}
+          onUpdateQty={updateQty}
+          onRemoveItem={removeItem}
+          onSubmit={handleOpenPayment}
+        />
       </div>
 
       <PaymentModal

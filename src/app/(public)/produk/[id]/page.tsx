@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { Package, ArrowLeft, Phone, MessageCircle } from "lucide-react";
 import { formatRupiah } from "@/lib/format";
@@ -45,8 +46,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
           {/* Image */}
           <div className="aspect-square md:aspect-auto md:h-full bg-surface-container-low relative overflow-hidden">
             {product.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+              <Image
+                src={product.image}
+                alt={product.name}
+                fill
+                priority
+                unoptimized
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover"
+              />
             ) : (
               <div className="w-full h-full min-h-[300px] flex items-center justify-center text-zinc-700">
                 <Package className="h-20 w-20 sm:h-28 sm:w-28" />

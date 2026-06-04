@@ -48,6 +48,13 @@ if (!isDev) {
 
 const nextConfig = {
   output: "standalone",
+  // Image optimization:
+  // - Local images (/uploads/...) otomatis di-optimize (WebP, AVIF, responsive).
+  // - External URLs (https://...) TIDAK di-optimize via `unoptimized` prop di
+  //   komponen <Image>, karena admin bisa input URL eksternal apa pun dan
+  //   kita tidak mau whitelist arbitrary hosts. Trade-off: tidak dapat WebP
+  //   otomatis untuk external, tapi tetap dapat lazy loading + responsive sizes.
+  // - remotePatterns di bawah adalah fallback untuk development seed data.
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },

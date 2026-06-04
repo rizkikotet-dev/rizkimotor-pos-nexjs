@@ -292,6 +292,9 @@ export function ProductForm({ mode, categories, initialData }: ProductFormProps)
           </span>
           {imagePreview ? (
             <div className="relative inline-block">
+              {/* Local-only preview: imagePreview adalah blob: URL dari
+                  URL.createObjectURL(file). next/image tidak support blob URLs,
+                  dan optimization tidak dibutuhkan untuk preview sebelum upload. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={imagePreview} alt="Preview gambar produk" className="w-32 h-32 object-cover rounded-lg border border-surface-outline-variant" />
               <button

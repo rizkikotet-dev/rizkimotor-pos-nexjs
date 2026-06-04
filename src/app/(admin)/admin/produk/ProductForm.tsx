@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Save, Loader2, ArrowLeft, Upload, X, Package, ImageIcon } from "lucide-react";
 import Link from "next/link";
 
@@ -261,13 +262,19 @@ export function ProductForm({ categories, action, initial, submitLabel = "Simpan
           <div className="w-full sm:w-40 h-40 bg-surface-100 rounded-2xl flex items-center justify-center overflow-hidden border-2 border-dashed border-surface-300">
             {imageUrl ? (
               <div className="relative w-full h-full">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={imageUrl} alt="Preview produk" className="w-full h-full object-cover" />
+                <Image
+                  src={imageUrl}
+                  alt="Preview produk"
+                  fill
+                  unoptimized
+                  sizes="160px"
+                  className="object-cover"
+                />
                 <button
                   type="button"
                   onClick={() => setImageUrl(null)}
                   aria-label="Hapus gambar"
-                  className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-lg hover:bg-red-600 transition-colors min-h-[32px] min-w-[32px] focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-lg hover:bg-red-600 transition-colors min-h-[32px] min-w-[32px] focus:outline-none focus:ring-2 focus:ring-red-500 z-10"
                 >
                   <X className="h-3 w-3" aria-hidden="true" />
                 </button>

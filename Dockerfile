@@ -13,9 +13,6 @@ FROM node:20-slim AS builder
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
-# DATABASE_URL dummy untuk Prisma client initialization di build time.
-# Pages yang query DB sudah di-mark force-dynamic, jadi query ini tidak benar-benar
-# dieksekusi. Workflow harus pass real-ish value via --build-arg.
 ARG DATABASE_URL=file:./build.db
 ENV DATABASE_URL=$DATABASE_URL
 
@@ -26,6 +23,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV SKIP_ENV_VALIDATION=1
 
 RUN npx prisma generate
+
+RUN npx prisma db push --skip-generate --accept-data-loss
+
 RUN npm run build
 
 # Stage 3: Production

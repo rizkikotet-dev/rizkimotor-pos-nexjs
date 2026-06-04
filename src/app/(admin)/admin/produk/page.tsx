@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { formatRupiah } from "@/lib/format";
 import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
@@ -93,11 +94,13 @@ export default async function AdminProdukPage({ searchParams }: PageProps) {
                   <tr key={product.id} className="hover:bg-surface-container-high transition-colors">
                     <td className="px-4 py-3">
                       {product.image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                        <Image
                           src={product.image}
                           alt={product.name}
-                          className="w-10 h-10 rounded-lg object-cover border border-surface-outline-variant"
+                          width={40}
+                          height={40}
+                          unoptimized
+                          className="rounded-lg object-cover border border-surface-outline-variant"
                         />
                       ) : (
                         <div className="w-10 h-10 rounded-lg bg-surface-container-high border border-surface-outline-variant flex items-center justify-center">
