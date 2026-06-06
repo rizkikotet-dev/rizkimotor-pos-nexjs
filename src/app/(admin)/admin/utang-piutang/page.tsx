@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { Pagination } from "@/components/ui/Pagination";
 import { formatRupiah } from "@/lib/format";
@@ -55,15 +55,7 @@ export default function UtangPiutangPage() {
   const [paying, setPaying] = useState(false);
   const [detailDebt, setDetailDebt] = useState<Debt | null>(null);
 
-  useEffect(() => {
-    setPage((prev) => (prev !== 1 ? 1 : prev));
-  }, [filter]);
-
-  useEffect(() => {
-    fetchDebts();
-  }, [filter, page, fetchDebts]);
-
-  async function fetchDebts() {
+  const fetchDebts = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), includeStats: "true" });
@@ -78,7 +70,19 @@ export default function UtangPiutangPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [filter, page, pageSize]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setPage((prev) => (prev !== 1 ? 1 : prev));
+    }, 0);
+  }, [filter]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      fetchDebts();
+    }, 0);
+  }, [filter, page, fetchDebts]);
 
   async function handlePay() {
     if (!payingId || !payAmount) return;

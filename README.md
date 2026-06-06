@@ -18,7 +18,22 @@ Aplikasi manajemen toko sparepart motor lengkap dengan fitur **Point of Sale (PO
 - [Panduan Penggunaan](#panduan-penggunaan)
 - [Scripts](#scripts)
 - [CI/CD — Docker ke GHCR & DockerHub](#cicd--docker-ke-ghcr--dockerhub)
+- [Staging Deployment](#staging-deployment)
 - [Troubleshooting](#troubleshooting)
+- [Fitur UI/UX](#fitur-uiux)
+- [Browser Support](#browser-support)
+- [License](#license)
+- [Contact](#contact)
+
+---
+
+## Dokumentasi Tambahan
+
+| File | Deskripsi |
+|------|-----------|
+| [`docs/API.md`](docs/API.md) | Referensi API lengkap dengan request/response schema |
+| [`docs/COMPONENTS.md`](docs/COMPONENTS.md) | Dokumentasi component library (UI primitives, POS, Admin, Public) |
+| [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) | Panduan troubleshooting komprehensif dengan error codes |
 
 ---
 
@@ -767,6 +782,107 @@ docker run -d \
 | `Dockerfile` | Multi-stage build (3 stages) |
 | `docker-compose.yml` | 3 profile orchestration |
 | `docker-entrypoint.sh` | Container startup script |
+
+---
+
+## Staging Deployment
+
+Pipeline otomatis deploy ke **staging environment** setelah CI dan Docker build berhasil.
+
+### Arsitektur Staging
+
+- **Image**: `ghcr.io/rizkikotet-dev/rizkimotor-pos-nexjs:main` (dari Docker workflow)
+- **Runtime**: Docker Compose dengan volume persistensi
+- **Port**: 3001 (host) → 3000 (container)
+- **Database**: SQLite terpisah (`staging.db`)
+- **Healthcheck**: Built-in `/api/health` endpoint
+
+### Trigger
+
+| Event | Action |
+|-------|--------|
+| CI (`quality` job) + Docker (`build` job) selesai sukses di branch `main` | Deploy otomatis ke staging |
+
+### Setup GitHub Environment & Secrets
+
+1. Buka **Settings** → **Environments** → **New environment** → nama: `staging`
+2. Tambahkan **Environment secrets**:
+   - `STAGING_NEXTAUTH_URL` — URL staging (contoh: `https://staging.rizki-motor.example.com`)
+   - `STAGING_NEXTAUTH_SECRET` — Generate dengan `openssl rand -base64 32`
+
+> **Catatan:** Jika secrets tidak diset, staging akan menggunakan default `http://staging.rizki-motor.local:3001` dan secret development.
+
+### Manual Deploy (jika diperlukan)
+
+```bash
+# 1. Pull image terbaru
+docker pull ghcr.io/rizkikotet-dev/rizkimotor-pos-nexjs:main
+
+# 2. Buat docker-compose.staging.yml
+cat << 'EOF' > docker-compose.staging.yml
+services:
+  app:
+    image: ghcr.io/rizkikotet-dev/rizkimotor-pos-nexjs:main
+    container_name: rizki-motor-staging
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - DATABASE_URL=file:/app/data/staging.db
+      - NEXTAUTH_URL=http://staging.rizki-motor.local:3001
+      - NEXTAUTH_SECRET=your-staging-secret
+      - NODE_ENV=production
+    volumes:
+      - staging-data:/app/data
+      - staging-uploads:/app/public/uploads
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  staging-data:
+  staging-uploads:
+EOF
+
+# 3. Deploy
+docker compose -f docker-compose.staging.yml up -d --remove-orphans
+
+# 4. Verifikasi
+docker compose -f docker-compose.staging.yml logs -f
+```
+
+### Smoke Tests
+
+Setelah deploy, jalankan smoke test untuk memverifikasi staging:
+
+```bash
+# Bash version (Linux/macOS/WSL)
+./scripts/smoke-test.sh http://localhost:3001
+
+# Node.js version (cross-platform)
+node scripts/smoke-test.mjs http://localhost:3001
+```
+
+**Test yang dijalankan:**
+1. **Health check** — `/api/health` mengembalikan `status: "healthy"` (retry 10x)
+2. **Main page** — Beranda memuat konten "RIZKI MOTOR"
+3. **Login page** — Halaman login accessible
+4. **API routes** — Endpoint produk, kategori, settings merespons
+5. **Static assets** — CSS/JS bundle accessible
+6. **HTML structure** — Valid DOCTYPE
+
+### File Terkait Staging
+
+| File | Keterangan |
+|------|------------|
+| `.github/workflows/cd.yml` | CD workflow (deploy + smoke test) |
+| `scripts/smoke-test.sh` | Bash smoke test script |
+| `scripts/smoke-test.mjs` | Node.js smoke test script |
+| `src/app/api/health/route.ts` | Health check endpoint |
+| `docker-compose.staging.yml` | Generated di runtime CD |
 
 ---
 

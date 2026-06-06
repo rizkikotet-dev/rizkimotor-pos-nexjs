@@ -45,9 +45,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const r = theme === "system" ? getSystemPref() : theme;
-    setResolved(r);
-    applyTheme(r);
-    setMounted(true);
+    setTimeout(() => {
+      setResolved(r);
+      applyTheme(r);
+      setMounted(true);
+    }, 0);
   }, [theme]);
 
   useEffect(() => {
