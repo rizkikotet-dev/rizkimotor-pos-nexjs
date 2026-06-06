@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+/* Fonts dimuat via next/font (self-hosted, no FOUT, no CLS). */
 
 @tailwind base;
 @tailwind components;
@@ -91,9 +91,10 @@
 
 @layer base {
   :root {
-    --font-sans: "Geist", system-ui, -apple-system, sans-serif;
-    --font-heading: "Plus Jakarta Sans", var(--font-sans);
-    --font-mono: "Geist Mono", ui-monospace, monospace;
+    /* Self-hosted via next/font. Falls back to platform system fonts if needed. */
+    --font-sans: var(--font-geist), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-heading: var(--font-jakarta), var(--font-sans);
+    --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
     --safe-area-bottom: env(safe-area-inset-bottom, 0px);
     --safe-area-top: env(safe-area-inset-top, 0px);
 
@@ -235,6 +236,14 @@
     -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: transparent;
     font-feature-settings: "cv11", "ss01", "ss03";
+  }
+
+  /* Mobile UX: prevent double-tap zoom delay pada tombol/links. Aman
+     karena semua UI control di project ini sudah 44x44px+. */
+  button,
+  a,
+  [role="button"] {
+    touch-action: manipulation;
   }
 
   /* Global border color — uses the OUTLINE-VARIANT (faint) so all

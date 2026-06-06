@@ -1,36 +1,46 @@
 // Utilitas format Rupiah & tanggal Indonesia
+//
+// Intl.NumberFormat dan Intl.DateTimeFormat cukup mahal untuk dibuat.
+// Kita cache instance di module scope supaya tidak di-instantiate
+// ulang setiap kali formatRupiah dipanggil (dipanggil puluhan kali
+// per render halaman POS, katalog, dll).
+const idIDR = new Intl.NumberFormat("id-ID", {
+  style: "currency",
+  currency: "IDR",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
+const idNumber = new Intl.NumberFormat("id-ID");
+const idDate = new Intl.DateTimeFormat("id-ID", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+});
+const idDateTime = new Intl.DateTimeFormat("id-ID", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
 export function formatRupiah(amount: number): string {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
+  return idIDR.format(amount);
 }
 
 export function formatRupiahShort(amount: number): string {
   // Rp 50.000 (lebih ringkas, tanpa "Rp" prefix double)
-  return "Rp " + new Intl.NumberFormat("id-ID").format(amount);
+  return "Rp " + idNumber.format(amount);
 }
 
 export function formatDate(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;
-  return new Intl.DateTimeFormat("id-ID", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(d);
+  return idDate.format(d);
 }
 
 export function formatDateTime(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;
-  return new Intl.DateTimeFormat("id-ID", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(d);
+  return idDateTime.format(d);
 }
 
 export function slugify(text: string): string {

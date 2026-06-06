@@ -1,10 +1,28 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { caseInsensitiveSearch } from "@/lib/search";
 import { ProductCard } from "@/components/public/ProductCard";
 import { Search, X, SlidersHorizontal } from "lucide-react";
 import { FadeIn } from "@/components/ui/FadeIn";
+import type { Metadata } from "next";
+
+const SITE_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Katalog Produk",
+  description:
+    "Jelajahi katalog lengkap sparepart motor di Rizki Motor. Filter berdasarkan kategori, cari berdasarkan nama atau SKU. Stok dan harga selalu terkini.",
+  alternates: { canonical: "/produk" },
+  openGraph: {
+    title: "Katalog Produk — Rizki Motor",
+    description:
+      "Jelajahi katalog lengkap sparepart motor di Rizki Motor. Filter berdasarkan kategori, cari berdasarkan nama atau SKU.",
+    type: "website",
+    url: `${SITE_URL}/produk`,
+  },
+};
 
 interface PageProps {
   searchParams: Promise<{ category?: string; q?: string }>;
@@ -21,15 +39,10 @@ export default async function ProductListPage({ searchParams }: PageProps) {
       where: {
         active: true,
         ...(categoryId ? { categoryId } : {}),
-        ...(query
-          ? {
-              OR: [
-                { name: { contains: query } },
-                { sku: { contains: query } },
-                { description: { contains: query } },
-              ],
-            }
-          : {}),
+        // mode: "insensitive" supaya konsisten antara dev (SQLite) dan
+        // production (PostgreSQL di Vercel). caseInsensitiveSearch memilih
+        // mode hanya untuk PostgreSQL (SQLite LIKE sudah case-insensitive).
+        ...caseInsensitiveSearch(query, ["name", "sku", "description"]),
       },
       orderBy: [{ stock: "asc" }, { createdAt: "desc" }],
       include: { category: true },

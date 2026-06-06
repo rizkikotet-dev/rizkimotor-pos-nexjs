@@ -43,6 +43,9 @@ export async function PublicHeader() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  // Prefetch default true, eksplisit untuk menunjukkan
+                  // intent dan agar dapat di-tuning di kemudian hari.
+                  prefetch
                   className="nav-item-hover px-3 py-1.5 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary/40 min-h-[36px]"
                 >
                   {item.label}

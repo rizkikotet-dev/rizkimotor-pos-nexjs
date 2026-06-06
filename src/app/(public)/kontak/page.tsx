@@ -1,14 +1,43 @@
+import type { Metadata } from "next";
 import { getSettings } from "@/lib/settings";
 import { MapPin, Phone, Clock, Wrench } from "lucide-react";
 import { FadeIn } from "@/components/ui/FadeIn";
+import { JsonLd, buildLocalBusiness, buildBreadcrumb } from "@/components/StructuredData";
+
+const SITE_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Kontak",
+  description:
+    "Hubungi Rizki Motor untuk konsultasi sparepart motor. Temukan alamat toko, nomor telepon, WhatsApp, dan jam operasional. Kami siap membantu menemukan part yang tepat.",
+  alternates: { canonical: "/kontak" },
+  openGraph: {
+    title: "Kontak Rizki Motor",
+    description: "Alamat, telepon, WhatsApp, dan jam operasional toko sparepart motor kami.",
+    type: "website",
+    url: `${SITE_URL}/kontak`,
+  },
+};
 
 export default async function KontakPage() {
   const settings = await getSettings();
 
+  // Structured data untuk Google: informasi toko + breadcrumb.
+  // Memungkinkan Google menampilkan jam buka, telepon, dan alamat
+  // langsung di halaman hasil pencarian.
+  const ld = [
+    buildLocalBusiness(settings, SITE_URL),
+    buildBreadcrumb(SITE_URL, [
+      { name: "Beranda", url: "/" },
+      { name: "Kontak", url: "/kontak" },
+    ]),
+  ];
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
+      <JsonLd data={ld} />
       <FadeIn>
         <div className="max-w-2xl mx-auto text-center mb-12">
         <div className="inline-flex items-center justify-center w-10 h-10 bg-primary/10 rounded-lg mb-4 border border-primary/20">

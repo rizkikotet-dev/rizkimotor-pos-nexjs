@@ -77,10 +77,13 @@ export async function POST(req: NextRequest) {
       const storeOverrides = body.store || {};
       for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {
         let finalValue: string = value;
-        if (key === "storeName" && storeOverrides.name) finalValue = storeOverrides.name;
-        else if (key === "storeTagline" && storeOverrides.tagline) finalValue = storeOverrides.tagline;
-        else if (key === "storePhone" && storeOverrides.phone) finalValue = storeOverrides.phone;
-        else if (key === "storeAddress" && storeOverrides.address) finalValue = storeOverrides.address;
+        // Kunci pakai dot-notation ("store.name") sesuai DEFAULT_SETTINGS.
+        // Sebelumnya bug: dibandingkan dengan "storeName" (tanpa titik) sehingga
+        // override dari setup wizard tidak pernah diterapkan.
+        if (key === "store.name" && storeOverrides.name) finalValue = storeOverrides.name;
+        else if (key === "store.tagline" && storeOverrides.tagline) finalValue = storeOverrides.tagline;
+        else if (key === "store.phone" && storeOverrides.phone) finalValue = storeOverrides.phone;
+        else if (key === "store.address" && storeOverrides.address) finalValue = storeOverrides.address;
         await prisma.setting.create({ data: { key, value: finalValue } });
       }
       results.push(`✅ ${Object.keys(DEFAULT_SETTINGS).length} pengaturan default dimuat.`);

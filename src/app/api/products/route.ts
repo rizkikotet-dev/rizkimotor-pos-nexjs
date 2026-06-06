@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/auth";
 import { withErrorHandler } from "@/lib/api-error";
+import { caseInsensitiveSearch } from "@/lib/search";
 import { z } from "zod";
 
 const createSchema = z.object({
@@ -31,11 +32,9 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     where: {
       active: true,
       ...(categoryId ? { categoryId: parseInt(categoryId) } : {}),
-      ...(q
-        ? {
-            OR: [{ name: { contains: q } }, { sku: { contains: q } }],
-          }
-        : {}),
+      // caseInsensitiveSearch memilih mode "insensitive" hanya untuk
+      // PostgreSQL (di SQLite, LIKE sudah case-insensitive untuk ASCII).
+      ...caseInsensitiveSearch(q, ["name", "sku"]),
     },
     include: { category: true },
     orderBy: { name: "asc" },

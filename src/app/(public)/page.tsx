@@ -1,11 +1,22 @@
 import Link from "next/link";
 import { ArrowRight, ShieldCheck, Truck, Tag, Zap } from "lucide-react";
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { ProductCard } from "@/components/public/ProductCard";
 import { FadeIn } from "@/components/ui/FadeIn";
+import { JsonLd, buildLocalBusiness, buildBreadcrumb } from "@/components/StructuredData";
+
+const SITE_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Beranda",
+  description:
+    "Rizki Motor — toko sparepart alat-alat sepeda motor terlengkap. Katalog produk, harga bersaing, dan ketersediaan stok terkini. Belanja mudah, bayar cepat, struk digital.",
+  alternates: { canonical: "/" },
+};
 
 export default async function HomePage() {
   const settings = await getSettings();
@@ -20,8 +31,16 @@ export default async function HomePage() {
     prisma.product.count({ where: { active: true } }),
   ]);
 
+  // Structured data: store info + breadcrumb. Google rich results
+  // dapat menampilkan jam buka, telepon, dan harga di SERP.
+  const ld = [
+    buildLocalBusiness(settings, SITE_URL),
+    buildBreadcrumb(SITE_URL, [{ name: "Beranda", url: "/" }]),
+  ];
+
   return (
     <div>
+      <JsonLd data={ld} />
       <FadeIn direction="none">
       <section className="relative bg-surface-base border-b border-surface-outline-variant overflow-hidden" aria-labelledby="hero-heading">
         <div className="absolute inset-0 surface-grid opacity-40 dark:opacity-50" aria-hidden="true" />

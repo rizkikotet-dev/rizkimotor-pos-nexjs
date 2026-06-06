@@ -1,7 +1,20 @@
+import type { Metadata } from "next";
 import { Wrench, Shield, Clock, Award } from "lucide-react";
 
-export const metadata = {
-  title: "Tentang Kami — RIZKI MOTOR",
+const SITE_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
+
+export const metadata: Metadata = {
+  title: "Tentang Kami",
+  description:
+    "Kenali Rizki Motor — toko sparepart motor terpercaya sejak 2015. Komitmen kami: produk berkualitas, harga bersaing, dan stok lengkap untuk mekanik dan bengkel di seluruh Indonesia.",
+  alternates: { canonical: "/tentang" },
+  openGraph: {
+    title: "Tentang Rizki Motor",
+    description:
+      "Toko sparepart motor terpercaya sejak 2015. Kualitas terjamin, harga bersaing, stok lengkap.",
+    type: "website",
+    url: `${SITE_URL}/tentang`,
+  },
 };
 
 export default function TentangPage() {

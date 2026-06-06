@@ -1,12 +1,62 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { Package, ArrowLeft, Phone, MessageCircle } from "lucide-react";
 import { formatRupiah } from "@/lib/format";
 import { getSettings } from "@/lib/settings";
+import { JsonLd, buildProductJsonLd, buildBreadcrumb } from "@/components/StructuredData";
+
+const SITE_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
 
 export const dynamic = "force-dynamic";
+
+// Per-halaman metadata (title, description, OG) untuk SEO optimal.
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id: idStr } = await params;
+  const id = parseInt(idStr);
+  if (isNaN(id)) return { title: "Produk tidak ditemukan" };
+
+  const product = await prisma.product.findUnique({
+    where: { id },
+    select: {
+      name: true,
+      description: true,
+      image: true,
+      price: true,
+      stock: true,
+      active: true,
+    },
+  });
+  if (!product || !product.active) {
+    // Page returns 404 jika product tidak aktif, jadi tidak ada
+    // metadata yang perlu di-generate.
+    return { title: "Produk tidak ditemukan" };
+  }
+
+  const description =
+    product.description?.slice(0, 160) ||
+    `${product.name} — ${formatRupiah(product.price)}. ${product.stock > 0 ? "Tersedia" : "Stok habis"}. Sparepart motor berkualitas dari Rizki Motor.`;
+
+  return {
+    title: product.name,
+    description,
+    alternates: { canonical: `/produk/${id}` },
+    openGraph: {
+      title: product.name,
+      description,
+      type: "website",
+      images: product.image ? [{ url: product.image }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name,
+      description,
+      images: product.image ? [product.image] : undefined,
+    },
+  };
+}
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -31,8 +81,19 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const phone = settings["store.phone"]?.replace(/[^0-9]/g, "") || "6281234567890";
   const waNumber = phone.startsWith("62") ? phone : `62${phone.replace(/^0/, "")}`;
 
+  // Structured data: Product + breadcrumb untuk rich results Google.
+  const ld = [
+    buildProductJsonLd(product, SITE_URL),
+    buildBreadcrumb(SITE_URL, [
+      { name: "Beranda", url: "/" },
+      { name: "Produk", url: "/produk" },
+      { name: product.name, url: `/produk/${product.id}` },
+    ]),
+  ];
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
+      <JsonLd data={ld} />
       <Link
         href="/produk"
         className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-primary mb-6 transition-colors group"

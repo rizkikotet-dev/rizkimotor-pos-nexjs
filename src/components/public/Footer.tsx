@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Wrench, MapPin, Phone, Mail, Globe } from "lucide-react";
 import { getSettings } from "@/lib/settings";
 
@@ -10,7 +11,11 @@ export async function PublicFooter() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-6">
           <div className="sm:col-span-2 lg:col-span-5">
-            <div className="flex items-center gap-2.5 mb-4">
+            <Link
+              href="/"
+              className="flex items-center gap-2.5 mb-4 focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-md -ml-1 px-1"
+              aria-label={`${s["store.name"]} - Beranda`}
+            >
               <div className="bg-primary text-surface-base p-1.5 rounded-lg">
                 <Wrench className="h-4 w-4" aria-hidden="true" />
               </div>
@@ -18,7 +23,7 @@ export async function PublicFooter() {
                 <div className="font-bold text-zinc-100 text-sm tracking-tight">{s["store.name"]}</div>
                 <div className="text-[10px] text-zinc-100/70 font-mono uppercase tracking-widest">{s["store.tagline"]}</div>
               </div>
-            </div>
+            </Link>
             <p className="text-sm text-zinc-300 leading-relaxed max-w-xs">
               Solusi terpercaya untuk segala kebutuhan alat-alat sepeda motor Anda.
             </p>
@@ -34,12 +39,13 @@ export async function PublicFooter() {
                 { href: "/kontak", label: "Kontak" },
               ].map((item) => (
                 <li key={item.href}>
-                  <a
+                  <Link
                     href={item.href}
+                    prefetch
                     className="nav-item-hover inline-block px-2 py-1 -mx-2 rounded-md text-zinc-400 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
                   >
                     {item.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

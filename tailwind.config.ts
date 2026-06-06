@@ -116,10 +116,11 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['"Geist"', "system-ui", "-apple-system", "sans-serif"],
-        mono: ['"Geist Mono"', "ui-monospace", "monospace"],
-        display: ['"Geist"', "system-ui", "sans-serif"],
-        heading: ['"Plus Jakarta Sans"', '"Geist"', "system-ui", "sans-serif"],
+        // Bound to CSS variables injected by next/font in app/layout.tsx
+        sans: ['var(--font-geist)', "system-ui", "-apple-system", "sans-serif"],
+        mono: ['var(--font-geist-mono)', "ui-monospace", "monospace"],
+        display: ['var(--font-geist)', "system-ui", "sans-serif"],
+        heading: ['var(--font-jakarta)', 'var(--font-geist)', "system-ui", "sans-serif"],
       },
       borderRadius: {
         sm: "6px",

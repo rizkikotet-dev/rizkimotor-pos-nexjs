@@ -62,7 +62,22 @@ const nextConfig = {
       { protocol: "https", hostname: "placehold.co" },
     ],
     domains: [],
+    // Format modern lebih kecil. Next.js otomatis negosiasi ke WebP/AVIF
+    // ketika browser support. localPlaceholder tetap JPEG fallback.
+    formats: ["image/avif", "image/webp"],
+    // Minimum timeout untuk fetch gambar external agar tidak menggantung
+    // request bila origin lambat. Default Next.js cukup tinggi (10s).
+    minimumCacheTTL: 60,
   },
+  // Compression level untuk response. Default 6, naikkan sedikit untuk
+  // payload teks besar (HTML, JSON API responses).
+  compress: true,
+  // Production source maps tidak di-bundle (hemat ~1MB). Set true untuk debug.
+  productionBrowserSourceMaps: false,
+  // Matikan x-powered-by header (sedikit info disclosure).
+  poweredByHeader: false,
+  // Transpile packages ESM yang Next.js tidak otomatis transpile.
+  transpilePackages: [],
   async headers() {
     return [
       {
