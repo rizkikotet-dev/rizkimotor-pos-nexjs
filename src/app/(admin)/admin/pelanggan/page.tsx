@@ -48,11 +48,7 @@ export default function PelangganPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    fetchCustomers();
-  }, [page]);
-
-  async function fetchCustomers() {
+  const fetchCustomers = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
@@ -65,7 +61,11 @@ export default function PelangganPage() {
     } finally {
       setLoading(false);
     }
-  }
+  };
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [page, fetchCustomers]);
 
   async function handleDelete() {
     if (!deleteId) return;

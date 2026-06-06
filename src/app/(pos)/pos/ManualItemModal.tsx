@@ -17,10 +17,12 @@ export function ManualItemModal({ open, onClose, onAdd }: ManualItemModalProps) 
 
   useEffect(() => {
     if (open) {
-      setName("");
-      setPrice("");
-      setQuantity("1");
-      setTimeout(() => nameRef.current?.focus(), 100);
+      setTimeout(() => {
+        setName("");
+        setPrice("");
+        setQuantity("1");
+        nameRef.current?.focus();
+      }, 0);
     }
   }, [open]);
 

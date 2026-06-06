@@ -45,13 +45,15 @@ export function PaymentModal({ open, onClose, onConfirm, grandTotal, submitting,
 
   useEffect(() => {
     if (open) {
-      setInputValue("");
-      setPaymentMethod(PaymentMethod.TUNAI);
-      setSelectedCustomer(null);
-      setIsDebt(false);
-      setShowCustomerList(false);
-      setCustomerSearch("");
-      setTimeout(() => inputRef.current?.focus(), 100);
+      setTimeout(() => {
+        setInputValue("");
+        setPaymentMethod(PaymentMethod.TUNAI);
+        setSelectedCustomer(null);
+        setIsDebt(false);
+        setShowCustomerList(false);
+        setCustomerSearch("");
+        inputRef.current?.focus();
+      }, 0);
     }
   }, [open]);
 

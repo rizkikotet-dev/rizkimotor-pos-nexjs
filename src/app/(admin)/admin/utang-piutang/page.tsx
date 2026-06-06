@@ -56,12 +56,12 @@ export default function UtangPiutangPage() {
   const [detailDebt, setDetailDebt] = useState<Debt | null>(null);
 
   useEffect(() => {
-    setPage(1);
+    setPage((prev) => (prev !== 1 ? 1 : prev));
   }, [filter]);
 
   useEffect(() => {
     fetchDebts();
-  }, [filter, page]);
+  }, [filter, page, fetchDebts]);
 
   async function fetchDebts() {
     setLoading(true);

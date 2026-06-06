@@ -22,6 +22,17 @@
 .DS_Store
 *.pem
 
+# temporary files
+*.log
+*.tmp
+*.html
+c.txt
+check-configs.js
+
+# hermes/agent artifacts
+.agents/
+.impeccable/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

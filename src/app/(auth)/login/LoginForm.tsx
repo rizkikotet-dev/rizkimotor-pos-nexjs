@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Wrench, AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
 import { UserRole } from "@/lib/constants";
 
@@ -155,9 +156,9 @@ export function LoginForm() {
         </div>
 
         <p className="text-center text-xs text-zinc-600 mt-3">
-          <a href="/" className="hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-sm">
+          <Link href="/" className="hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-sm">
             &larr; Kembali ke katalog
-          </a>
+          </Link>
         </p>
       </div>
     </div>
