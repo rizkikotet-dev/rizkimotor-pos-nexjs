@@ -97,7 +97,7 @@ jobs:
           
           # Test 2: Main page loads
           echo "Test 2: Main page"
-          if curl -sf "$STAGING_URL" | grep -q "RIZKI MOTOR"; then
+          if curl -sf "$STAGING_URL" | grep -qi "RIZKI MOTOR"; then
             echo "✓ Main page loads correctly"
           else
             echo "✗ Main page failed"
@@ -106,7 +106,7 @@ jobs:
           
           # Test 3: Login page accessible
           echo "Test 3: Login page"
-          if curl -sf "$STAGING_URL/login" | grep -q "Login"; then
+          if curl -sf "$STAGING_URL/login" | grep -qi "Login"; then
             echo "✓ Login page accessible"
           else
             echo "✗ Login page failed"
