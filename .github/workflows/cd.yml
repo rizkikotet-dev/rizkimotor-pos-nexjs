@@ -14,7 +14,6 @@ permissions:
 
 env:
   STAGING_IMAGE: ghcr.io/rizkikotet-dev/rizkimotor-pos-nexjs:main
-  STAGING_COMPOSE_FILE: docker-compose.staging.yml
 
 jobs:
   deploy-staging:
@@ -28,36 +27,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download docker-compose.staging.yml
-        run: |
-          cat << 'EOF' > docker-compose.staging.yml
-services:
-  app:
-    image: ${{ env.STAGING_IMAGE }}
-    container_name: rizki-motor-staging
-    restart: unless-stopped
-    ports:
-      - "3001:3000"
-    environment:
-      - DATABASE_URL=file:/app/data/staging.db
-      - NEXTAUTH_URL=${{ secrets.STAGING_NEXTAUTH_URL || 'http://staging.rizki-motor.local:3001' }}
-      - NEXTAUTH_SECRET=${{ secrets.STAGING_NEXTAUTH_SECRET || 'staging-fallback-secret-do-not-use-in-prod' }}
-      - NODE_ENV=production
-    volumes:
-      - staging-data:/app/data
-      - staging-uploads:/app/public/uploads
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-
-volumes:
-  staging-data:
-  staging-uploads:
-          EOF
-
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
@@ -68,7 +37,7 @@ volumes:
       - name: Pull staging image
         run: docker pull ${{ env.STAGING_IMAGE }}
 
-      - name: Deploy to staging (docker compose)
+      - name: Deploy to staging
         run: |
           docker compose -f docker-compose.staging.yml up -d --remove-orphans
           echo "Waiting for container to start..."
@@ -76,75 +45,62 @@ volumes:
 
       - name: Run smoke tests
         run: |
-          STAGING_URL="http://localhost:3001"
-          echo "Running smoke tests against $STAGING_URL"
-          
-          # Wait for app to be fully ready
+          URL="http://localhost:3001"
+          echo "Running smoke tests against $URL"
+
+          # Wait for health check
           echo "Waiting for app to be ready..."
           for i in {1..30}; do
-            if curl -sf "$STAGING_URL/api/health" | grep -q '"healthy"'; then
+            if curl -sf "$URL/api/health" | grep -q '"healthy"'; then
               echo "✓ App is healthy"
               break
             fi
-            echo "  Attempt $i/30 - waiting..."
+            echo "  Attempt $i/30..."
             sleep 5
           done
-          
-          # Extra settle time after health check passes
+
           sleep 3
-          
-          # Test 1: Main page loads
+
+          # Main page
           echo "Test 1: Main page"
           for i in {1..5}; do
-            if curl -sf "$STAGING_URL" | grep -qi "RIZKI MOTOR"; then
-              echo "✓ Main page loads correctly"
+            if curl -sf "$URL" | grep -qi "RIZKI MOTOR"; then
+              echo "✓ Main page loads"
               break
             fi
             echo "  Retry $i/5..."
             sleep 3
           done
-          # Verify it actually passed
-          if ! curl -sf "$STAGING_URL" | grep -qi "RIZKI MOTOR"; then
-            echo "✗ Main page failed after retries"
+          if ! curl -sf "$URL" | grep -qi "RIZKI MOTOR"; then
+            echo "✗ Main page failed"
             docker compose -f docker-compose.staging.yml logs --tail=30
             exit 1
           fi
-          
-          # Test 2: Login page accessible
+
+          # Login page
           echo "Test 2: Login page"
-          if curl -sf "$STAGING_URL/login" | grep -qi "Login"; then
+          if curl -sf "$URL/login" | grep -qi "Login"; then
             echo "✓ Login page accessible"
           else
             echo "✗ Login page failed"
             exit 1
           fi
-          
-          # Test 3: API routes respond
+
+          # API routes
           echo "Test 3: API routes"
-          if curl -sf "$STAGING_URL/api/products" > /dev/null 2>&1; then
+          if curl -sf "$URL/api/products" > /dev/null 2>&1; then
             echo "✓ API routes respond"
           else
             echo "✗ API routes failed"
             exit 1
           fi
-          
+
           echo "All smoke tests passed! ✓"
 
-      - name: Notify staging deployment status
-        if: always()
-        run: |
-          if [ "${{ job.status }}" == "success" ]; then
-            echo "✅ Staging deployment successful"
-            echo "Staging URL: ${{ secrets.STAGING_NEXTAUTH_URL || 'http://staging.rizki-motor.local:3001' }}"
-          else
-            echo "❌ Staging deployment failed"
-            echo "--- Container status ---"
-            docker compose -f docker-compose.staging.yml ps
-            echo "--- Container logs ---"
-            docker compose -f docker-compose.staging.yml logs --tail=50
-          fi
+      - name: Show logs on failure
+        if: failure()
+        run: docker compose -f docker-compose.staging.yml logs --tail=50
 
-  # Optional: Cleanup old staging images
   cleanup:
     name: Cleanup old images
     needs: deploy-staging
@@ -152,5 +108,4 @@ volumes:
     runs-on: ubuntu-latest
     steps:
       - name: Remove unused images
-        run: |
-          docker image prune -f --filter "until=24h" || true
+        run: docker image prune -f --filter "until=24h" || true
