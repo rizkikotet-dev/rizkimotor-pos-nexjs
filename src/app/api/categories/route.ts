@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/auth";
 import { z } from "zod";
-import { slugify } from "@/lib/format";
+import { generateUniqueSlug } from "@/lib/slug";
 
 const createSchema = z.object({ name: z.string().min(1).max(50) });
 
@@ -21,11 +21,7 @@ export const POST = withAuth(async (req) => {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  let slug = slugify(parsed.data.name);
-  let i = 1;
-  while (await prisma.category.findUnique({ where: { slug } })) {
-    slug = `${slugify(parsed.data.name)}-${i++}`;
-  }
+  const slug = await generateUniqueSlug(parsed.data.name);
 
   const cat = await prisma.category.create({
     data: { name: parsed.data.name, slug, isDefault: false },

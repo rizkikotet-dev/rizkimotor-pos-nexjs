@@ -4,7 +4,7 @@
 export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 100;
 
-export interface PaginationParams {
+interface PaginationParams {
   page: number;
   pageSize: number;
   skip: number;
@@ -18,7 +18,7 @@ export interface PaginationMeta {
   totalPages: number;
 }
 
-export interface PaginatedResponse<T> {
+interface PaginatedResponse<T> {
   data: T[];
   pagination: PaginationMeta;
 }
