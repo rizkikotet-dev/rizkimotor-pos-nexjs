@@ -48,10 +48,10 @@ jobs:
                 - staging-uploads:/app/public/uploads
               healthcheck:
                 test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
-                interval: 30s
-                timeout: 10s
-                retries: 3
-                start_period: 15s
+                interval: 10s
+                timeout: 5s
+                retries: 10
+                start_period: 30s
 
           volumes:
             staging-data:
@@ -71,41 +71,47 @@ jobs:
       - name: Deploy to staging (docker compose)
         run: |
           docker compose -f docker-compose.staging.yml up -d --remove-orphans
-          echo "Waiting for staging to be healthy..."
-          for i in {1..30}; do
-            if docker compose -f docker-compose.staging.yml ps | grep -q "healthy"; then
-              echo "Staging is healthy!"
-              break
-            fi
-            sleep 5
-          done
+          echo "Waiting for container to start..."
+          sleep 10
 
       - name: Run smoke tests
         run: |
           STAGING_URL="http://localhost:3001"
           echo "Running smoke tests against $STAGING_URL"
           
-          # Test 1: Health check endpoint
-          echo "Test 1: Health check"
-          for i in {1..10}; do
-            if curl -sf "$STAGING_URL/api/health" > /dev/null 2>&1; then
-              echo "✓ Health check passed"
+          # Wait for app to be fully ready
+          echo "Waiting for app to be ready..."
+          for i in {1..30}; do
+            if curl -sf "$STAGING_URL/api/health" | grep -q '"healthy"'; then
+              echo "✓ App is healthy"
               break
             fi
-            sleep 3
+            echo "  Attempt $i/30 - waiting..."
+            sleep 5
           done
           
-          # Test 2: Main page loads
-          echo "Test 2: Main page"
-          if curl -sf "$STAGING_URL" | grep -qi "RIZKI MOTOR"; then
-            echo "✓ Main page loads correctly"
-          else
-            echo "✗ Main page failed"
+          # Extra settle time after health check passes
+          sleep 3
+          
+          # Test 1: Main page loads
+          echo "Test 1: Main page"
+          for i in {1..5}; do
+            if curl -sf "$STAGING_URL" | grep -qi "RIZKI MOTOR"; then
+              echo "✓ Main page loads correctly"
+              break
+            fi
+            echo "  Retry $i/5..."
+            sleep 3
+          done
+          # Verify it actually passed
+          if ! curl -sf "$STAGING_URL" | grep -qi "RIZKI MOTOR"; then
+            echo "✗ Main page failed after retries"
+            docker compose -f docker-compose.staging.yml logs --tail=30
             exit 1
           fi
           
-          # Test 3: Login page accessible
-          echo "Test 3: Login page"
+          # Test 2: Login page accessible
+          echo "Test 2: Login page"
           if curl -sf "$STAGING_URL/login" | grep -qi "Login"; then
             echo "✓ Login page accessible"
           else
@@ -113,8 +119,8 @@ jobs:
             exit 1
           fi
           
-          # Test 4: API routes respond
-          echo "Test 4: API routes"
+          # Test 3: API routes respond
+          echo "Test 3: API routes"
           if curl -sf "$STAGING_URL/api/products" > /dev/null 2>&1; then
             echo "✓ API routes respond"
           else
@@ -132,7 +138,9 @@ jobs:
             echo "Staging URL: ${{ secrets.STAGING_NEXTAUTH_URL || 'http://staging.rizki-motor.local:3001' }}"
           else
             echo "❌ Staging deployment failed"
-            # Show logs for debugging
+            echo "--- Container status ---"
+            docker compose -f docker-compose.staging.yml ps
+            echo "--- Container logs ---"
             docker compose -f docker-compose.staging.yml logs --tail=50
           fi
 
