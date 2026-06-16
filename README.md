@@ -17,23 +17,12 @@ Aplikasi manajemen toko sparepart motor lengkap dengan fitur **Point of Sale (PO
 - [Environment Variables](#environment-variables)
 - [Panduan Penggunaan](#panduan-penggunaan)
 - [Scripts](#scripts)
-- [CI/CD — Docker ke GHCR & DockerHub](#cicd--docker-ke-ghcr--dockerhub)
+- [CI/CD](#cicd)
 - [Staging Deployment](#staging-deployment)
 - [Troubleshooting](#troubleshooting)
 - [Fitur UI/UX](#fitur-uiux)
 - [Browser Support](#browser-support)
 - [License](#license)
-- [Contact](#contact)
-
----
-
-## Dokumentasi Tambahan
-
-| File | Deskripsi |
-|------|-----------|
-| [`docs/API.md`](docs/API.md) | Referensi API lengkap dengan request/response schema |
-| [`docs/COMPONENTS.md`](docs/COMPONENTS.md) | Dokumentasi component library (UI primitives, POS, Admin, Public) |
-| [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) | Panduan troubleshooting komprehensif dengan error codes |
 
 ---
 
@@ -45,24 +34,23 @@ Aplikasi manajemen toko sparepart motor lengkap dengan fitur **Point of Sale (PO
 - **Input item manual** — tambah item kustom ke transaksi (jasa, barang tidak terdaftar)
 - Keranjang belanja dengan update qty otomatis
 - Dukungan **harga normal & reseller**
-- Pilih **metode bayar** (Tunai, QRIS, Transfer, Kartu)
+- Pilih **metode bayar** (Tunai, QRIS, Transfer)
 - **Bayar Cepat** — tombol Uang Pas, Rp50rb, Rp100rb, dll.
 - Pilih **pelanggan** saat transaksi
 - Fitur **Bayar Nanti (Utang)** — transaksi kredit ke pelanggan
-- **Proteksi stok** — stok < 3 tidak bisa ditambahkan ke transaksi, badge peringatan
+- **Proteksi stok** — stok < 3 tidak bisa ditambahkan, badge peringatan
 - Kembalian otomatis
 - Cetak struk transaksi
 
 ### 2. Utang & Piutang
-- Daftar semua utang pelanggan dengan filter (Belum Bayar, Sebagian, Lunas)
+- Daftar utang pelanggan dengan filter (Belum Bayar, Sebagian, Lunas)
 - **Detail transaksi** — lihat item yang dibeli
-- **Bayar utang** — catat pembayaran cicilan
-- Badge status pada daftar transaksi (Utang/Sebagian/Lunas)
+- **Bayar utang** — catat pembayaran cicilan (atomic update, anti race condition)
 - Statistik total utang outstanding
 
 ### 3. Manajemen Pelanggan
 - CRUD pelanggan (nama, telepon, alamat, catatan)
-- Pencarian pelanggan
+- Pencarian server-side
 - Pelanggan dengan utang ditandai badge khusus
 - Soft delete (nonaktifkan, bukan hapus permanen)
 
@@ -70,12 +58,12 @@ Aplikasi manajemen toko sparepart motor lengkap dengan fitur **Point of Sale (PO
 - Manajemen produk (CRUD + upload gambar)
 - Tampilan stok menipis dengan badge tiered (Habis, Stok Menipis, Normal)
 - Sorting otomatis: stok menipis tampil paling atas
-- Manajemen kategori
+- Manajemen kategori dengan slug otomatis
 - Manajemen pengguna (Admin & Kasir)
-- Daftar transaksi dengan **badge status utang**
+- Daftar transaksi dengan badge status utang
 - Detail transaksi (item, total, pembayaran)
 - Cetak barcode produk
-- Pengaturan toko (nama, tagline, kontak, alamat)
+- Pengaturan toko (nama, tagline, kontak, alamat, cetak)
 
 ### 5. Katalog Publik
 - Tampilan produk modern dan profesional
@@ -85,11 +73,13 @@ Aplikasi manajemen toko sparepart motor lengkap dengan fitur **Point of Sale (PO
 - Responsive design, dark mode
 
 ### 6. Keamanan
-- Authentication dengan bcrypt
+- Authentication dengan bcrypt + NextAuth.js
 - Role-based access control (ADMIN / KASIR)
-- Protected API routes
+- Protected API routes dengan `withAuth` wrapper
 - Input validation dengan Zod
 - SQL injection prevention (Prisma)
+- Rate limiting pada API
+- CSP headers yang ketat
 
 ---
 
@@ -97,13 +87,14 @@ Aplikasi manajemen toko sparepart motor lengkap dengan fitur **Point of Sale (PO
 
 | Layer | Teknologi |
 |-------|-----------|
-| Framework | Next.js 16 (App Router) |
+| Framework | Next.js 16 (App Router, Turbopack) |
 | Language | TypeScript 5.6 |
 | Database | Prisma ORM + SQLite (dev) / PostgreSQL (production) |
 | Authentication | NextAuth.js 4 |
 | Styling | Tailwind CSS 3.4 |
 | Icons | Lucide React |
 | Validation | Zod |
+| Testing | Vitest |
 | Container | Docker (multi-stage build) |
 | Registry | GHCR & DockerHub |
 
@@ -152,15 +143,11 @@ Aplikasi berjalan di **http://localhost:3000**
 
 ## Docker
 
-Tiga profile Docker untuk kebutuhan berbeda: pull registry, build lokal, dan development hot-reload.
-
 ### Prasyarat
 
 - Docker & Docker Compose v2+
 
-### Profile 1: Pull dari Registry (Production)
-
-Menarik image dari GHCR, cocok untuk production. Tidak perlu build.
+### Quick Start (Pull dari Registry)
 
 ```bash
 # Clone
@@ -182,38 +169,14 @@ docker compose exec app npx tsx prisma/seed.ts
 
 Akses di **http://localhost:3000**
 
-### Profile 2: Build Lokal (Production)
-
-Build image dari Dockerfile lokal, cocok untuk development atau kustomisasi.
+### Profile Lainnya
 
 ```bash
+# Build lokal
 docker compose --profile build up -d --build
 
-# Setup database (pertama kali)
-docker compose --profile build exec app npx prisma db push
-```
-
-### Profile 3: Development (Hot Reload)
-
-Mount source code dengan hot reload. Perubahan kode langsung terlihat tanpa rebuild.
-
-```bash
+# Development (hot reload)
 docker compose --profile dev up -d
-
-# Akses di http://localhost:3000
-```
-
-### Perintah Docker Lainnya
-
-```bash
-# Logs
-docker compose logs -f
-docker compose --profile build logs -f
-
-# Stop
-docker compose down
-docker compose --profile build down
-docker compose --profile dev down
 ```
 
 ### File Docker
@@ -222,6 +185,7 @@ docker compose --profile dev down
 |------|------------|
 | `Dockerfile` | Multi-stage build: `deps` → `builder` → `runner` |
 | `docker-compose.yml` | 3 profile: `app` (pull), `build` (lokal), `dev` (hot-reload) |
+| `docker-compose.staging.yml` | Staging deployment config |
 | `docker-entrypoint.sh` | Entrypoint: prisma generate, db push, lalu start app |
 | `.dockerignore` | File yang di-exclude dari build |
 
@@ -247,23 +211,13 @@ docker compose --profile dev down
 
 #### 1. Buat Database PostgreSQL
 
-Buka [Neon](https://neon.tech) → Create project → Copy connection string:
-
-```
-postgresql://user:pass@ep-xxx.us-east-2.aws.neon.tech/rizkimotor?sslmode=require
-```
+Buka [Neon](https://neon.tech) → Create project → Copy connection string.
 
 #### 2. Import Project ke Vercel
 
-```bash
-# Push repository ke GitHub
-git remote add origin https://github.com/rizkikotet-dev/rizkimotor-pos-nexjs.git
-git push -u origin main
-```
-
 Buka [Vercel Dashboard](https://vercel.com) → **Add New Project** → Import repository.
 
-#### 3. Set Environment Variables di Vercel
+#### 3. Set Environment Variables
 
 Buka project → **Settings** → **Environment Variables** → tambahkan:
 
@@ -274,85 +228,44 @@ Buka project → **Settings** → **Environment Variables** → tambahkan:
 | `NEXTAUTH_SECRET` | Hasil dari `openssl rand -base64 32` |
 | `SKIP_ENV_VALIDATION` | `1` |
 
-> **Catatan:** NEXTAUTH_URL harus diisi domain production Vercel. Untuk production, set juga di **Preview** dan **Development** dengan URL masing-masing.
+#### 4. Build & Deploy
 
-#### 4. Build Settings
+Vercel akan otomatis membaca `vercel.json` dan menjalankan build command yang sudah dikonfigurasi.
 
-Vercel akan otomatis membaca `vercel.json`:
+#### 5. Setup Database
 
-- **Build Command:** `npx prisma generate --schema=prisma/schema.vercel.prisma && (npx prisma db push --schema=prisma/schema.vercel.prisma --skip-generate --accept-data-loss || echo '⚠️  db push skipped — will run at runtime via /api/setup') && next build`
-- **Schema khusus PostgreSQL** — `prisma/schema.vercel.prisma` digunakan, bukan `schema.prisma` (SQLite)
+Jika tabel belum terbentuk, aplikasi akan menampilkan **Setup Wizard** di halaman pertama kali akses. Wizard akan memandu:
 
-> Build command secara otomatis menjalankan `prisma db push` untuk membuat/menyinkronkan tabel database setiap deploy. Jika database belum siap saat build, build tetap lanjut (tidak blocking).
+1. Pilih tipe database (PostgreSQL untuk Vercel)
+2. Inisialisasi database
+3. Buat akun admin
+4. Konfigurasi toko
+5. Selesai → redirect ke login
 
-#### 5. Deploy
+### Catatan Vercel
 
-Klik **Deploy**. Vercel akan build dan deploy aplikasi.
-
-#### 6. Setup Database Production
-
-Database akan otomatis tersinkronisasi saat build berkat `prisma db push` di build command.
-
-**Jika tabel belum terbentuk**, jangan khawatir — aplikasi otomatis mendeteksi database kosong dan menampilkan **Setup Wizard** di halaman pertama kali akses. Wizard akan memandu Anda melalui:
-
-1. **Pilih tipe database** — SQLite (untuk Docker/lokal) atau PostgreSQL (untuk Vercel/production)
-2. **Konfigurasi koneksi** (PostgreSQL) — masukkan connection string jika perlu
-3. **Inisialisasi database** — menjalankan `prisma db push` secara otomatis via `POST /api/setup`
-4. **Buat akun admin** — username, nama, dan password
-5. **Konfigurasi toko** — nama toko, tagline, dan kontak
-6. **Selesai** — redirect ke halaman login
-
-> **Untuk Vercel:** Pilih PostgreSQL. Connection string sudah diset sebagai environment variable `DATABASE_URL` — cukup klik Lanjutkan.
-> **Untuk Docker/lokal:** Pilih SQLite — tanpa setup server database.
-
-> Jika wizard tidak muncul, akses endpoint setup manual:
-> ```bash
-> curl -X POST https://domain-anda.vercel.app/api/setup
-> ```
-
-#### 7. Seed Data (User & Pengaturan Default)
-
-Setelah database siap, isi data awal:
-
-```bash
-curl -X POST https://domain-anda.vercel.app/api/seed \
-  -H "x-allow-seed: 1"
-```
-
-Ini akan membuat:
-
-| Role | Username | Password |
-|------|----------|----------|
-| Admin | `admin` | `admin123` |
-| Kasir | `kasir` | `kasir123` |
-
-Serta pengaturan toko default dan kategori "Umum".
-
-> **Idempotent** — aman dipanggil berulang. Hanya mengisi data jika belum ada.
-
-### Catatan Penting Vercel
-
-- **File upload** tidak bisa disimpan di filesystem Vercel (ephemeral). Untuk production, gunakan cloud storage (Uploadthing, Cloudinary, S3).
-- **SQLite tidak bisa digunakan di Vercel** karena serverless function read-only filesystem. Wajib PostgreSQL.
-- **Prisma schema khusus** (`schema.vercel.prisma`) identik dengan schema utama tapi menggunakan `provider = "postgresql"`.
-- **Database migration** dilakukan manual via `prisma db push` atau `prisma migrate`.
+- **File upload** tidak bisa disimpan di filesystem Vercel. Gunakan cloud storage (Uploadthing, Cloudinary, S3).
+- **SQLite tidak bisa digunakan di Vercel** — wajib PostgreSQL.
+- **Prisma schema khusus** (`schema.vercel.prisma`) digunakan untuk PostgreSQL.
 
 ---
 
 ## Struktur Project
 
 ```
-rizkimotor/
+rizkimotor-pos-nexjs/
 ├── prisma/
 │   ├── schema.prisma              # SQLite (development)
 │   ├── schema.vercel.prisma       # PostgreSQL (Vercel)
 │   └── seed.ts                    # Seed data
 ├── public/
 │   └── uploads/                   # Upload gambar produk
-├── data/                          # Database SQLite (Docker volume)
+├── scripts/
+│   ├── smoke-test.mjs             # Smoke test (Node.js)
+│   └── smoke-test.sh              # Smoke test (Bash)
 ├── src/
 │   ├── app/
-│   │   ├── (admin)/               # Halaman admin (dashboard, produk, dll)
+│   │   ├── (admin)/               # Halaman admin
 │   │   │   └── admin/
 │   │   │       ├── produk/        #   CRUD produk + stok warning
 │   │   │       ├── kategori/      #   CRUD kategori
@@ -367,47 +280,64 @@ rizkimotor/
 │   │   │   └── pos/
 │   │   │       ├── page.tsx       #   Halaman kasir utama
 │   │   │       ├── POSClient.tsx  #   Client component POS
-│   │   │       ├── ProductGrid.tsx#   Grid produk + stok badge
-│   │   │       ├── ProductSearchBar.tsx
 │   │   │       ├── CartPanel.tsx  #   Keranjang belanja
-│   │   │       ├── ManualItemModal.tsx # Input item manual
-│   │   │       ├── PaymentModal.tsx#   Modal pembayaran
+│   │   │       ├── PaymentModal.tsx #  Modal pembayaran
 │   │   │       ├── useCart.ts     #   Hook state keranjang
-│   │   │       ├── types.ts      #   Tipe data POS
 │   │   │       ├── riwayat/      #   Riwayat transaksi
 │   │   │       └── struk/[id]/   #   Cetak struk
 │   │   ├── (public)/             # Katalog publik
-│   │   │   ├── produk/           #   Halaman produk publik
-│   │   │   └── page.tsx          #   Beranda
-│   │   └── api/                  # API routes
-│   │       ├── auth/             #   NextAuth
-│   │       ├── products/         #   CRUD produk
-│   │       ├── categories/       #   CRUD kategori
-│   │       ├── transactions/     #   Transaksi + item manual
-│   │       ├── customers/        #   CRUD pelanggan
-│   │       ├── debts/            #   Utang/piutang
-│   │       ├── users/            #   CRUD pengguna
-│   │       ├── settings/         #   Pengaturan toko
-│   │       ├── setup/            #   Inisialisasi database (POST)
-│   │       └── seed/             #   Seed data default (POST)
+│   │   ├── api/                  # API routes
+│   │   │   ├── auth/             #   NextAuth
+│   │   │   ├── products/         #   CRUD produk
+│   │   │   ├── categories/       #   CRUD kategori
+│   │   │   ├── transactions/     #   Transaksi
+│   │   │   ├── customers/        #   CRUD pelanggan
+│   │   │   ├── debts/            #   Utang/piutang
+│   │   │   ├── users/            #   CRUD pengguna
+│   │   │   ├── settings/         #   Pengaturan toko
+│   │   │   ├── health/           #   Health check
+│   │   │   ├── setup/            #   Inisialisasi database
+│   │   │   ├── seed/             #   Seed data
+│   │   │   └── upload/           #   Upload gambar
+│   │   └── setup/                # Setup wizard page
 │   ├── components/
 │   │   ├── admin/                # Sidebar, header admin
 │   │   ├── pos/                  # Komponen POS
 │   │   ├── public/               # Header, footer, ProductCard
+│   │   ├── setup/                # Setup wizard components
+│   │   │   ├── StepIndicator.tsx
+│   │   │   ├── icons.tsx
+│   │   │   └── types.ts
 │   │   ├── ui/                   # Button, Toast, Pagination, dll
-│   │   └── SetupWizard.tsx       # Setup wizard (auto-redirect saat DB kosong)
+│   │   ├── SetupWizard.tsx       # Setup wizard orchestrator
+│   │   ├── ThemeProvider.tsx
+│   │   ├── ErrorBoundary.tsx
+│   │   └── ...
+│   ├── hooks/
+│   │   ├── useFormSubmit.ts       # Deduplicate loading/error pattern
+│   │   └── useModal.ts           # Deduplicate modal state
 │   ├── lib/
 │   │   ├── auth.ts               # NextAuth config
 │   │   ├── prisma.ts             # Prisma client singleton
-│   │   ├── format.ts             # formatRupiah, formatDate
-│   │   ├── settings.ts           # App settings + getSettings cache
-│   │   └── setup.ts              # checkNeedsSetup — deteksi setup awal
-│   └── types/                    # TypeScript types
+│   │   ├── format.ts             # formatRupiah, formatDate, slugify
+│   │   ├── settings.ts           # App settings + cache
+│   │   ├── setup.ts              # checkNeedsSetup
+│   │   ├── api-helpers.ts        # parseId, invalidId, zodError
+│   │   ├── slug.ts               # generateUniqueSlug
+│   │   ├── constants.ts          # UserRole, PaperSize, PaymentMethod
+│   │   ├── search.ts             # Case-insensitive search
+│   │   ├── pagination.ts         # Pagination helpers
+│   │   ├── rate-limit.ts         # API rate limiting
+│   │   ├── barcode-encode.ts     # Barcode encoding
+│   │   └── __tests__/            # Unit tests
+│   └── types/
+│       ├── models.ts             # Shared domain types
+│       └── next-auth.d.ts        # NextAuth type augmentation
 ├── Dockerfile                    # Multi-stage build
 ├── docker-compose.yml            # 3 profile orchestration
+├── docker-compose.staging.yml    # Staging config
 ├── docker-entrypoint.sh          # Container entrypoint
 ├── vercel.json                   # Vercel config
-├── .env.example
 └── package.json
 ```
 
@@ -440,7 +370,7 @@ rizkimotor/
 |-------|------|------------|
 | id | Int | Primary key |
 | name | String | Unique, nama kategori |
-| slug | String | Unique, URL-friendly |
+| slug | String | Unique, URL-friendly (auto-generated) |
 | isDefault | Boolean | Kategori default (tidak bisa dihapus) |
 
 ### Product
@@ -461,7 +391,7 @@ rizkimotor/
 | Field | Type | Keterangan |
 |-------|------|------------|
 | id | Int | Primary key |
-| invoiceNo | String | Nomor invoice unik |
+| invoiceNo | String | Nomor invoice unik (auto-generated) |
 | userId | Int | Kasir yang melayani |
 | customerId | Int? | Pelanggan (opsional) |
 | total | Int | Total belanja |
@@ -535,7 +465,7 @@ DELETE /api/products/:id
 ### Pelanggan
 
 ```
-GET    /api/customers?q=
+GET    /api/customers?q=&page=1&pageSize=20
 POST   /api/customers
 GET    /api/customers/:id
 PATCH  /api/customers/:id
@@ -545,7 +475,7 @@ DELETE /api/customers/:id
 ### Utang/Piutang
 
 ```
-GET  /api/debts?status=UNPAID|PARTIAL|PAID
+GET  /api/debts?status=UNPAID|PARTIAL|PAID&page=1&pageSize=20
 POST /api/debts
 ```
 
@@ -557,14 +487,56 @@ Bayar utang:
 }
 ```
 
+### Users
+
+```
+GET    /api/users?page=1&pageSize=20
+POST   /api/users
+GET    /api/users/:id
+PUT    /api/users/:id
+DELETE /api/users/:id
+```
+
+### Categories
+
+```
+GET    /api/categories
+POST   /api/categories
+GET    /api/categories/:id
+PUT    /api/categories/:id
+DELETE /api/categories/:id
+```
+
+### Settings
+
+```
+GET    /api/settings
+PATCH  /api/settings
+```
+
+### Health Check
+
+```
+GET /api/health
+```
+
+Response:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2025-01-01T00:00:00.000Z",
+  "version": "0.1.0",
+  "environment": "production"
+}
+```
+
 ### Setup Database
 
 ```
 POST /api/setup
 ```
 
-Menjalankan `prisma db push` untuk membuat tabel database. Body opsional untuk memilih tipe database:
-
+Body opsional:
 ```json
 {
   "type": "postgresql",
@@ -572,65 +544,13 @@ Menjalankan `prisma db push` untuk membuat tabel database. Body opsional untuk m
 }
 ```
 
-| Parameter | Tipe | Default | Deskripsi |
-|-----------|------|---------|-----------|
-| `type` | `"sqlite"` \| `"postgresql"` | `"sqlite"` | Tipe database |
-| `connectionString` | string | `DATABASE_URL` env | Connection string (wajib untuk PostgreSQL) |
-
-Response:
-
-```json
-{
-  "ok": true,
-  "message": "Database initialized successfully",
-  "type": "postgresql",
-  "info": ["📦 Tipe database: PostgreSQL", "✅ DATABASE_URL diperbarui di .env", "✅ Database berhasil diinisialisasi"]
-}
-```
-
-> Endpoint ini memiliki lock untuk mencegah eksekusi ganda per cold start. Aman dipanggil berulang kali.
-
-### Seed Data Default
+### Seed Data
 
 ```
 POST /api/seed
 ```
 
-Mengisi data awal (user admin/kasir, pengaturan toko, kategori default). Panggil **setelah** `/api/setup`.
-
-Body opsional untuk kostumisasi dari Setup Wizard:
-
-```json
-{
-  "admin": { "username": "admin", "name": "Administrator", "password": "admin123" },
-  "store": { "name": "Toko Saya", "tagline": "Murah & Terpercaya", "phone": "08123456789" }
-}
-```
-
-Jika body tidak diberikan, akan menggunakan data default. Header `x-allow-seed: 1` wajib untuk mencegah eksekusi tidak sengaja:
-
-```bash
-curl -X POST https://domain-anda.vercel.app/api/seed \
-  -H "x-allow-seed: 1"
-```
-
-Header `x-allow-seed: 1` wajib untuk mencegah eksekusi tidak sengaja.
-
-Response:
-
-```json
-{
-  "ok": true,
-  "results": [
-    "✅ User ADMIN dibuat (admin / admin123)",
-    "✅ User KASIR dibuat (kasir / kasir123)",
-    "✅ 18 pengaturan default dimuat.",
-    "✅ Kategori default dibuat: \"Umum\""
-  ]
-}
-```
-
-> **Idempotent** — hanya mengisi data jika belum ada, tidak menghapus data existing. Aman dipanggil berulang.
+Header wajib: `x-allow-seed: 1`
 
 ---
 
@@ -639,25 +559,9 @@ Response:
 | Variable | Wajib | Default | Deskripsi |
 |----------|-------|---------|-----------|
 | `DATABASE_URL` | Ya | `file:./dev.db` | SQLite (dev) atau PostgreSQL (production) |
-| `NEXTAUTH_URL` | Ya | `http://localhost:3000` | URL aplikasi (ganti di production) |
+| `NEXTAUTH_URL` | Ya | `http://localhost:3000` | URL aplikasi |
 | `NEXTAUTH_SECRET` | Ya | — | Generate dengan `openssl rand -base64 32` |
 | `SKIP_ENV_VALIDATION` | Tidak | — | Set `1` untuk skip validasi env di build |
-
-### Development (SQLite)
-
-```env
-DATABASE_URL="file:./dev.db"
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-secret-here"
-```
-
-### Vercel / Production (PostgreSQL)
-
-```env
-DATABASE_URL="postgresql://user:password@host:5432/dbname?sslmode=require"
-NEXTAUTH_URL="https://rizki-motor.vercel.app"
-NEXTAUTH_SECRET="your-strong-secret"
-```
 
 ---
 
@@ -666,23 +570,22 @@ NEXTAUTH_SECRET="your-strong-secret"
 ### Transaksi di POS (Kasir)
 
 1. **Cari produk** — ketik nama atau SKU di kolom pencarian
-2. **Item manual** — klik tombol "Manual" untuk input item kustom (jasa, barang tidak terdaftar)
-3. **Tambah ke keranjang** — klik "Normal" (harga jual) atau "Reseller" (harga reseller)
+2. **Item manual** — klik tombol "Manual" untuk input item kustom
+3. **Tambah ke keranjang** — klik "Normal" atau "Reseller"
 4. **Atur jumlah** — gunakan tombol +/- di keranjang
 5. **Klik "Buat Pesanan"** — payment modal muncul
-6. **Pilih pelanggan** (opsional) — klik area pelanggan, cari nama
-7. **Pilih metode bayar** — Tunai/QRIS/Transfer/Kartu
-8. **Input nominal bayar** — atau klik tombol bayar cepat (Uang Pas, Rp50rb, Rp100rb, Rp200rb)
+6. **Pilih pelanggan** (opsional)
+7. **Pilih metode bayar** — Tunai/QRIS/Transfer
+8. **Input nominal bayar** — atau klik tombol bayar cepat
 9. **Jika utang** — nyalakan toggle "Bayar Nanti", pastikan pelanggan dipilih
 10. **Klik "Bayar"** atau **"Catat Utang"**
 
 ### Proteksi Stok
 
-- Produk dengan stok **< 3** tidak bisa ditambahkan ke transaksi
-- Stok **0** → badge merah "Habis" dengan pesan error
-- Stok **1–2** → badge merah "Stok Menipis" dengan toast warning
+- Stok **0** → badge merah "Habis", tidak bisa ditambahkan
+- Stok **1–2** → badge merah "Stok Menipis", toast warning
 - Stok **3–5** → badge amber "Sisa N" sebagai pengingat
-- Sorting otomatis: stok terendah muncul paling atas di semua halaman produk
+- Sorting otomatis: stok terendah muncul paling atas
 
 ### Kelola Utang (Admin)
 
@@ -691,48 +594,35 @@ NEXTAUTH_SECRET="your-strong-secret"
 3. Klik **Bayar** untuk mencatat pembayaran cicilan
 4. Klik **ikon mata** untuk melihat detail transaksi
 
-### Manajemen Pelanggan (Admin)
-
-1. Buka menu **Pelanggan** di sidebar
-2. Klik **Tambah Pelanggan** untuk data baru
-3. Isi nama, telepon, alamat, catatan
-4. Pelanggan dengan utang otomatis ditandai badge "Utang"
-
 ---
 
 ## Scripts
 
 ```bash
-npm run dev             # Development server (Next.js)
+npm run dev             # Development server
 npm run build           # Production build
 npm run start           # Production server
 npm run lint            # ESLint check
-
-npm run vercel:build    # Build untuk Vercel (Prisma PostgreSQL + Next.js)
+npm test                # Jalankan test (Vitest)
+npm run test:watch      # Test mode watch
 
 npm run db:push         # Push schema ke database
 npm run db:migrate      # Buat migration
 npm run db:seed         # Seed data awal
 npm run db:studio       # Buka Prisma Studio
-
-npm test                # Jalankan test (Vitest)
-npm run test:watch      # Test mode watch
-npm run test:coverage   # Test dengan coverage
 ```
 
 ---
 
-## CI/CD — Docker ke GHCR & DockerHub
+## CI/CD
 
-Pipeline otomatis build & push Docker image ke **DockerHub** dan **GitHub Container Registry (ghcr.io)**.
+### Pipeline
 
-### Trigger
-
-| Event | Action |
-|-------|--------|
-| Push ke `main` | Build & push dengan tag `main` |
-| Push tag `v*` | Build & push dengan versi (v1.0.0, v1.0, v1) |
-| Pull Request | Build saja (tidak push) |
+| Workflow | Trigger | Action |
+|----------|---------|--------|
+| `ci.yml` | Push ke `main`, PR ke `main` | Lint + Test |
+| `docker.yml` | Push ke `main`, Tag `v*`, PR | Build & push image ke GHCR & DockerHub |
+| `cd.yml` | Docker build berhasil di `main` | Deploy ke staging + smoke test |
 
 ### Setup
 
@@ -748,141 +638,50 @@ Pipeline otomatis build & push Docker image ke **DockerHub** dan **GitHub Contai
 
 GHCR sudah otomatis aktif — `GITHUB_TOKEN` tersedia secara default.
 
-### Pull Image
-
-```bash
-# Dari GHCR (default di docker-compose.yml)
-docker pull ghcr.io/rizkikotet-dev/rizkimotor-pos-nexjs:main
-
-# Dari DockerHub
-docker pull rizkikotet/rizkimotor-pos-nexjs:main
-
-# Jalankan
-docker run -d \
-  --name rizki-motor \
-  -p 3000:3000 \
-  -v $(pwd)/data:/app/data \
-  -e NEXTAUTH_SECRET="your-secret" \
-  ghcr.io/rizkikotet-dev/rizkimotor-pos-nexjs:main
-```
-
 ### Tag yang Dihasilkan
 
-| Source | DockerHub | GHCR |
-|--------|-----------|------|
-| Push ke main | `main`, `sha-abc1234` | `main`, `sha-abc1234` |
-| Tag v1.2.3 | `1.2.3`, `1.2`, `latest` | `1.2.3`, `1.2`, `latest` |
-| PR #42 | `pr-42` | `pr-42` |
-
-### File Terkait
-
-| File | Keterangan |
-|------|------------|
-| `.github/workflows/docker.yml` | GitHub Actions workflow |
-| `Dockerfile` | Multi-stage build (3 stages) |
-| `docker-compose.yml` | 3 profile orchestration |
-| `docker-entrypoint.sh` | Container startup script |
+| Source | Tag |
+|--------|-----|
+| Push ke main | `main`, `sha-abc1234` |
+| Tag v1.2.3 | `1.2.3`, `1.2`, `latest` |
 
 ---
 
 ## Staging Deployment
 
-Pipeline otomatis deploy ke **staging environment** setelah CI dan Docker build berhasil.
+### Arsitektur
 
-### Arsitektur Staging
-
-- **Image**: `ghcr.io/rizkikotet-dev/rizkimotor-pos-nexjs:main` (dari Docker workflow)
-- **Runtime**: Docker Compose dengan volume persistensi
+- **Image**: `ghcr.io/rizkikotet-dev/rizkimotor-pos-nexjs:main`
+- **Runtime**: Docker Compose (`docker-compose.staging.yml`)
 - **Port**: 3001 (host) → 3000 (container)
-- **Database**: SQLite terpisah (`staging.db`)
-- **Healthcheck**: Built-in `/api/health` endpoint
+- **Database**: SQLite (`staging.db`)
+- **Healthcheck**: `/api/health` endpoint
 
-### Trigger
-
-| Event | Action |
-|-------|--------|
-| CI (`quality` job) + Docker (`build` job) selesai sukses di branch `main` | Deploy otomatis ke staging |
-
-### Setup GitHub Environment & Secrets
+### Setup GitHub Environment
 
 1. Buka **Settings** → **Environments** → **New environment** → nama: `staging`
-2. Tambahkan **Environment secrets**:
-   - `STAGING_NEXTAUTH_URL` — URL staging (contoh: `https://staging.rizki-motor.example.com`)
-   - `STAGING_NEXTAUTH_SECRET` — Generate dengan `openssl rand -base64 32`
+2. Tambahkan **Environment secrets** (opsional):
+   - `STAGING_NEXTAUTH_URL` — URL staging custom
+   - `STAGING_NEXTAUTH_SECRET` — Secret custom
 
-> **Catatan:** Jika secrets tidak diset, staging akan menggunakan default `http://staging.rizki-motor.local:3001` dan secret development.
+> Jika secrets tidak diset, staging menggunakan default values dari `docker-compose.staging.yml`.
 
-### Manual Deploy (jika diperlukan)
+### Manual Deploy
 
 ```bash
-# 1. Pull image terbaru
 docker pull ghcr.io/rizkikotet-dev/rizkimotor-pos-nexjs:main
-
-# 2. Buat docker-compose.staging.yml
-cat << 'EOF' > docker-compose.staging.yml
-services:
-  app:
-    image: ghcr.io/rizkikotet-dev/rizkimotor-pos-nexjs:main
-    container_name: rizki-motor-staging
-    restart: unless-stopped
-    ports:
-      - "3001:3000"
-    environment:
-      - DATABASE_URL=file:/app/data/staging.db
-      - NEXTAUTH_URL=http://staging.rizki-motor.local:3001
-      - NEXTAUTH_SECRET=your-staging-secret
-      - NODE_ENV=production
-    volumes:
-      - staging-data:/app/data
-      - staging-uploads:/app/public/uploads
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 15s
-
-volumes:
-  staging-data:
-  staging-uploads:
-EOF
-
-# 3. Deploy
-docker compose -f docker-compose.staging.yml up -d --remove-orphans
-
-# 4. Verifikasi
-docker compose -f docker-compose.staging.yml logs -f
+docker compose -f docker-compose.staging.yml up -d
 ```
 
 ### Smoke Tests
 
-Setelah deploy, jalankan smoke test untuk memverifikasi staging:
-
 ```bash
-# Bash version (Linux/macOS/WSL)
-./scripts/smoke-test.sh http://localhost:3001
-
-# Node.js version (cross-platform)
+# Node.js (cross-platform)
 node scripts/smoke-test.mjs http://localhost:3001
+
+# Bash (Linux/macOS/WSL)
+./scripts/smoke-test.sh http://localhost:3001
 ```
-
-**Test yang dijalankan:**
-1. **Health check** — `/api/health` mengembalikan `status: "healthy"` (retry 10x)
-2. **Main page** — Beranda memuat konten "RIZKI MOTOR"
-3. **Login page** — Halaman login accessible
-4. **API routes** — Endpoint produk, kategori, settings merespons
-5. **Static assets** — CSS/JS bundle accessible
-6. **HTML structure** — Valid DOCTYPE
-
-### File Terkait Staging
-
-| File | Keterangan |
-|------|------------|
-| `.github/workflows/cd.yml` | CD workflow (deploy + smoke test) |
-| `scripts/smoke-test.sh` | Bash smoke test script |
-| `scripts/smoke-test.mjs` | Node.js smoke test script |
-| `src/app/api/health/route.ts` | Health check endpoint |
-| `docker-compose.staging.yml` | Generated di runtime CD |
 
 ---
 
@@ -898,11 +697,6 @@ npm run db:push
 npx prisma generate
 ```
 
-### Build error TypeScript
-```bash
-npx tsc --noEmit
-```
-
 ### Reset database SQLite
 ```bash
 rm prisma/dev.db
@@ -910,42 +704,31 @@ npm run db:push
 npm run db:seed
 ```
 
-### Reset database PostgreSQL
-```bash
-npx prisma db push --force-reset --schema=prisma/schema.vercel.prisma
-npx tsx prisma/seed.ts
-```
-
 ### Docker: permission denied
 ```bash
-# Pastikan entrypoint punya execute permission
 chmod +x docker-entrypoint.sh
-
-# Jika error chown di entrypoint, non-root user mungkin perlu disesuaikan
-# Cek dengan:
 docker compose logs app
 ```
 
 ### Vercel: build error Prisma
-Pastikan `DATABASE_URL` sudah diset di Vercel Environment Variables dan menggunakan PostgreSQL URL yang valid. Build Vercel menggunakan `prisma/schema.vercel.prisma` secara otomatis melalui `vercel.json`.
+Pastikan `DATABASE_URL` sudah diset di Vercel Environment Variables dan menggunakan PostgreSQL URL yang valid.
 
 ### Upload gambar tidak muncul di Vercel
-Vercel memiliki filesystem read-only untuk serverless functions. Gunakan layanan eksternal (Uploadthing, Cloudinary, S3) untuk menyimpan gambar di production.
+Vercel memiliki filesystem read-only. Gunakan cloud storage (Uploadthing, Cloudinary, S3).
 
 ---
 
 ## Fitur UI/UX
 
-- ✅ Dark mode dengan theme toggle (system preference + manual toggle)
-- ✅ Responsive design (mobile-first)
-- ✅ Payment modal modern (bukan prompt)
-- ✅ Toast notifications (sukses, error, warning)
-- ✅ Badge stok tiered (merah = habis/menipis, amber = waspada)
-- ✅ Loading states & skeleton
-- ✅ Error boundaries
-- ✅ Accessibility (ARIA labels, focus management)
-- ✅ Keyboard navigation (Escape tutup modal, shortcut POS)
-- ✅ Screen reader support
+- Dark mode dengan theme toggle (system preference + manual toggle)
+- Responsive design (mobile-first)
+- Payment modal modern (bukan prompt)
+- Toast notifications (sukses, error, warning)
+- Badge stok tiered (merah = habis/menipis, amber = waspada)
+- Loading states & skeleton
+- Error boundaries
+- Accessibility (ARIA labels, focus management, keyboard navigation)
+- Print-ready receipts (58mm & 80mm)
 
 ---
 
@@ -961,10 +744,3 @@ Vercel memiliki filesystem read-only untuk serverless functions. Gunakan layanan
 ## License
 
 Proprietary — All rights reserved
-
----
-
-## Contact
-
-RIZKI MOTOR — POS & Management System  
-Dibangun dengan Next.js 16, TypeScript, Prisma, Tailwind CSS
