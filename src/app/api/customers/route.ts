@@ -59,13 +59,15 @@ export const POST = withAuth(async (req) => {
     return NextResponse.json({ error: parsed.error.issues.map((i) => i.message).join(", ") }, { status: 400 });
   }
 
-  if (parsed.data.phone) {
-    const existing = await prisma.customer.findUnique({ where: { phone: parsed.data.phone } });
+  // Normalize empty phone to null for unique constraint
+  const phone = parsed.data.phone || null;
+  if (phone) {
+    const existing = await prisma.customer.findUnique({ where: { phone } });
     if (existing) {
       return NextResponse.json({ error: "Nomor telepon sudah terdaftar" }, { status: 400 });
     }
   }
 
-  const customer = await prisma.customer.create({ data: parsed.data });
+  const customer = await prisma.customer.create({ data: { ...parsed.data, phone } });
   return NextResponse.json(customer, { status: 201 });
 });

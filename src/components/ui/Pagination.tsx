@@ -120,7 +120,7 @@ export function Pagination({
             <li key={p}>
               {p === currentPage ? (
                 <span
-                  className="inline-flex items-center justify-center min-w-[36px] h-8 px-2 rounded-md text-sm font-medium bg-[var(--accent)] text-white"
+                  className="inline-flex items-center justify-center min-w-[36px] h-8 px-2 rounded-md text-sm font-medium bg-[var(--primary)] text-white"
                   aria-current="page"
                 >
                   {p}

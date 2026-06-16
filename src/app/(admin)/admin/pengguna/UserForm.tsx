@@ -32,6 +32,9 @@ export function UserForm({ action, initial, isEdit }: UserFormProps) {
       await action(formData);
       router.refresh();
     } catch (e) {
+      if (e instanceof Error && e.message.includes("NEXT_REDIRECT")) {
+        throw e;
+      }
       setError((e as Error).message || "Terjadi kesalahan");
     } finally {
       setPending(false);

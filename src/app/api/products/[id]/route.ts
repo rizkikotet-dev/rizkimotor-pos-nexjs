@@ -23,7 +23,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
   const product = await prisma.product.findUnique({
     where: { id },
-    include: { category: true },
+    select: { id: true, sku: true, name: true, description: true, price: true, priceReseller: true, stock: true, minStock: true, image: true, active: true, createdAt: true, updatedAt: true, categoryId: true, category: true },
   });
   if (!product) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(product);
@@ -31,6 +31,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
 export const PUT = withAuth<{ id: string }>(async (req, { params }) => {
   const id = parseInt(params.id);
+  if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
 
   const body = await req.json();
   const parsed = updateSchema.safeParse(body);
@@ -53,6 +54,7 @@ export const PUT = withAuth<{ id: string }>(async (req, { params }) => {
 
 export const DELETE = withAuth<{ id: string }>(async (_req, { params }) => {
   const id = parseInt(params.id);
+  if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
 
   const itemCount = await prisma.transactionItem.count({ where: { productId: id } });
   if (itemCount > 0) {

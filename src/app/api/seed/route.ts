@@ -23,7 +23,12 @@ interface SeedBody {
 export async function POST(req: NextRequest) {
   // Cek apakah sudah ada user admin. Jika belum, izinkan seed tanpa auth (initial setup).
   // Jika sudah ada, wajib admin auth.
-  const userCount = await prisma.user.count();
+  let userCount = 0;
+  try {
+    userCount = await prisma.user.count();
+  } catch {
+    // Database not initialized — allow seed to proceed
+  }
   if (userCount > 0) {
     const user = await getCurrentUser();
     if (!user || user.role !== "ADMIN") {

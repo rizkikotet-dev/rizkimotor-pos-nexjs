@@ -77,22 +77,23 @@ export const POST = withAuth(async (req) => {
     return NextResponse.json({ error: parsed.error.issues.map((i) => i.message).join(", ") }, { status: 400 });
   }
 
-  const debt = await prisma.debt.findUnique({ where: { id: parsed.data.debtId } });
-  if (!debt) return NextResponse.json({ error: "Utang tidak ditemukan" }, { status: 404 });
-  if (debt.status === "PAID") return NextResponse.json({ error: "Utang sudah lunas" }, { status: 400 });
+  // Atomic update: read + write inside transaction to prevent race condition
+  const updated = await prisma.$transaction(async (tx) => {
+    const debt = await tx.debt.findUnique({ where: { id: parsed.data.debtId } });
+    if (!debt) throw new Error("Utang tidak ditemukan");
+    if (debt.status === "PAID") throw new Error("Utang sudah lunas");
 
-  const remaining = debt.amount - debt.paid;
-  if (parsed.data.amount > remaining) {
-    return NextResponse.json({ error: `Sisa utang hanya ${remaining}` }, { status: 400 });
-  }
+    const remaining = debt.amount - debt.paid;
+    if (parsed.data.amount > remaining) throw new Error(`Sisa utang hanya ${remaining}`);
 
-  const newPaid = debt.paid + parsed.data.amount;
-  const newStatus = newPaid >= debt.amount ? "PAID" : "PARTIAL";
+    const newPaid = debt.paid + parsed.data.amount;
+    const newStatus = newPaid >= debt.amount ? "PAID" : "PARTIAL";
 
-  const updated = await prisma.debt.update({
-    where: { id: parsed.data.debtId },
-    data: { paid: newPaid, status: newStatus },
-    include: { customer: true },
+    return tx.debt.update({
+      where: { id: parsed.data.debtId },
+      data: { paid: newPaid, status: newStatus },
+      include: { customer: true },
+    });
   });
 
   return NextResponse.json(updated);

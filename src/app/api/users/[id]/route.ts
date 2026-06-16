@@ -28,8 +28,9 @@ export const PUT = withAuth<{ id: string }>(async (req, { params, user }) => {
   const id = parseInt(params.id);
   if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
 
+  const body = await req.json();
+
   if (id === parseInt(user.id)) {
-    const body = await req.json();
     if (body.role && body.role !== UserRole.ADMIN) {
       return NextResponse.json({ error: "Tidak dapat mengubah role sendiri" }, { status: 400 });
     }
@@ -37,8 +38,6 @@ export const PUT = withAuth<{ id: string }>(async (req, { params, user }) => {
       return NextResponse.json({ error: "Tidak dapat menonaktifkan akun sendiri" }, { status: 400 });
     }
   }
-
-  const body = await req.json();
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });

@@ -70,21 +70,28 @@ export default function UtangPiutangPage() {
   }, [filter, page, pageSize]);
 
   useEffect(() => {
-    setTimeout(() => {
-      setPage((prev) => (prev !== 1 ? 1 : prev));
-    }, 0);
+    const t = setTimeout(() => setPage((prev) => (prev !== 1 ? 1 : prev)), 0);
+    return () => clearTimeout(t);
   }, [filter]);
 
   useEffect(() => {
-    setTimeout(() => {
-      fetchDebts();
-    }, 0);
-  }, [filter, page, fetchDebts]);
+    const t = setTimeout(() => fetchDebts(), 0);
+    return () => clearTimeout(t);
+  }, [fetchDebts]);
 
   async function handlePay() {
     if (!payingId || !payAmount) return;
     const amount = Number(payAmount.replace(/\D/g, ""));
     if (amount <= 0) return;
+
+    const debt = debts.find((d) => d.id === payingId);
+    if (debt) {
+      const remaining = debt.amount - debt.paid;
+      if (amount > remaining) {
+        toast.error(`Sisa utang hanya ${formatRupiah(remaining)}`);
+        return;
+      }
+    }
 
     setPaying(true);
     try {
@@ -390,7 +397,7 @@ export default function UtangPiutangPage() {
               <div className="bg-surface-container rounded-lg p-3 space-y-2">
                 <div className="flex justify-between text-xs">
                   <span className="text-zinc-500">Total</span>
-                  <span className="text-zinc-200 font-semibold">{formatRupiah(detailDebt.amount + detailDebt.paid)}</span>
+                  <span className="text-zinc-200 font-semibold">{formatRupiah(detailDebt.transaction.total)}</span>
                 </div>
                 {detailDebt.paid > 0 && (
                   <div className="flex justify-between text-xs">

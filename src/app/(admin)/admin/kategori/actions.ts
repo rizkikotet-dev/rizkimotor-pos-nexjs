@@ -61,7 +61,7 @@ export async function deleteCategory(id: number) {
   const defaultCat = await prisma.category.findFirst({ where: { isDefault: true } });
   if (!defaultCat) {
     throw new Error(
-      "Kategori default tidak ditemukan di sistem. Hubungi administrator untuk修复 data."
+      "Kategori default tidak ditemukan di sistem. Hubungi administrator untuk memperbaiki data."
     );
   }
 

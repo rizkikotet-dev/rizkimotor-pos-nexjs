@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
+import { getCurrentUser } from "@/lib/auth";
 
 function isVercel(): boolean {
   return !!process.env.VERCEL;
@@ -93,6 +94,22 @@ export async function POST(req: NextRequest) {
       { ok: false, message: "Setup tidak tersedia di Vercel. Set DATABASE_URL di Vercel Dashboard." },
       { status: 403 }
     );
+  }
+
+  // Require admin auth if database already has users (prevents unauthorized schema changes)
+  try {
+    const { PrismaClient } = await import("@prisma/client");
+    const checkClient = new PrismaClient();
+    const userCount = await checkClient.user.count();
+    await checkClient.$disconnect();
+    if (userCount > 0) {
+      const user = await getCurrentUser();
+      if (!user || user.role !== "ADMIN") {
+        return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 });
+      }
+    }
+  } catch {
+    // DB not initialized yet — allow setup
   }
 
   // Lock eksekusi ganda per cold start
@@ -182,7 +199,9 @@ export async function POST(req: NextRequest) {
       {
         ok: false,
         message: "Failed to initialize database",
-        error: stderr || stdout || err?.message || "Unknown error",
+        error: process.env.NODE_ENV === "production"
+          ? "Database initialization failed. Check server logs for details."
+          : stderr || stdout || err?.message || "Unknown error",
         info: logs,
         tip:
           dbType === "postgresql"

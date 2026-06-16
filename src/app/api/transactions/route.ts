@@ -16,7 +16,7 @@ const dbItemSchema = z.object({
 // Item manual (tidak ada di database)
 const manualItemSchema = z.object({
   name: z.string().min(1).max(150),
-  sku: z.string().max(50),
+  sku: z.string().max(50).optional().default(""),
   price: z.number().int().positive(),
   quantity: z.number().int().positive(),
 });

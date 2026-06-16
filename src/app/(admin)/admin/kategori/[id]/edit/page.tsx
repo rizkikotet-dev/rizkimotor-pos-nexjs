@@ -11,6 +11,7 @@ interface PageProps {
 export default async function CategoryEditPage({ params }: PageProps) {
   const { id } = await params;
   const categoryId = parseInt(id);
+  if (isNaN(categoryId)) notFound();
 
   const category = await prisma.category.findUnique({
     where: { id: categoryId },

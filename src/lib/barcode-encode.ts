@@ -37,16 +37,28 @@ export function decodePrice(encoded: string): string {
   };
 
   let result = "";
-  for (let i = 0; i < encoded.length; i++) {
+  let i = 0;
+  while (i < encoded.length) {
     const ch = encoded[i];
     if (REVERSE_MAP[ch]) {
       result += REVERSE_MAP[ch];
+      i++;
     } else if (/[0-9]/.test(ch)) {
-      const lastChar = result[result.length - 1];
-      const count = parseInt(ch);
-      for (let j = 1; j < count; j++) {
-        result += lastChar;
+      // Read multi-digit count
+      let countStr = "";
+      while (i < encoded.length && /[0-9]/.test(encoded[i])) {
+        countStr += encoded[i];
+        i++;
       }
+      const count = parseInt(countStr);
+      const lastChar = result[result.length - 1];
+      if (lastChar) {
+        for (let j = 1; j < count; j++) {
+          result += lastChar;
+        }
+      }
+    } else {
+      i++;
     }
   }
   return result;

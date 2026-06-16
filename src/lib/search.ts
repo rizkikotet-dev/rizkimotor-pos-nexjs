@@ -41,9 +41,11 @@ export function caseInsensitiveSearch(
 ): Record<string, unknown> {
   if (!query || !query.trim() || fields.length === 0) return {};
 
+  // Escape SQL LIKE wildcards to prevent incorrect results
+  const escaped = query.replace(/%/g, "\\%").replace(/_/g, "\\_");
   const mode = isPostgres() ? ({ mode: "insensitive" } as const) : {};
   const conditions = fields.map((f) => ({
-    [f]: { contains: query, ...mode },
+    [f]: { contains: escaped, ...mode },
   }));
 
   return { OR: conditions };

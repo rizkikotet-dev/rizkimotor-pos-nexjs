@@ -49,6 +49,7 @@ export default function PelangganPage() {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+      if (searchQuery.trim()) params.set("q", searchQuery.trim());
       const res = await fetch(`/api/customers?${params}`);
       if (res.ok) {
         const json = await res.json();
@@ -58,13 +59,17 @@ export default function PelangganPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize]);
+  }, [page, pageSize, searchQuery]);
 
   useEffect(() => {
-    setTimeout(() => {
-      fetchCustomers();
-    }, 0);
-  }, [page, fetchCustomers]);
+    const t = setTimeout(() => setPage(1), 0);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const t = setTimeout(() => fetchCustomers(), 0);
+    return () => clearTimeout(t);
+  }, [fetchCustomers]);
 
   async function handleDelete() {
     if (!deleteId) return;
@@ -85,11 +90,6 @@ export default function PelangganPage() {
       setDeleting(false);
     }
   }
-
-  const filtered = customers.filter((c) => {
-    const q = searchQuery.toLowerCase();
-    return c.name.toLowerCase().includes(q) || (c.phone || "").includes(q);
-  });
 
   return (
     <div>
@@ -119,7 +119,7 @@ export default function PelangganPage() {
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
-      ) : filtered.length === 0 ? (
+      ) : customers.length === 0 ? (
         <div className="text-center py-20">
           <Users className="h-10 w-10 text-zinc-700 mx-auto mb-3" />
           <p className="text-sm text-zinc-500">
@@ -129,7 +129,7 @@ export default function PelangganPage() {
       ) : (
         <>
         <div className="space-y-2">
-          {filtered.map((customer) => (
+          {customers.map((customer) => (
             <div
               key={customer.id}
               className="flex items-center gap-3 p-3 rounded-lg border border-surface-outline-variant bg-surface-container-low hover:bg-surface-container transition-colors"

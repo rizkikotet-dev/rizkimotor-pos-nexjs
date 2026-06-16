@@ -19,6 +19,7 @@ const csp = [
   "img-src 'self' data: https:",
   "font-src 'self' data:",
   `connect-src ${connectSrc.join(" ")}`,
+  "frame-src 'self' https://www.google.com https://www.google.com/maps",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -61,7 +62,6 @@ const nextConfig = {
       { protocol: "https", hostname: "picsum.photos" },
       { protocol: "https", hostname: "placehold.co" },
     ],
-    domains: [],
     // Format modern lebih kecil. Next.js otomatis negosiasi ke WebP/AVIF
     // ketika browser support. localPlaceholder tetap JPEG fallback.
     formats: ["image/avif", "image/webp"],

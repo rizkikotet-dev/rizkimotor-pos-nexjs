@@ -36,14 +36,15 @@ export const PATCH = withAuth<{ id: string }>(async (req, { params }) => {
     return NextResponse.json({ error: parsed.error.issues.map((i) => i.message).join(", ") }, { status: 400 });
   }
 
-  if (parsed.data.phone) {
-    const existing = await prisma.customer.findFirst({ where: { phone: parsed.data.phone, id: { not: id } } });
+  const phone = parsed.data.phone || null;
+  if (phone) {
+    const existing = await prisma.customer.findFirst({ where: { phone, id: { not: id } } });
     if (existing) {
       return NextResponse.json({ error: "Nomor telepon sudah digunakan" }, { status: 400 });
     }
   }
 
-  const customer = await prisma.customer.update({ where: { id }, data: parsed.data });
+  const customer = await prisma.customer.update({ where: { id }, data: { ...parsed.data, phone } });
   return NextResponse.json(customer);
 });
 

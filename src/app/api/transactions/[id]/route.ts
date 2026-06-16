@@ -24,17 +24,21 @@ export const DELETE = withAuth<{ id: string }>(async (_req, { params }) => {
   const id = parseInt(params.id);
   if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
 
-  // Rollback: kembalikan stok & hapus transaksi
   const transaction = await prisma.transaction.findUnique({
     where: { id },
-    include: { items: true },
+    include: { items: true, debt: true },
   });
   if (!transaction) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  // Refuse delete if there's an outstanding or partial debt
+  if (transaction.debt && transaction.debt.status !== "PAID") {
+    return NextResponse.json({ error: "Tidak dapat menghapus transaksi dengan utang yang belum lunas" }, { status: 400 });
+  }
+
   await prisma.$transaction(async (tx) => {
-    // Rollback stok hanya untuk item DB (bukan item manual)
+    // Rollback stok hanya untuk item DB — use updateMany to silently skip deleted products
     for (const item of transaction.items.filter((i) => i.productId !== null)) {
-      await tx.product.update({
+      await tx.product.updateMany({
         where: { id: item.productId! },
         data: { stock: { increment: item.quantity } },
       });

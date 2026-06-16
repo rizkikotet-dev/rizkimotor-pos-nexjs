@@ -80,6 +80,9 @@ export function ProductForm({ categories, action, initial, submitLabel = "Simpan
       else fd.set("image", "");
       await action(fd);
     } catch (err: unknown) {
+      if (err instanceof Error && err.message.includes("NEXT_REDIRECT")) {
+        throw err;
+      }
       setError(err instanceof Error ? err.message : "Terjadi kesalahan");
       setPending(false);
     }
