@@ -125,6 +125,7 @@ export default async function RootLayout({
         lang="id"
         className={`${geist.variable} ${geistMono.variable} ${jakarta.variable} dark`}
         suppressHydrationWarning
+        data-scroll-behavior="smooth"
       >
         <body className="min-h-dvh bg-[#09090b] antialiased">
           <script
@@ -145,6 +146,7 @@ export default async function RootLayout({
       lang="id"
       className={`${geist.variable} ${geistMono.variable} ${jakarta.variable} dark`}
       suppressHydrationWarning
+      data-scroll-behavior="smooth"
     >
       <head>
         {/*
