@@ -5,15 +5,12 @@ import { useToast } from "@/components/ui/Toast";
 import { Pagination } from "@/components/ui/Pagination";
 import { formatRupiah } from "@/lib/format";
 import {
-  AlertTriangle,
   CheckCircle,
-  Clock,
   Loader2,
   Search,
   DollarSign,
   X,
   Eye,
-  Receipt,
 } from "lucide-react";
 
 interface Debt {

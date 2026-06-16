@@ -35,11 +35,12 @@ function runPrisma(args: string): string {
       timeout: 30_000,
     });
     return output.toString().trim();
-  } catch (e: any) {
+  } catch (e: unknown) {
     // Fallback ke npx untuk environment tanpa node_modules langsung
+    const err = e as { message?: string; stderr?: Buffer };
     if (
-      (e?.message && e.message.includes("ENOENT")) ||
-      (e?.stderr && e.stderr.toString().includes("not found"))
+      (err?.message && err.message.includes("ENOENT")) ||
+      (err?.stderr && err.stderr.toString().includes("not found"))
     ) {
       const fallback = execSync(`npx prisma ${args}`, {
         cwd: process.cwd(),
@@ -78,15 +79,24 @@ function saveEnvIfPossible(connectionString: string): string[] {
       logs.push("✅ File .env dibuat dengan DATABASE_URL");
     }
     fs.writeFileSync(envPath, content, "utf-8");
-  } catch (e: any) {
-    logs.push(`⚠️  Gagal menulis .env: ${e.message}`);
+  } catch (e: unknown) {
+    logs.push(`⚠️  Gagal menulis .env: ${e instanceof Error ? e.message : "Unknown error"}`);
   }
   return logs;
 }
 
 export async function POST(req: NextRequest) {
+  // Setup hanya boleh dijalankan di development atau saat database belum terinisialisasi.
+  // Di production, DATABASE_URL harus sudah di-set di environment.
+  if (isVercel()) {
+    return NextResponse.json(
+      { ok: false, message: "Setup tidak tersedia di Vercel. Set DATABASE_URL di Vercel Dashboard." },
+      { status: 403 }
+    );
+  }
+
   // Lock eksekusi ganda per cold start
-  if ((globalThis as any).__setupDone) {
+  if ((globalThis as { __setupDone?: boolean }).__setupDone) {
     return NextResponse.json({ ok: false, message: "Setup already completed" }, { status: 409 });
   }
 
@@ -108,7 +118,7 @@ export async function POST(req: NextRequest) {
     const client = new PrismaClient();
     const count = await client.setting.count();
     await client.$disconnect();
-    (globalThis as any).__setupDone = true;
+    (globalThis as { __setupDone?: boolean }).__setupDone = true;
     return NextResponse.json({
       ok: true,
       message: `Database ready (${count} settings found)`,
@@ -135,8 +145,8 @@ export async function POST(req: NextRequest) {
         logs.push("🔄 Regenerating Prisma client for PostgreSQL...");
         runPrisma(`generate --schema=${schemaPath}`);
         logs.push("✅ Prisma client regenerated for PostgreSQL");
-      } catch (e: any) {
-        logs.push(`⚠️  Gagal regenerate client: ${e.message}`);
+      } catch (e: unknown) {
+        logs.push(`⚠️  Gagal regenerate client: ${e instanceof Error ? e.message : "Unknown error"}`);
       }
     } else {
       logs.push("ℹ️  Vercel: skip regenerate client (sudah PostgreSQL dari build)");
@@ -154,7 +164,7 @@ export async function POST(req: NextRequest) {
     const lastLines = output.split("\n").slice(-5).join("\n");
     logs.push("✅ Database berhasil diinisialisasi");
 
-    (globalThis as any).__setupDone = true;
+    (globalThis as { __setupDone?: boolean }).__setupDone = true;
 
     return NextResponse.json({
       ok: true,
@@ -163,15 +173,16 @@ export async function POST(req: NextRequest) {
       log: lastLines,
       info: logs,
     });
-  } catch (e: any) {
-    const stderr = e?.stderr?.toString().trim() || "";
-    const stdout = e?.stdout?.toString().trim() || "";
+  } catch (e: unknown) {
+    const err = e as { stderr?: Buffer; stdout?: Buffer; message?: string };
+    const stderr = err?.stderr?.toString().trim() || "";
+    const stdout = err?.stdout?.toString().trim() || "";
 
     return NextResponse.json(
       {
         ok: false,
         message: "Failed to initialize database",
-        error: stderr || stdout || e?.message || "Unknown error",
+        error: stderr || stdout || err?.message || "Unknown error",
         info: logs,
         tip:
           dbType === "postgresql"

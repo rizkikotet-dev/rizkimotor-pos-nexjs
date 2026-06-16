@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Wrench, ShoppingCart, History, LogOut, LayoutDashboard } from "lucide-react";
+import { Wrench, ShoppingCart, History, LayoutDashboard } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { UserRole } from "@/lib/constants";
 import { ThemeToggle } from "@/components/ThemeToggle";

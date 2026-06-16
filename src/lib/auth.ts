@@ -8,7 +8,7 @@ import { prisma } from "./prisma";
 import { validateEnv } from "./env-check";
 import { UserRole } from "./constants";
 import { withErrorHandler } from "./api-error";
-import { rateLimiter, getClientIp, RATE_LIMITS } from "./rate-limit";
+import { rateLimiter, RATE_LIMITS } from "./rate-limit";
 
 export { AuthError } from "./api-error";
 
@@ -135,7 +135,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   try {
     const session = await getServerSession(authOptions);
     return (session?.user as SessionUser | undefined) ?? null;
-  } catch (e) {
+  } catch {
     // NextAuth melempar "decryption operation failed" jika cookie di-sign dengan
     // NEXTAUTH_SECRET lama (mis. setelah rotate secret, restart Docker dengan .env
     // baru, atau cookie korup). Perlakukan user sebagai belum login, jangan crash

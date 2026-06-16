@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { UserRole } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
@@ -9,7 +10,8 @@ import { FadeIn } from "@/components/ui/FadeIn";
 export const dynamic = "force-dynamic";
 
 export default async function PosRiwayatPage() {
-  const user = (await getCurrentUser())!;
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
 
   const where = user.role === UserRole.ADMIN ? {} : { userId: parseInt(user.id) };
 

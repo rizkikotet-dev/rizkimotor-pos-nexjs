@@ -1,6 +1,10 @@
 // POST /api/seed — Seed database dengan user & pengaturan default
 // Panggil setelah database terinisialisasi:
-//   curl -X POST https://domain.vercel.app/api/seed -H "x-allow-seed: 1"
+//   curl -X POST https://domain.vercel.app/api/seed
+//
+// Auth:
+//   - Jika belum ada user: izinkan tanpa auth (initial setup)
+//   - Jika sudah ada user: wajib admin auth (via session cookie)
 //
 // Aman: hanya mengisi data jika belum ada. Tidak menghapus data existing.
 
@@ -9,6 +13,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { DEFAULT_SETTINGS } from "@/lib/settings";
 import { DEFAULT_CATEGORY } from "@/lib/constants";
+import { getCurrentUser } from "@/lib/auth";
 
 interface SeedBody {
   admin?: { username?: string; name?: string; password?: string };
@@ -16,16 +21,17 @@ interface SeedBody {
 }
 
 export async function POST(req: NextRequest) {
-  // Guard: harus ada header x-allow-seed: 1 (sama seperti ALLOW_SEED=1 di seed.ts)
-  const isApiSetup = req.headers.get("x-allow-seed") === "1";
-  if (!isApiSetup) {
-    return NextResponse.json(
-      {
-        ok: false,
-        message: 'Refusing to seed. Set header "x-allow-seed: 1" to proceed.',
-      },
-      { status: 403 }
-    );
+  // Cek apakah sudah ada user admin. Jika belum, izinkan seed tanpa auth (initial setup).
+  // Jika sudah ada, wajib admin auth.
+  const userCount = await prisma.user.count();
+  if (userCount > 0) {
+    const user = await getCurrentUser();
+    if (!user || user.role !== "ADMIN") {
+      return NextResponse.json(
+        { ok: false, message: "Hanya admin yang bisa menjalankan seed." },
+        { status: 403 }
+      );
+    }
   }
 
   // Parse body opsional dari setup wizard
@@ -37,7 +43,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Cegah eksekusi ganda
-  if ((globalThis as any).__seedDone) {
+  if ((globalThis as { __seedDone?: boolean }).__seedDone) {
     return NextResponse.json(
       { ok: false, message: "Seed already completed in this session." },
       { status: 409 }
@@ -105,15 +111,15 @@ export async function POST(req: NextRequest) {
       results.push(`✅ Kategori default dibuat: "${cat.name}"`);
     }
 
-    (globalThis as any).__seedDone = true;
+    (globalThis as { __seedDone?: boolean }).__seedDone = true;
 
     return NextResponse.json({ ok: true, results });
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json(
       {
         ok: false,
         message: "Seed gagal",
-        error: e?.message || "Unknown error",
+        error: e instanceof Error ? e.message : "Unknown error",
       },
       { status: 500 }
     );

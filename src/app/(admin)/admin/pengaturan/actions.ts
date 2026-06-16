@@ -30,7 +30,7 @@ export async function updateSetting(key: string, value: string) {
 export async function updateSettingsBulk(formData: FormData) {
   await requireAdmin();
 
-  const ops: Array<Promise<any>> = [];
+  const ops: Array<Promise<{ key: string; value: string }>> = [];
   for (const key of ALLOWED_KEYS) {
     // Ambil value: text/textarea/select dari FormData, boolean dari checkbox "on" atau ""
     let value: string;

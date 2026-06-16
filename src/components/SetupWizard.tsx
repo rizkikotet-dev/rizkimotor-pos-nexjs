@@ -52,22 +52,12 @@ function AlertIcon() {
 /* ─────────────── Step indicator ─────────────── */
 
 function StepIndicator({ steps, current }: { steps: Step[]; current: Step }) {
-  const labels: Record<Step, string> = {
-    welcome: "Mulai",
-    dbtype: "Database",
-    dbconfig: "Koneksi",
-    database: "Init",
-    admin: "Admin",
-    store: "Toko",
-    done: "Selesai",
-  };
   const idx = steps.indexOf(current);
   if (idx < 0) return null;
 
   return (
     <nav className="flex items-center justify-center gap-0 mb-10" aria-label="Progress">
       {steps.map((s, i) => {
-        const isActive = i <= idx;
         return (
           <div key={s} className="flex items-center">
             <div
@@ -152,8 +142,14 @@ export function SetupWizard() {
   const [dbDone, setDbDone] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  // Database selection
-  const [dbType, setDbType] = useState<DbType>("sqlite");
+  // Database selection - detect from env on client side
+  const [dbType, setDbType] = useState<DbType>(() => {
+    if (typeof window !== "undefined") {
+      const envDbType = (window as unknown as { __ENV_DB_TYPE?: string }).__ENV_DB_TYPE;
+      return envDbType === "postgresql" ? "postgresql" : "sqlite";
+    }
+    return "sqlite";
+  });
   const [connectionString, setConnectionString] = useState("");
 
   // Forms
@@ -174,15 +170,6 @@ export function SetupWizard() {
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [dbLog]);
-
-  // Deteksi database type dari env saat mounting
-  useEffect(() => {
-    const pg = (window as any).__ENV_DATABASE_URL || "";
-    if (pg.startsWith("postgresql")) {
-      setDbType("postgresql");
-      setConnectionString(pg);
-    }
-  }, []);
 
   // ── Database init ──
   const runDatabaseSetup = useCallback(async () => {
@@ -230,9 +217,10 @@ export function SetupWizard() {
           setBusy(false);
         }
       }
-    } catch (e: any) {
-      setDbLog((prev) => prev + `❌ ${e.message}\n`);
-      setError(e.message);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Unknown error";
+      setDbLog((prev) => prev + `❌ ${msg}\n`);
+      setError(msg);
       setBusy(false);
     }
   }, [dbType, connectionString]);
@@ -243,7 +231,7 @@ export function SetupWizard() {
     setError(null);
 
     try {
-      const body: any = {};
+      const body: { admin?: { username?: string; name?: string; password?: string }; store?: { name?: string; tagline?: string; phone?: string } } = {};
       if (adminForm.username || adminForm.name || adminForm.password) {
         body.admin = {
           username: adminForm.username || undefined,
@@ -278,8 +266,8 @@ export function SetupWizard() {
           setError(data.message || "Seed failed");
         }
       }
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unknown error");
     } finally {
       setBusy(false);
     }

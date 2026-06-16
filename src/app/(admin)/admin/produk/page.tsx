@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { formatRupiah } from "@/lib/format";
 import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
 import { Pagination } from "@/components/ui/Pagination";
-import { Plus, Pencil, Trash2, Package } from "lucide-react";
+import { Plus, Pencil, Package } from "lucide-react";
 import { DeleteButton } from "./DeleteButton";
 import { FadeIn } from "@/components/ui/FadeIn";
 
@@ -31,7 +31,7 @@ export default async function AdminProdukPage({ searchParams }: PageProps) {
       }
     : {};
 
-  const [products, total, categories] = await Promise.all([
+  const [products, total] = await Promise.all([
     prisma.product.findMany({
       where,
       orderBy: [{ stock: "asc" }, { createdAt: "desc" }],

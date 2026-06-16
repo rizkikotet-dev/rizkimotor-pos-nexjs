@@ -5,7 +5,7 @@
 // Validasi MIME (UX) + magic bytes (security, anti MIME spoofing).
 // Error handling: dengan withErrorHandler (otomatis via withAuth) —
 // Prisma/FS errors di-log server-side, user lihat pesan generic di prod.
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
@@ -29,7 +29,7 @@ const EXT_MAP: Record<string, string> = {
 };
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 
-const handler = withAuth(async (req, { user }) => {
+const handler = withAuth(async (req, { user: _user }) => {
   const formData = await req.formData();
   const file = formData.get("file");
 

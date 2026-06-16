@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/auth";
-import { DEFAULT_SETTINGS, type SettingKey } from "@/lib/settings";
+import { DEFAULT_SETTINGS } from "@/lib/settings";
 import { z } from "zod";
 
 const ALLOWED_KEYS = Object.keys(DEFAULT_SETTINGS);

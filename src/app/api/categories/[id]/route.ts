@@ -9,6 +9,7 @@ const updateSchema = z.object({ name: z.string().min(1).max(50) });
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: idStr } = await params;
   const id = parseInt(idStr);
+  if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
   const cat = await prisma.category.findUnique({ where: { id } });
   if (!cat) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(cat);
@@ -16,6 +17,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
 export const PUT = withAuth<{ id: string }>(async (req, { params }) => {
   const id = parseInt(params.id);
+  if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
 
   const body = await req.json();
   const parsed = updateSchema.safeParse(body);
@@ -38,6 +40,7 @@ export const PUT = withAuth<{ id: string }>(async (req, { params }) => {
 
 export const DELETE = withAuth<{ id: string }>(async (_req, { params }) => {
   const id = parseInt(params.id);
+  if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
 
   const category = await prisma.category.findUnique({ where: { id } });
   if (!category) return NextResponse.json({ error: "Kategori tidak ditemukan" }, { status: 404 });

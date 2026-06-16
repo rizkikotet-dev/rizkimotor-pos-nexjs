@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, Upload, X, Loader2 } from "lucide-react";
+import { Upload, X, Loader2 } from "lucide-react";
 
 interface Category {
   id: number;

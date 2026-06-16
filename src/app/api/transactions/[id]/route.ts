@@ -5,6 +5,7 @@ import { UserRole } from "@/lib/constants";
 
 export const GET = withAuth<{ id: string }>(async (_req, { params, user }) => {
   const id = parseInt(params.id);
+  if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
   const transaction = await prisma.transaction.findUnique({
     where: { id },
     include: { user: true, items: true },
@@ -21,6 +22,7 @@ export const GET = withAuth<{ id: string }>(async (_req, { params, user }) => {
 
 export const DELETE = withAuth<{ id: string }>(async (_req, { params }) => {
   const id = parseInt(params.id);
+  if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
 
   // Rollback: kembalikan stok & hapus transaksi
   const transaction = await prisma.transaction.findUnique({

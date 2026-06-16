@@ -20,6 +20,7 @@ const updateSchema = z.object({
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: idStr } = await params;
   const id = parseInt(idStr);
+  if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
   const product = await prisma.product.findUnique({
     where: { id },
     include: { category: true },

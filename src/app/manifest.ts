@@ -1,7 +1,5 @@
 import type { MetadataRoute } from "next";
 
-const SITE_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
-
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Rizki Motor — Sparepart Motor Terlengkap",

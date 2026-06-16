@@ -129,7 +129,9 @@ export default async function RootLayout({
         <body className="min-h-dvh bg-[#09090b] antialiased">
           <script
             dangerouslySetInnerHTML={{
-              __html: `window.__ENV_DATABASE_URL=${JSON.stringify(process.env.DATABASE_URL || "")}`,
+              __html: `window.__ENV_DB_TYPE=${JSON.stringify(
+                process.env.DATABASE_URL?.startsWith("postgresql") ? "postgresql" : "sqlite"
+              )}`,
             }}
           />
           <SetupWizard />

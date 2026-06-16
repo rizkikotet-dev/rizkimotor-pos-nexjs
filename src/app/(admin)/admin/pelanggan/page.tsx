@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { Pagination } from "@/components/ui/Pagination";
 import { formatRupiah } from "@/lib/format";
@@ -14,7 +13,6 @@ import {
   MapPin,
   Loader2,
   AlertTriangle,
-  X,
   ChevronRight,
 } from "lucide-react";
 
@@ -38,7 +36,6 @@ interface PaginationMeta {
 
 export default function PelangganPage() {
   const toast = useToast();
-  const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");

@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Save, Loader2, ArrowLeft, Upload, X, Package, ImageIcon } from "lucide-react";
+import { Save, Loader2, ArrowLeft, Upload, X, ImageIcon } from "lucide-react";
 import Link from "next/link";
 
 interface Category {
@@ -31,7 +30,6 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ categories, action, initial, submitLabel = "Simpan" }: ProductFormProps) {
-  const router = useRouter();
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
 
@@ -81,8 +79,8 @@ export function ProductForm({ categories, action, initial, submitLabel = "Simpan
       if (imageUrl) fd.set("image", imageUrl);
       else fd.set("image", "");
       await action(fd);
-    } catch (err: any) {
-      setError(err?.message || "Terjadi kesalahan");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Terjadi kesalahan");
       setPending(false);
     }
   }

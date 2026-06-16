@@ -15,11 +15,6 @@
 //   ]);
 //   const products = await prisma.product.findMany({ where: { ...where, active: true } });
 
-type PrismaStringFilter = {
-  contains?: string;
-  mode?: "insensitive" | "default";
-};
-
 /**
  * Returns true when the runtime database is PostgreSQL. Detection via
  * DATABASE_URL scheme (postgres:// or postgresql://). Falls back to

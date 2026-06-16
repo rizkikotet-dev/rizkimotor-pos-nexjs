@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/auth";
 import { UserRole, USER_ROLES } from "@/lib/constants";
@@ -15,6 +15,7 @@ const updateSchema = z.object({
 
 export const GET = withAuth<{ id: string }>(async (_req, { params }) => {
   const id = parseInt(params.id);
+  if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
   const target = await prisma.user.findUnique({
     where: { id },
     select: { id: true, username: true, name: true, role: true, active: true, createdAt: true },
@@ -25,6 +26,7 @@ export const GET = withAuth<{ id: string }>(async (_req, { params }) => {
 
 export const PUT = withAuth<{ id: string }>(async (req, { params, user }) => {
   const id = parseInt(params.id);
+  if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
 
   if (id === parseInt(user.id)) {
     const body = await req.json();
@@ -49,7 +51,7 @@ export const PUT = withAuth<{ id: string }>(async (req, { params, user }) => {
     }
   }
 
-  const data: any = { ...parsed.data };
+  const data: { username?: string; name?: string; password?: string; role?: string; active?: boolean } = { ...parsed.data };
   if (data.password) {
     data.password = await bcrypt.hash(data.password, 10);
   }
@@ -64,6 +66,7 @@ export const PUT = withAuth<{ id: string }>(async (req, { params, user }) => {
 
 export const DELETE = withAuth<{ id: string }>(async (_req, { params, user }) => {
   const id = parseInt(params.id);
+  if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
 
   if (id === parseInt(user.id)) {
     return NextResponse.json({ error: "Tidak dapat menghapus akun sendiri" }, { status: 400 });

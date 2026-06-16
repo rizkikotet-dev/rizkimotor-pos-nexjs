@@ -28,6 +28,7 @@ export default async function StrukPage({ params, searchParams }: PageProps) {
   if (!transaction) notFound();
 
   // Permission: KASIR hanya bisa lihat transaksinya sendiri
+  if (!user) notFound();
   if (user!.role !== UserRole.ADMIN && transaction.userId !== parseInt(user!.id)) {
     notFound();
   }

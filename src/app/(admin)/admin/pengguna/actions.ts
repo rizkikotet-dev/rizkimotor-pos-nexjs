@@ -53,7 +53,7 @@ async function assertAdminAccess() {
 }
 
 export async function createUser(formData: FormData) {
-  const currentUser = await assertAdminAccess();
+  await assertAdminAccess();
   const data = parseFormCreate(formData);
 
   const existing = await prisma.user.findUnique({ where: { username: data.username } });
@@ -90,7 +90,7 @@ export async function updateUser(id: number, formData: FormData) {
   const existing = await prisma.user.findFirst({ where: { username: data.username, NOT: { id } } });
   if (existing) throw new Error(`Username "${data.username}" sudah digunakan.`);
 
-  const updateData: any = {
+  const updateData: { username: string; name: string; role: string; active: boolean; password?: string } = {
     username: data.username,
     name: data.name,
     role: data.role,
