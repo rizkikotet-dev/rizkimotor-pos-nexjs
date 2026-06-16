@@ -31,31 +31,31 @@ jobs:
       - name: Download docker-compose.staging.yml
         run: |
           cat << 'EOF' > docker-compose.staging.yml
-          services:
-            app:
-              image: ${{ env.STAGING_IMAGE }}
-              container_name: rizki-motor-staging
-              restart: unless-stopped
-              ports:
-                - "3001:3000"
-              environment:
-                - DATABASE_URL=file:/app/data/staging.db
-                - NEXTAUTH_URL=${{ secrets.STAGING_NEXTAUTH_URL || 'http://staging.rizki-motor.local:3001' }}
-                - NEXTAUTH_SECRET=${{ secrets.STAGING_NEXTAUTH_SECRET }}
-                - NODE_ENV=production
-              volumes:
-                - staging-data:/app/data
-                - staging-uploads:/app/public/uploads
-              healthcheck:
-                test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
-                interval: 10s
-                timeout: 5s
-                retries: 10
-                start_period: 30s
+services:
+  app:
+    image: ${{ env.STAGING_IMAGE }}
+    container_name: rizki-motor-staging
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - DATABASE_URL=file:/app/data/staging.db
+      - NEXTAUTH_URL=${{ secrets.STAGING_NEXTAUTH_URL || 'http://staging.rizki-motor.local:3001' }}
+      - NEXTAUTH_SECRET=${{ secrets.STAGING_NEXTAUTH_SECRET || 'staging-fallback-secret-do-not-use-in-prod' }}
+      - NODE_ENV=production
+    volumes:
+      - staging-data:/app/data
+      - staging-uploads:/app/public/uploads
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
-          volumes:
-            staging-data:
-            staging-uploads:
+volumes:
+  staging-data:
+  staging-uploads:
           EOF
 
       - name: Login to GHCR
