@@ -40,7 +40,6 @@ export default async function AdminProdukPage({ searchParams }: PageProps) {
       include: { category: true },
     }),
     prisma.product.count({ where }),
-    prisma.category.findMany({ orderBy: { name: "asc" } }),
   ]);
   const pagination = buildPaginationMeta(page, pageSize, total);
 

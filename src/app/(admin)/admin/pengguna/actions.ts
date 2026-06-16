@@ -105,20 +105,3 @@ export async function updateUser(id: number, formData: FormData) {
   revalidatePath("/admin/pengguna");
   redirect("/admin/pengguna");
 }
-
-export async function deleteUser(id: number) {
-  const currentUser = await assertAdminAccess();
-  if (id === parseInt(currentUser.id)) {
-    throw new Error("Anda tidak dapat menghapus akun sendiri.");
-  }
-  // Cek apakah ada transaksi
-  const txCount = await prisma.transaction.count({ where: { userId: id } });
-  if (txCount > 0) {
-    // Nonaktifkan
-    await prisma.user.update({ where: { id }, data: { active: false } });
-    revalidatePath("/admin/pengguna");
-    return;
-  }
-  await prisma.user.delete({ where: { id } });
-  revalidatePath("/admin/pengguna");
-}

@@ -327,23 +327,9 @@
     color: var(--text-secondary);
   }
 
-  .text-caption {
-    font-size: 0.75rem;
-    color: var(--text-primary);
-    opacity: 0.6;
-  }
-
   /* =======================================================================
      CARD SYSTEM — Elevation scale dari low ke high + special variants
      ======================================================================= */
-
-  /* card-sm — low elevation, flat border, minimal shadow */
-  .card-sm {
-    background: var(--surface-container);
-    border: 1px solid var(--surface-outline-variant);
-    border-radius: 10px;
-    box-shadow: var(--shadow-sm);
-  }
 
   /* card — standard elevation */
   .card {
@@ -361,14 +347,6 @@
     box-shadow: var(--shadow-md);
   }
 
-  /* card-lg — high elevation, used for modals, dropdowns */
-  .card-lg {
-    background: var(--surface-container);
-    border: 1px solid transparent;
-    border-radius: 14px;
-    box-shadow: var(--shadow-lg);
-  }
-
   .card-hover {
     @apply transition-all duration-150;
     background: var(--surface-container);
@@ -380,20 +358,6 @@
     background: var(--surface-container-high);
     border-color: var(--surface-outline);
     box-shadow: 0 4px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
-  }
-
-  /* card-elevated — card yang "terangkat" dengan border accent hover */
-  .card-elevated {
-    transition: all 0.2s ease;
-    background: var(--surface-container);
-    border: 1px solid var(--surface-outline-variant);
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
-  }
-  .card-elevated:hover {
-    transform: translateY(-2px);
-    border-color: var(--primary-soft-border);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
   }
 
   /* Card variant for use on non-base surfaces (e.g. on bg-surface-base) */
@@ -432,13 +396,6 @@
     opacity: 0.6;
     cursor: not-allowed;
     background: var(--surface-container-high);
-  }
-
-  .input-sm {
-    @apply input;
-    padding: 0.5rem 0.75rem;
-    min-height: 36px;
-    font-size: 0.875rem;
   }
 
   .select {
@@ -512,12 +469,6 @@
     font-size: 0.8125rem;
     min-height: 36px;
   }
-  .btn-lg {
-    padding: 0.625rem 1rem;
-    font-size: 0.875rem;
-    min-height: 44px;
-  }
-
   .btn-primary {
     @apply btn;
     background: var(--primary, #4f46e5);
@@ -557,16 +508,6 @@
   }
   .btn-danger:hover:not(:disabled) {
     background: var(--red-deep, #b91c1c);
-  }
-
-  .btn-success {
-    @apply btn;
-    background: var(--success, #059669);
-    color: white;
-    font-weight: 600;
-  }
-  .btn-success:hover:not(:disabled) {
-    background: var(--emerald-deep, #047857);
   }
 
   .btn-soft-primary {
@@ -612,22 +553,11 @@
     border: 1px solid var(--red-soft-border);
   }
 
-  .badge-info {
-    @apply badge;
-    background: var(--primary-soft);
-    color: var(--primary);
-    border: 1px solid var(--primary-soft-border);
-  }
-
   .badge-neutral {
     @apply badge;
     background: var(--surface-container-high);
     color: var(--text-secondary);
     border: 1px solid var(--surface-outline-variant);
-  }
-
-  .section {
-    @apply py-8 lg:py-12 space-y-6;
   }
 
   .page-container {
@@ -771,112 +701,12 @@
   background: var(--text-tertiary);
 }
 
-/* ========================================================================
-   MICRO-INTERACTIONS & MODERN UI UTILITIES
-   ======================================================================== */
-
-/* Glass effect — transparan dengan blur untuk modals, sidebar, header */
-.glass {
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-}
-.dark .glass {
-  background: rgba(9, 9, 11, 0.55);
-  border-color: rgba(255, 255, 255, 0.06);
-}
-
-.glass-strong {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-}
-.dark .glass-strong {
-  background: rgba(14, 14, 18, 0.78);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-/* Hover lift — card/image yang "terangkat" saat hover */
-.hover-lift {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
-}
-
-/* Page enter transition */
-@keyframes page-enter {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.page-enter {
-  animation: page-enter 0.3s ease-out;
-}
-
-/* Enhanced shimmer (skeleton loading) */
-.skeleton-pulse {
-  background: linear-gradient(
-    90deg,
-    var(--surface-container-low) 25%,
-    var(--surface-container-high) 50%,
-    var(--surface-container-low) 75%
-  );
-  background-size: 200% 100%;
-  animation: skeleton-shimmer 1.8s ease-in-out infinite;
-}
-@keyframes skeleton-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* Focus ring */
-.focus-ring:focus-visible {
-  outline: none;
-  box-shadow: var(--shadow-focus);
-}
-
-.stagger-item {
-  animation: fade-in 0.3s ease-out both;
-}
-.stagger-item:nth-child(1) { animation-delay: 0ms; }
-.stagger-item:nth-child(2) { animation-delay: 40ms; }
-.stagger-item:nth-child(3) { animation-delay: 80ms; }
-.stagger-item:nth-child(4) { animation-delay: 120ms; }
-.stagger-item:nth-child(5) { animation-delay: 160ms; }
-.stagger-item:nth-child(6) { animation-delay: 200ms; }
-.stagger-item:nth-child(7) { animation-delay: 240ms; }
-.stagger-item:nth-child(8) { animation-delay: 280ms; }
-
-@keyframes fade-in {
-  0% { opacity: 0; transform: translateY(8px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
 /* Adaptive grid: subtle slate-tinted in light, near-invisible in dark */
 .surface-grid {
   background-size: 48px 48px;
   background-image:
     linear-gradient(var(--surface-outline-variant) 1px, transparent 1px),
     linear-gradient(90deg, var(--surface-outline-variant) 1px, transparent 1px);
-}
-
-.shimmer {
-  background: linear-gradient(
-    90deg,
-    var(--surface-container) 25%,
-    var(--surface-container-high) 50%,
-    var(--surface-container) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite linear;
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
 }
 
 @keyframes animate-in {

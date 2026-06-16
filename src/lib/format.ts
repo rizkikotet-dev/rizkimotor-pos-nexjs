@@ -10,7 +10,6 @@ const idIDR = new Intl.NumberFormat("id-ID", {
   minimumFractionDigits: 0,
   maximumFractionDigits: 0,
 });
-const idNumber = new Intl.NumberFormat("id-ID");
 const idDate = new Intl.DateTimeFormat("id-ID", {
   day: "2-digit",
   month: "short",
@@ -26,11 +25,6 @@ const idDateTime = new Intl.DateTimeFormat("id-ID", {
 
 export function formatRupiah(amount: number): string {
   return idIDR.format(amount);
-}
-
-export function formatRupiahShort(amount: number): string {
-  // Rp 50.000 (lebih ringkas, tanpa "Rp" prefix double)
-  return "Rp " + idNumber.format(amount);
 }
 
 export function formatDate(date: Date | string): string {

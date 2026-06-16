@@ -96,17 +96,3 @@ export async function updateProduct(id: number, formData: FormData) {
   revalidatePath("/produk");
   redirect("/admin/produk");
 }
-
-export async function deleteProduct(id: number) {
-  await requireAdmin();
-  // Cek apakah ada di transaksi
-  const itemCount = await prisma.transactionItem.count({ where: { productId: id } });
-  if (itemCount > 0) {
-    // Tidak boleh hapus; nonaktifkan saja
-    await prisma.product.update({ where: { id }, data: { active: false } });
-    revalidatePath("/admin/produk");
-    return;
-  }
-  await prisma.product.delete({ where: { id } });
-  revalidatePath("/admin/produk");
-}

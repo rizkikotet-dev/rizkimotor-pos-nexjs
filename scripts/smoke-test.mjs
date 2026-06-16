@@ -4,8 +4,6 @@
  * Usage: node scripts/smoke-test.mjs <URL>
  */
 
-import fetch from 'node:fetch';
-
 const STAGING_URL = process.argv[2] || 'http://localhost:3001';
 const TIMEOUT = 30000;
 const RETRIES = 10;
