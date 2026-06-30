@@ -25,7 +25,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV SKIP_ENV_VALIDATION=1
 
-RUN npx prisma generate
+RUN node prisma/prepare.js && npx prisma generate --schema=prisma/schema.prepared.prisma
 
 RUN npm run build
 

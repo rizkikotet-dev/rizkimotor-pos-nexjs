@@ -232,21 +232,14 @@ Buka project → **Settings** → **Environment Variables** → tambahkan:
 
 Vercel akan otomatis membaca `vercel.json` dan menjalankan build command yang sudah dikonfigurasi.
 
-#### 5. Setup Database
+#### 5. Database Migration
 
-Jika tabel belum terbentuk, aplikasi akan menampilkan **Setup Wizard** di halaman pertama kali akses. Wizard akan memandu:
-
-1. Pilih tipe database (PostgreSQL untuk Vercel)
-2. Inisialisasi database
-3. Buat akun admin
-4. Konfigurasi toko
-5. Selesai → redirect ke login
+Set `DATABASE_URL` dengan PostgreSQL connection string di Vercel Dashboard. Prisma provider auto-detect dari URL — tidak perlu schema terpisah.
 
 ### Catatan Vercel
 
 - **File upload** tidak bisa disimpan di filesystem Vercel. Gunakan cloud storage (Uploadthing, Cloudinary, S3).
 - **SQLite tidak bisa digunakan di Vercel** — wajib PostgreSQL.
-- **Prisma schema khusus** (`schema.vercel.prisma`) digunakan untuk PostgreSQL.
 
 ---
 
@@ -255,8 +248,8 @@ Jika tabel belum terbentuk, aplikasi akan menampilkan **Setup Wizard** di halama
 ```
 rizkimotor-pos-nexjs/
 ├── prisma/
-│   ├── schema.prisma              # SQLite (development)
-│   ├── schema.vercel.prisma       # PostgreSQL (Vercel)
+│   ├── schema.prisma              # Schema tunggal, provider auto-detect dari DATABASE_URL
+│   ├── prepare.js                 # Auto-detect provider SQLite/PostgreSQL
 │   └── seed.ts                    # Seed data
 ├── public/
 │   └── uploads/                   # Upload gambar produk
@@ -296,20 +289,13 @@ rizkimotor-pos-nexjs/
 │   │   │   ├── users/            #   CRUD pengguna
 │   │   │   ├── settings/         #   Pengaturan toko
 │   │   │   ├── health/           #   Health check
-│   │   │   ├── setup/            #   Inisialisasi database
-│   │   │   ├── seed/             #   Seed data
+│   │   │   │   ├── seed/             #   Seed data
 │   │   │   └── upload/           #   Upload gambar
-│   │   └── setup/                # Setup wizard page
 │   ├── components/
 │   │   ├── admin/                # Sidebar, header admin
 │   │   ├── pos/                  # Komponen POS
 │   │   ├── public/               # Header, footer, ProductCard
-│   │   ├── setup/                # Setup wizard components
-│   │   │   ├── StepIndicator.tsx
-│   │   │   ├── icons.tsx
-│   │   │   └── types.ts
 │   │   ├── ui/                   # Button, Toast, Pagination, dll
-│   │   ├── SetupWizard.tsx       # Setup wizard orchestrator
 │   │   ├── ThemeProvider.tsx
 │   │   ├── ErrorBoundary.tsx
 │   │   └── ...
@@ -321,7 +307,6 @@ rizkimotor-pos-nexjs/
 │   │   ├── prisma.ts             # Prisma client singleton
 │   │   ├── format.ts             # formatRupiah, formatDate, slugify
 │   │   ├── settings.ts           # App settings + cache
-│   │   ├── setup.ts              # checkNeedsSetup
 │   │   ├── api-helpers.ts        # parseId, invalidId, zodError
 │   │   ├── slug.ts               # generateUniqueSlug
 │   │   ├── constants.ts          # UserRole, PaperSize, PaymentMethod
@@ -530,19 +515,6 @@ Response:
 }
 ```
 
-### Setup Database
-
-```
-POST /api/setup
-```
-
-Body opsional:
-```json
-{
-  "type": "postgresql",
-  "connectionString": "postgresql://user:pass@host:5432/db"
-}
-```
 
 ### Seed Data
 

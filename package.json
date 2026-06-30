@@ -7,19 +7,20 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run prisma:prepare && next build",
     "start": "next start",
-    "vercel:build": "prisma generate --schema=prisma/schema.vercel.prisma && next build",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
-    "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev",
+    "prisma:prepare": "node prisma/prepare.js",
+    "prisma:generate": "npm run prisma:prepare && prisma generate --schema=prisma/schema.prepared.prisma",
+    "db:push": "npm run prisma:prepare && prisma db push --schema=prisma/schema.prepared.prisma",
+    "db:migrate": "npm run prisma:prepare && prisma migrate dev --schema=prisma/schema.prepared.prisma",
     "db:seed": "tsx prisma/seed.ts",
-    "db:studio": "prisma studio",
-    "postinstall": "prisma generate"
+    "db:studio": "npm run prisma:prepare && prisma studio --schema=prisma/schema.prepared.prisma",
+    "postinstall": "node prisma/prepare.js && prisma generate --schema=prisma/schema.prepared.prisma"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

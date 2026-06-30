@@ -12,19 +12,20 @@ if [ "$(id -u)" = "0" ]; then
   chown -R nextjs:nodejs /app/data /app/public/uploads 2>/dev/null || true
 fi
 
-# Generate Prisma client
+# Generate Prisma client (auto-detect provider dari DATABASE_URL)
 echo ""
 echo "Generating Prisma client..."
-gosu nextjs npx prisma generate
+gosu nextjs node prisma/prepare.js
+gosu nextjs npx prisma generate --schema=prisma/schema.prepared.prisma
 
 # Initialize / migrate database
 if [ ! -f /app/data/prod.db ]; then
   echo "Database not found, initializing..."
-  gosu nextjs npx prisma db push --skip-generate
+  gosu nextjs npx prisma db push --schema=prisma/schema.prepared.prisma --skip-generate
   echo "Database initialized."
 else
   echo "Database found, running schema sync..."
-  gosu nextjs npx prisma db push --skip-generate 2>/dev/null || true
+  gosu nextjs npx prisma db push --schema=prisma/schema.prepared.prisma --skip-generate 2>/dev/null || true
 fi
 
 # Start the application as nextjs user

@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npx prisma generate --schema=prisma/schema.vercel.prisma && (npx prisma db push --schema=prisma/schema.vercel.prisma --skip-generate --accept-data-loss || echo '⚠️  db push skipped — will run at runtime via /api/setup') && next build",
+  "buildCommand": "node prisma/prepare.js && npx prisma generate --schema=prisma/schema.prepared.prisma && npx prisma db push --schema=prisma/schema.prepared.prisma --skip-generate --accept-data-loss && next build",
   "installCommand": "npm install",
   "outputDirectory": ".next",
   "git": {

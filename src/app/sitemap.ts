@@ -32,7 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   // Product detail pages — generated from active products.
-  // Gracefully falls back to base routes if DB not ready (setup wizard / first boot).
+  // Gracefully falls back to base routes if DB not ready yet.
   let productRoutes: MetadataRoute.Sitemap = [];
   try {
     const products = await prisma.product.findMany({

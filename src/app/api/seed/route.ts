@@ -3,7 +3,7 @@
 //   curl -X POST https://domain.vercel.app/api/seed
 //
 // Auth:
-//   - Jika belum ada user: izinkan tanpa auth (initial setup)
+//   - Jika belum ada user: izinkan tanpa auth (first boot)
 //   - Jika sudah ada user: wajib admin auth (via session cookie)
 //
 // Aman: hanya mengisi data jika belum ada. Tidak menghapus data existing.
@@ -21,7 +21,7 @@ interface SeedBody {
 }
 
 export async function POST(req: NextRequest) {
-  // Cek apakah sudah ada user admin. Jika belum, izinkan seed tanpa auth (initial setup).
+  // Cek apakah sudah ada user admin. Jika belum, izinkan seed tanpa auth (first boot).
   // Jika sudah ada, wajib admin auth.
   let userCount = 0;
   try {
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Parse body opsional dari setup wizard
+  // Parse body opsional dari seed caller
   let body: SeedBody = {};
   try {
     body = await req.json();
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
         let finalValue: string = value;
         // Kunci pakai dot-notation ("store.name") sesuai DEFAULT_SETTINGS.
         // Sebelumnya bug: dibandingkan dengan "storeName" (tanpa titik) sehingga
-        // override dari setup wizard tidak pernah diterapkan.
+        // override dari caller tidak pernah diterapkan.
         if (key === "store.name" && storeOverrides.name) finalValue = storeOverrides.name;
         else if (key === "store.tagline" && storeOverrides.tagline) finalValue = storeOverrides.tagline;
         else if (key === "store.phone" && storeOverrides.phone) finalValue = storeOverrides.phone;

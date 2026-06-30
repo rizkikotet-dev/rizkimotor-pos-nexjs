@@ -4,8 +4,6 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastProvider } from "@/components/ui/Toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { SetupWizard } from "@/components/SetupWizard";
-import { checkNeedsSetup } from "@/lib/setup";
 import { cookies } from "next/headers";
 
 // Self-hosted fonts via next/font. No external network at runtime, no FOUT,
@@ -115,31 +113,8 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Opt out of static rendering + cek setup
+  // Opt out of static rendering
   await cookies();
-  const needsSetup = await checkNeedsSetup();
-
-  if (needsSetup) {
-    return (
-      <html
-        lang="id"
-        className={`${geist.variable} ${geistMono.variable} ${jakarta.variable} dark`}
-        suppressHydrationWarning
-        data-scroll-behavior="smooth"
-      >
-        <body className="min-h-dvh bg-[#09090b] antialiased">
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `window.__ENV_DB_TYPE=${JSON.stringify(
-                process.env.DATABASE_URL?.startsWith("postgresql") ? "postgresql" : "sqlite"
-              )}`,
-            }}
-          />
-          <SetupWizard />
-        </body>
-      </html>
-    );
-  }
 
   return (
     <html

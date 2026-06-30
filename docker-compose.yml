@@ -73,8 +73,9 @@ services:
       - /app/.next
     command: >
       sh -c "
-        npx prisma generate &&
-        npx prisma db push &&
+        node prisma/prepare.js &&
+        npx prisma generate --schema=prisma/schema.prepared.prisma &&
+        npx prisma db push --schema=prisma/schema.prepared.prisma &&
         npm run dev
       "
     profiles:
