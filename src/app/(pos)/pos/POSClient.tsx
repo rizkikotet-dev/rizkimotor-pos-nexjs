@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
+import dynamic from "next/dynamic";
 import { formatRupiah } from "@/lib/format";
-import { PaymentModal } from "@/components/pos/PaymentModal";
 import { ProductSearchBar } from "./ProductSearchBar";
 import { ProductGrid } from "./ProductGrid";
 import { CartPanel } from "./CartPanel";
@@ -13,6 +13,8 @@ import { useCart } from "./useCart";
 import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
 import { filterProducts, type POSClientProps, type Customer, type Product } from "./types";
 import { PackagePlus } from "lucide-react";
+
+const PaymentModal = dynamic(() => import("@/components/pos/PaymentModal").then(m => m.PaymentModal), { ssr: false });
 
 // Main orchestrator. Composes:
 //   - ProductSearchBar: search input (with focus ref + Enter to add first match)

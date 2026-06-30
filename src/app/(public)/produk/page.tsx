@@ -8,7 +8,7 @@ import type { Metadata } from "next";
 
 const SITE_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Katalog Produk",
@@ -34,7 +34,7 @@ export default async function ProductListPage({ searchParams }: PageProps) {
   const query = q?.trim() || "";
 
   const [categories, products] = await Promise.all([
-    prisma.category.findMany({ orderBy: { name: "asc" } }),
+    prisma.category.findMany({ orderBy: { name: "asc" } }).catch(() => []),
     prisma.product.findMany({
       where: {
         active: true,
@@ -46,7 +46,7 @@ export default async function ProductListPage({ searchParams }: PageProps) {
       },
       orderBy: [{ stock: "asc" }, { createdAt: "desc" }],
       include: { category: true },
-    }),
+    }).catch(() => []),
   ]);
 
   return (

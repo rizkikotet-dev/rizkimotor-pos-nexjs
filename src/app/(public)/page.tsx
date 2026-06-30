@@ -9,7 +9,7 @@ import { JsonLd, buildLocalBusiness, buildBreadcrumb } from "@/components/Struct
 
 const SITE_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Beranda",
@@ -19,16 +19,16 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const settings = await getSettings();
-  const [latestProducts, categoryCount, productCount] = await Promise.all([
+  const [settings, latestProducts, categoryCount, productCount] = await Promise.all([
+    getSettings(),
     prisma.product.findMany({
       where: { active: true },
       take: 8,
       orderBy: { createdAt: "desc" },
       include: { category: true },
-    }),
-    prisma.category.count(),
-    prisma.product.count({ where: { active: true } }),
+    }).catch(() => []),
+    prisma.category.count().catch(() => 0),
+    prisma.product.count({ where: { active: true } }).catch(() => 0),
   ]);
 
   // Structured data: store info + breadcrumb. Google rich results

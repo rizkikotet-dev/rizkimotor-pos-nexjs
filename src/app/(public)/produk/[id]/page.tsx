@@ -10,7 +10,7 @@ import { JsonLd, buildProductJsonLd, buildBreadcrumb } from "@/components/Struct
 
 const SITE_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 // Per-halaman metadata (title, description, OG) untuk SEO optimal.
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -112,7 +112,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 alt={product.name}
                 fill
                 priority
-                unoptimized
                 sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover"
               />

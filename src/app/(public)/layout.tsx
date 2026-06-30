@@ -1,12 +1,9 @@
 import { PublicHeader } from "@/components/public/Header";
 import { PublicFooter } from "@/components/public/Footer";
 
-// Force dynamic rendering: layout calls getSettings() + getCurrentUser() (via
-// Header/Footer) yang query DB. Tanpa flag ini Next.js coba pre-render sebagai
-// static page di build time → prisma error karena DATABASE_URL tidak ada.
-// Pada runtime dengan real DB, pages di-render per-request (cocok untuk public
-// marketing site yang kontennya jarang berubah & di-cache di CDN).
-export const dynamic = "force-dynamic";
+// ISR — Public layout jarang berubah (header/footer settings).
+// Revalidate every 1 hour. Jika DB belum siap, query fallback ke default.
+export const revalidate = 3600;
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
