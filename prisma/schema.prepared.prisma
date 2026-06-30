@@ -1,0 +1,149 @@
+// Rizki Motor — Prisma schema
+// SQLite (file-based) untuk development; bisa di-migrasi ke PostgreSQL untuk production.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User: ADMIN atau KASIR
+// role disimpan sebagai string karena SQLite tidak support enum di Prisma
+model User {
+  id           Int           @id @default(autoincrement())
+  username     String        @unique
+  name         String
+  password     String // bcrypt hash
+  role         String        @default("KASIR") // "ADMIN" | "KASIR"
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+
+  @@index([username])
+}
+
+model Customer {
+  id           Int           @id @default(autoincrement())
+  name         String
+  phone        String?       @unique
+  address      String?
+  note         String?
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+  debts        Debt[]
+
+  @@index([name])
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  slug      String    @unique
+  isDefault Boolean   @default(false) // kategori default, tidak bisa dihapus
+  createdAt DateTime  @default(now())
+  products  Product[]
+
+  @@index([isDefault])
+}
+
+model Product {
+  id            Int               @id @default(autoincrement())
+  sku           String            @unique
+  name          String
+  description   String?
+  category      Category          @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  categoryId    Int
+  price         Int // harga jual (rupiah, integer)
+  priceReseller Int               @default(0) // 0 = tidak ada pilihan reseller
+  cost          Int               @default(0) // harga modal
+  stock         Int               @default(0)
+  minStock      Int               @default(5) // threshold alert stok menipis
+  image         String? // path /uploads/xxx.jpg atau URL
+  active        Boolean           @default(true)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  items         TransactionItem[]
+
+  @@index([categoryId])
+  @@index([name])
+  // Composite: POS catalog query filter `active=true AND categoryId=X` ORDER BY name.
+  // Existing [categoryId] tidak cover skenario `active=true` filter (full table scan).
+  @@index([active, categoryId])
+}
+
+model Transaction {
+  id         Int               @id @default(autoincrement())
+  invoiceNo  String            @unique
+  user       User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  userId     Int
+  customer   Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerId Int?
+  total      Int
+  payment    Int // uang bayar (0 jika utang)
+  change     Int // kembalian
+  note       String?
+  createdAt  DateTime          @default(now())
+  items      TransactionItem[]
+  debt       Debt?
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([customerId])
+  // Composite: KASIR view `WHERE userId=X ORDER BY createdAt DESC`.
+  // Existing [userId] tidak cover sort, jadi tetap ada filesort.
+  @@index([userId, createdAt])
+  // Composite: admin view per-pelanggan `WHERE customerId=X ORDER BY createdAt DESC`.
+  @@index([customerId, createdAt])
+}
+
+model TransactionItem {
+  id            Int         @id @default(autoincrement())
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  transactionId Int
+  product       Product?    @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productId     Int? // nullable untuk produk manual (tidak ada di database)
+  productName   String // snapshot nama produk saat transaksi
+  productSku    String // snapshot SKU saat transaksi
+  quantity      Int
+  price         Int // harga satuan saat transaksi
+  subtotal      Int
+
+  @@index([transactionId])
+  @@index([productId])
+}
+
+// Utang Piutang
+model Debt {
+  id            Int         @id @default(autoincrement())
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  transactionId Int         @unique
+  customer      Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  customerId    Int
+  amount        Int // jumlah utang
+  paid          Int         @default(0) // sudah dibayar berapa
+  status        String      @default("UNPAID") // "UNPAID" | "PARTIAL" | "PAID"
+  dueDate       DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+  // Composite: utang piutang page `WHERE status IN (...) ORDER BY createdAt DESC`.
+  // Existing [status] tidak cover sort.
+  @@index([status, createdAt])
+  // Composite: customer detail `WHERE customerId=X AND status=Y` (mis. "belum lunas").
+  @@index([customerId, status])
+}
+
+// Pengaturan toko & struk (key-value store sederhana)
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

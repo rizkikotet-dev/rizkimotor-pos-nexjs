@@ -47,10 +47,11 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/.bin ./node_modules/.bin
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/node_modules/bcryptjs ./node_modules/bcryptjs
 COPY --from=builder /app/docker-entrypoint.sh ./docker-entrypoint.sh
 
-RUN mkdir -p /app/data /app/public/uploads && \
-    chown -R nextjs:nodejs /app/data /app/public/uploads && \
+RUN mkdir -p /app/data /app/public/uploads /app/.next/cache && \
+    chown -R nextjs:nodejs /app/data /app/public/uploads /app/prisma /app/.next && \
     chown -R nextjs:nodejs /app/node_modules/.prisma /app/node_modules/@prisma /app/node_modules/.bin /app/node_modules/prisma
 
 RUN chmod +x ./docker-entrypoint.sh

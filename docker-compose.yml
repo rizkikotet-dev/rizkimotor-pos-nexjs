@@ -10,7 +10,7 @@ services:
     environment:
       - DATABASE_URL=file:/app/data/prod.db
       - NEXTAUTH_URL=http://localhost:3000
-      - NEXTAUTH_SECRET=your-production-secret
+      - NEXTAUTH_SECRET=generate-dengan-openssl-rand-base64-32-dan-paste-disini
     volumes:
       - ./data:/app/data
       - ./uploads:/app/public/uploads
@@ -34,7 +34,7 @@ services:
     environment:
       - DATABASE_URL=file:/app/data/prod.db
       - NEXTAUTH_URL=http://localhost:3000
-      - NEXTAUTH_SECRET=your-production-secret
+      - NEXTAUTH_SECRET=generate-dengan-openssl-rand-base64-32-dan-paste-disini
     volumes:
       - ./data:/app/data
       - ./uploads:/app/public/uploads
