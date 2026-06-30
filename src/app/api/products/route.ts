@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/auth";
 import { withErrorHandler } from "@/lib/api-error";
 import { caseInsensitiveSearch } from "@/lib/search";
+import { generateSku } from "@/lib/format";
 import { z } from "zod";
 
 const createSchema = z.object({
@@ -15,7 +16,20 @@ const createSchema = z.object({
   cost: z.number().int().nonnegative().default(0),
   stock: z.number().int().nonnegative().default(0),
   minStock: z.number().int().nonnegative().default(5),
-  // image: string biasa (bisa URL eksternal atau path lokal /uploads/...)
+  image: z.string().max(500).optional().nullable(),
+  active: z.boolean().default(true),
+});
+
+const createSchemaInput = z.object({
+  sku: z.string().max(50).optional().default(""),
+  name: z.string().min(1).max(150),
+  description: z.string().optional().nullable(),
+  categoryId: z.number().int().positive(),
+  price: z.number().int().nonnegative(),
+  priceReseller: z.number().int().nonnegative().default(0),
+  cost: z.number().int().nonnegative().default(0),
+  stock: z.number().int().nonnegative().default(0),
+  minStock: z.number().int().nonnegative().default(5),
   image: z.string().max(500).optional().nullable(),
   active: z.boolean().default(true),
 });
@@ -44,16 +58,26 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
 
 export const POST = withAuth(async (req) => {
   const body = await req.json();
-  const parsed = createSchema.safeParse(body);
+  const parsed = createSchemaInput.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const existing = await prisma.product.findUnique({ where: { sku: parsed.data.sku } });
-  if (existing) {
-    return NextResponse.json({ error: `SKU "${parsed.data.sku}" sudah digunakan` }, { status: 400 });
+  // Auto-generate SKU jika tidak diisi
+  if (!parsed.data.sku) {
+    parsed.data.sku = generateSku();
   }
 
-  const product = await prisma.product.create({ data: parsed.data });
+  const valid = createSchema.safeParse(parsed.data);
+  if (!valid.success) {
+    return NextResponse.json({ error: valid.error.flatten() }, { status: 400 });
+  }
+
+  const existing = await prisma.product.findUnique({ where: { sku: valid.data.sku } });
+  if (existing) {
+    return NextResponse.json({ error: `SKU "${valid.data.sku}" sudah digunakan` }, { status: 400 });
+  }
+
+  const product = await prisma.product.create({ data: valid.data });
   return NextResponse.json(product, { status: 201 });
 }, { admin: true });

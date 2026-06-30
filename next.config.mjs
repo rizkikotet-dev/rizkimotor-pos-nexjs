@@ -55,6 +55,7 @@ if (!isDev) {
 
 const nextConfig = {
   output: "standalone",
+  devIndicators: false,
   // Image optimization:
   // - Local images (/uploads/...) otomatis di-optimize (WebP, AVIF, responsive).
   // - External URLs (https://...) TIDAK di-optimize via `unoptimized` prop di

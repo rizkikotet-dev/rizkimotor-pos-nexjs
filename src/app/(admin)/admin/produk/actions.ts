@@ -4,10 +4,25 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { generateSku } from "@/lib/format";
 import { z } from "zod";
 
 const productSchema = z.object({
-  sku: z.string().min(1, "SKU wajib diisi").max(50),
+  sku: z.string().min(1).max(50),
+  name: z.string().min(1).max(150),
+  description: z.string().optional().nullable(),
+  categoryId: z.number().int().positive(),
+  price: z.number().int().nonnegative(),
+  priceReseller: z.number().int().nonnegative().default(0),
+  cost: z.number().int().nonnegative().default(0),
+  stock: z.number().int().nonnegative().default(0),
+  minStock: z.number().int().nonnegative().default(5),
+  image: z.string().max(500).optional().nullable(),
+  active: z.boolean().default(true),
+});
+
+const productFormSchema = z.object({
+  sku: z.string().max(50).optional().default(""),
   name: z.string().min(1, "Nama wajib diisi").max(150),
   description: z.string().optional(),
   categoryId: z.coerce.number().int().positive("Kategori wajib dipilih"),
@@ -16,14 +31,13 @@ const productSchema = z.object({
   cost: z.coerce.number().int().nonnegative().default(0),
   stock: z.coerce.number().int().nonnegative().default(0),
   minStock: z.coerce.number().int().nonnegative().default(5),
-  // image: string biasa (bisa URL eksternal atau path lokal /uploads/...)
   image: z.string().max(500).optional().or(z.literal("")),
   active: z.coerce.boolean().default(true),
 });
 
 function parseForm(formData: FormData) {
-  return productSchema.parse({
-    sku: formData.get("sku"),
+  const parsed = productFormSchema.parse({
+    sku: formData.get("sku") || undefined,
     name: formData.get("name"),
     description: formData.get("description") || undefined,
     categoryId: formData.get("categoryId"),
@@ -35,6 +49,14 @@ function parseForm(formData: FormData) {
     image: formData.get("image") || "",
     active: formData.get("active") === "on" || formData.get("active") === "true",
   });
+
+  // Auto-generate SKU jika tidak diisi
+  if (!parsed.sku) {
+    parsed.sku = generateSku();
+  }
+
+  // Parse ulang dgn schema final (coerce number → number, default applied)
+  return productSchema.parse(parsed);
 }
 
 export async function createProduct(formData: FormData) {

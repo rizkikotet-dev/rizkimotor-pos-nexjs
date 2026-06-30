@@ -115,18 +115,16 @@ export function ProductForm({ categories, action, initial, submitLabel = "Simpan
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="product-sku" className="block text-xs font-semibold text-surface-600 uppercase tracking-wider mb-1.5">
-                SKU <span className="text-red-500" aria-hidden="true">*</span>
+                SKU
               </label>
               <input
                 id="product-sku"
                 type="text"
                 name="sku"
-                required
                 maxLength={50}
                 defaultValue={initial?.sku}
                 className="input min-h-[44px]"
-                placeholder="Contoh: OLI-001"
-                aria-required="true"
+                placeholder="Kosongkan untuk auto-generate"
               />
             </div>
             <div>

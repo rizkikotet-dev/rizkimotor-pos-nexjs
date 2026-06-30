@@ -31,8 +31,8 @@ export function AdminMobileNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`nav-item-hover relative flex flex-col items-center justify-center gap-0.5 min-h-[56px] px-2 ${
-                isActive ? "nav-item-active text-zinc-100 font-semibold" : "text-zinc-400 active:text-zinc-100"
+              className={`relative flex flex-col items-center justify-center gap-0.5 min-h-[56px] px-2 transition-colors duration-150 ${
+                isActive ? "text-zinc-100" : "text-zinc-400 active:text-zinc-100"
               }`}
               aria-label={item.label}
               aria-current={isActive ? "page" : undefined}

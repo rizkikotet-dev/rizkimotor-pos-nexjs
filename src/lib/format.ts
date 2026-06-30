@@ -47,6 +47,16 @@ export function slugify(text: string): string {
     .replace(/^-|-$/g, "");
 }
 
+export function generateSku(): string {
+  // PRD-YYYYMMDD-XXXX
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const random = Math.floor(1000 + Math.random() * 9000);
+  return `PRD-${yyyy}${mm}${dd}-${random}`;
+}
+
 export function generateInvoiceNo(): string {
   // INV-YYYYMMDD-HHMMSS-XXX
   const now = new Date();

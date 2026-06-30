@@ -153,12 +153,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             <div className="bg-surface-container-low rounded-lg p-4 mb-5 border border-surface-outline-variant">
               <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest mb-1">Harga</p>
               <p className="text-3xl font-bold text-primary">{formatRupiah(product.price)}</p>
-              {product.priceReseller > 0 && (
-                <p className="text-sm text-zinc-400 mt-1.5">
-                  Harga reseller: <span className="font-semibold text-zinc-200">{formatRupiah(product.priceReseller)}</span>
-                </p>
-              )}
-            </div>
+              </div>
 
             {/* Description */}
             {product.description && (

@@ -103,6 +103,7 @@ services:
         node prisma/prepare.js &&
         npx prisma generate --schema=prisma/schema.prepared.prisma &&
         npx prisma db push --schema=prisma/schema.prepared.prisma &&
+        node prisma/seed.js &&
         npm run dev
       "
 
