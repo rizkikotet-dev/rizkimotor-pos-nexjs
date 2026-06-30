@@ -21,6 +21,7 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Link
       href={`/produk/${product.id}`}
+      prefetch
       className="group block card-hover overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/40 rounded-lg active:scale-[0.98] transition-all duration-150"
       aria-label={`${product.name}, ${product.category.name}${!inStock ? ", stok habis" : ""}`}
     >
@@ -32,6 +33,8 @@ export function ProductCard({ product }: ProductCardProps) {
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="object-cover group-hover:scale-[1.02] transition-transform duration-300"
+            placeholder="blur"
+            blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/+F9PQAI8wNPvd7POQAAAABJRU5ErkJggg=="
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-zinc-700">
