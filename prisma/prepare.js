@@ -43,6 +43,8 @@ function getDbUrl() {
 }
 
 function determineProvider(url) {
+  // Di Vercel, selalu PostgreSQL (SQLite gak didukung)
+  if (process.env.VERCEL) return "postgresql";
   return url.startsWith("postgresql://") ? "postgresql" : "sqlite";
 }
 
