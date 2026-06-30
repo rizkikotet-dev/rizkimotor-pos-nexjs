@@ -1,76 +1,103 @@
+version: "3.9"
+
 services:
-  # === Production (pull from GHCR) ===
-  # Jalankan: docker compose up -d
+  # ============================================
+  # Production (Pull Image from GHCR)
+  # docker compose up -d
+  # ============================================
   app:
     image: ghcr.io/rizkikotet-dev/rizkimotor-pos-nexjs:main
     container_name: rizki-motor
     restart: unless-stopped
+
     ports:
       - "3000:3000"
+
     environment:
-      - DATABASE_URL=file:/app/data/prod.db
-      - NEXTAUTH_URL=http://localhost:3000
-      - NEXTAUTH_SECRET=generate-dengan-openssl-rand-base64-32-dan-paste-disini
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:-file:/app/data/prod.db}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+
     volumes:
       - ./data:/app/data
       - ./uploads:/app/public/uploads
+
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
+
     profiles:
       - default
 
-  # === Production (build local) ===
-  # Jalankan: docker compose --profile build up -d
+  # ============================================
+  # Production (Build Local)
+  # docker compose --profile build up -d
+  # ============================================
   build:
-    build: .
-    container_name: rizki-motor
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: rizki-motor-build
     restart: unless-stopped
+
     ports:
       - "3000:3000"
+
     environment:
-      - DATABASE_URL=file:/app/data/prod.db
-      - NEXTAUTH_URL=http://localhost:3000
-      - NEXTAUTH_SECRET=generate-dengan-openssl-rand-base64-32-dan-paste-disini
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:-file:/app/data/prod.db}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+
     volumes:
       - ./data:/app/data
       - ./uploads:/app/public/uploads
+
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
+
     profiles:
       - build
 
-  # === Development (hot reload) ===
-  # Jalankan: docker compose --profile dev up -d
-  # Akses: http://localhost:3000
+  # ============================================
+  # Development (Hot Reload)
+  # docker compose --profile dev up -d
+  # ============================================
   dev:
     build:
       context: .
       dockerfile: Dockerfile
       target: deps
+
     container_name: rizki-motor-dev
     restart: unless-stopped
+
     ports:
       - "3000:3000"
+
     environment:
-      - NODE_ENV=development
-      - DATABASE_URL=file:/app/data/dev.db
-      - NEXTAUTH_URL=http://localhost:3000
-      - NEXTAUTH_SECRET=dev-secret-rizki-motor
-      - SKIP_ENV_VALIDATION=1
+      NODE_ENV: development
+      DATABASE_URL: ${DEV_DATABASE_URL:-file:/app/data/dev.db}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      SKIP_ENV_VALIDATION: "1"
+
     volumes:
       - ./data:/app/data
       - ./uploads:/app/public/uploads
       - .:/app
       - /app/node_modules
       - /app/.next
+
     command: >
       sh -c "
         node prisma/prepare.js &&
@@ -78,5 +105,13 @@ services:
         npx prisma db push --schema=prisma/schema.prepared.prisma &&
         npm run dev
       "
+
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
     profiles:
       - dev
